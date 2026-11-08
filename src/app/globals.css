@@ -28,7 +28,30 @@ body {
     #f1efe9;
 }
 
-.safe-bottom-padding {
-  padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
+@keyframes scanner-beam {
+  0% {
+    top: 8%;
+    opacity: 0.85;
+  }
+  50% {
+    top: 84%;
+    opacity: 1;
+  }
+  100% {
+    top: 8%;
+    opacity: 0.85;
+  }
 }
+
+.scanner-line {
+  animation: scanner-beam 2.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scanner-line {
+    animation: none;
+    top: 50%;
+  }
+}
+
 
