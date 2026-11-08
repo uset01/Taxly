@@ -4,11 +4,17 @@ import { useEffect, useRef, useState } from "react";
 import {
   AlertCircleIcon,
   CheckIcon,
+  ChevronDownIcon,
+  CopyIcon,
   DocumentScannerIcon,
   ShieldCheckIcon,
   UploadIcon,
 } from "@/components/icons";
-import { Charge } from "@/data/charges";
+import {
+  Charge,
+  calculateChargesMetrics,
+  formatBRL,
+} from "@/data/charges";
 import {
   AnalysisStageId,
   InvoiceAnalysisError,
@@ -16,6 +22,8 @@ import {
 } from "@/lib/analyze-invoice";
 
 export type ScreenState = "empty" | "analyzing" | "result";
+
+const RESOLVED_STORAGE_KEY = "vazamentozero:resolved_charge_ids";
 
 const BENEFITS = [
   "Resultado em 15 segundos",
@@ -40,6 +48,9 @@ export function HomeScreen() {
   const [completedStages, setCompletedStages] = useState<AnalysisStageId[]>([]);
   const [analysisProgress, setAnalysisProgress] = useState<number>(0);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [expandedChargeId, setExpandedChargeId] = useState<string | null>(null);
+  const [copiedChargeId, setCopiedChargeId] = useState<string | null>(null);
+  const [monitoringFeedback, setMonitoringFeedback] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -48,12 +59,34 @@ export function HomeScreen() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [screenState]);
 
+  const readResolvedIdsFromStorage = (): string[] => {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = window.localStorage.getItem(RESOLVED_STORAGE_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const saveResolvedIdsToStorage = (ids: string[]) => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(RESOLVED_STORAGE_KEY, JSON.stringify(ids));
+    } catch {
+      // Ignora indisponibilidade de storage privado
+    }
+  };
+
   const handleStartAnalysis = async (file: File) => {
     setSelectedFileName(file.name);
     setAnalysisError(null);
     setCurrentStage("reading");
     setCompletedStages([]);
     setAnalysisProgress(10);
+    setExpandedChargeId(null);
     setScreenState("analyzing");
 
     try {
@@ -62,7 +95,12 @@ export function HomeScreen() {
         setCompletedStages(update.completedStages);
         setAnalysisProgress(update.progressPercent);
       });
-      setCharges(result.charges);
+      const resolvedIds = readResolvedIdsFromStorage();
+      const hydratedCharges: Charge[] = result.charges.map((charge) => ({
+        ...charge,
+        status: resolvedIds.includes(charge.id) ? "resolved" : charge.status,
+      }));
+      setCharges(hydratedCharges);
       setScreenState("result");
     } catch (err) {
       if (err instanceof InvoiceAnalysisError) {
@@ -74,6 +112,55 @@ export function HomeScreen() {
       }
     }
   };
+
+  const handleToggleAccordion = (chargeId: string) => {
+    setExpandedChargeId((prev) => (prev === chargeId ? null : chargeId));
+  };
+
+  const handleCopyScript = async (chargeId: string, scriptText: string) => {
+    try {
+      await navigator.clipboard.writeText(scriptText);
+      setCopiedChargeId(chargeId);
+      window.setTimeout(() => {
+        setCopiedChargeId((prev) => (prev === chargeId ? null : prev));
+      }, 2200);
+    } catch {
+      setCopiedChargeId(chargeId);
+    }
+  };
+
+  const handleMarkResolved = (chargeId: string) => {
+    setCharges((prev) => {
+      const updated: Charge[] = prev.map((item) =>
+        item.id === chargeId
+          ? {
+              ...item,
+              status: item.status === "resolved" ? "active" : "resolved",
+            }
+          : item
+      );
+      const resolvedIds = updated
+        .filter((item) => item.status === "resolved")
+        .map((item) => item.id);
+      saveResolvedIdsToStorage(resolvedIds);
+      return updated;
+    });
+    setExpandedChargeId((prev) => (prev === chargeId ? null : prev));
+  };
+
+  const handleActivateMonitoring = () => {
+    // TODO: Integrar ao checkout de pagamento (Stripe / Mercado Pago / Pix recorrente) de R$ 14,90/mês
+    setMonitoringFeedback(true);
+    window.setTimeout(() => setMonitoringFeedback(false), 3500);
+  };
+
+  const handleSendAnotherInvoice = () => {
+    setAnalysisError(null);
+    setExpandedChargeId(null);
+    setScreenState("empty");
+  };
+
+  const metrics = calculateChargesMetrics(charges);
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -392,10 +479,265 @@ export function HomeScreen() {
           )}
 
           {screenState === "result" && (
-            <section aria-label="Resultado da análise">
-              <p className="text-[15px] text-[#4B514D]">
-                {charges.length} cobranças para revisar.
-              </p>
+            <section aria-label="Resultado da análise de cobranças">
+              {/* Greeting / Dynamic Title */}
+              <h1 className="text-[26px] sm:text-[28px] leading-[1.2] tracking-[-0.03em]">
+                <span className="block font-medium text-[#161A18]">
+                  Encontramos R$ {formatBRL(metrics.activeTotal)} para você
+                  recuperar.
+                </span>
+              </h1>
+
+              {/* Card Possível economia */}
+              <div className="mt-5 rounded-[26px] bg-[#F0EFEA] p-6">
+                <div className="flex items-center justify-between">
+                  <span className="text-[14px] font-medium text-[#4A504C]">
+                    Possível economia
+                  </span>
+                </div>
+
+                <div className="mt-2.5">
+                  <p className="text-[42px] sm:text-[46px] leading-[1.04] tracking-[-0.035em] font-medium text-[#141F1B] tabular-nums">
+                    R$ {formatBRL(metrics.activeTotal)}
+                  </p>
+                  <p className="text-[13.5px] text-[#4A504C] mt-1.5 tabular-nums">
+                    por mês • R$ {formatBRL(metrics.annualActiveTotal)} por ano
+                    • {metrics.totalCount} cobranças
+                  </p>
+                </div>
+
+                {metrics.resolvedTotal > 0 && (
+                  <div
+                    role="status"
+                    className="mt-4 rounded-[14px] bg-[#E2ECE7] px-3.5 py-2.5 text-[13.5px] font-semibold text-[#1E4635] flex items-center gap-2"
+                  >
+                    <span>
+                      ✓ Você já recuperou R$ {formatBRL(metrics.resolvedTotal)}
+                      /mês
+                    </span>
+                  </div>
+                )}
+
+                <div className="mt-5 pt-1">
+                  <div className="flex items-center justify-between text-[13px] font-medium text-[#4A504C] mb-2">
+                    <span id="resolved-progress-label">
+                      {metrics.resolvedCount} de {metrics.totalCount} resolvidas
+                    </span>
+                    <span className="tabular-nums">
+                      {metrics.progressPercent}%
+                    </span>
+                  </div>
+                  <div
+                    role="progressbar"
+                    aria-labelledby="resolved-progress-label"
+                    aria-valuenow={metrics.resolvedCount}
+                    aria-valuemin={0}
+                    aria-valuemax={metrics.totalCount}
+                    className="h-[4px] w-full rounded-full bg-[#D5D3CC] overflow-hidden"
+                  >
+                    <div
+                      className="h-full rounded-full bg-[#181B19] transition-all duration-300"
+                      style={{ width: `${metrics.progressPercent}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Section COBRANÇAS PARA REVISAR */}
+              <div className="mt-8">
+                <p className="text-[11px] uppercase tracking-[0.12em] font-semibold text-[#4E5450]">
+                  COBRANÇAS PARA REVISAR
+                </p>
+
+                <div className="mt-2 divide-y divide-[#E4E2DC] border-t border-b border-[#E4E2DC]">
+                  {charges.map((item) => {
+                    const isResolved = item.status === "resolved";
+                    const isExpanded = expandedChargeId === item.id;
+                    const isCopied = copiedChargeId === item.id;
+                    const initial = item.merchant.charAt(0).toUpperCase();
+
+                    return (
+                      <div key={item.id} className="py-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-start gap-3.5 min-w-0">
+                            <div
+                              aria-hidden="true"
+                              style={{ backgroundColor: item.color }}
+                              className={`w-[44px] h-[44px] rounded-full text-white font-bold text-[15px] flex items-center justify-center shrink-0 transition-opacity ${
+                                isResolved ? "opacity-50" : ""
+                              }`}
+                            >
+                              {initial}
+                            </div>
+                            <div className="min-w-0">
+                              <p
+                                className={`text-[16px] font-semibold leading-snug ${
+                                  isResolved
+                                    ? "line-through text-[#4E5450]"
+                                    : "text-[#181C1A]"
+                                }`}
+                              >
+                                {item.merchant}
+                              </p>
+                              <p
+                                className={`text-[13.5px] text-[#4E5450] mt-0.5 ${
+                                  isResolved ? "line-through" : ""
+                                }`}
+                              >
+                                {item.reason}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="text-right shrink-0">
+                            <p
+                              className={`text-[16px] font-semibold leading-snug tabular-nums ${
+                                isResolved
+                                  ? "line-through text-[#4E5450]"
+                                  : "text-[#181C1A]"
+                              }`}
+                            >
+                              R$ {formatBRL(item.amount)}
+                            </p>
+                            <p className="text-[13px] text-[#4E5450] mt-0.5">
+                              /mês
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Action Bar: Como cancelar */}
+                        <div className="mt-2.5 pl-[58px] flex items-center justify-between">
+                          <button
+                            type="button"
+                            aria-expanded={isExpanded}
+                            aria-controls={`cancel-guide-${item.id}`}
+                            aria-label={`Como cancelar ${item.merchant}`}
+                            onClick={() => handleToggleAccordion(item.id)}
+                            className="min-h-[44px] px-2 -ml-2 inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-[#2E5945] hover:text-[#181B19] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#181B19] transition-colors cursor-pointer"
+                          >
+                            <span>Como cancelar</span>
+                            <ChevronDownIcon
+                              className={`w-4 h-4 transition-transform ${
+                                isExpanded ? "rotate-180" : ""
+                              }`}
+                            />
+                          </button>
+
+                          {isResolved && (
+                            <span className="text-[12px] font-semibold px-2.5 py-1 rounded-full bg-[#E2ECE7] text-[#1E4635]">
+                              Resolvida ✓
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Accordion Content (only one open at a time) */}
+                        {isExpanded && (
+                          <div
+                            id={`cancel-guide-${item.id}`}
+                            className="mt-2 ml-[58px] rounded-[18px] bg-[#F0EFEA] p-4 border border-[#E2E0D8]"
+                          >
+                            <p className="text-[12.5px] font-semibold uppercase tracking-[0.08em] text-[#4A504C]">
+                              Passo a passo
+                            </p>
+                            <ol className="mt-2 space-y-2 text-[13.5px] text-[#181C1A] list-decimal list-inside leading-relaxed">
+                              {item.cancelGuide.steps.map((step, index) => (
+                                <li key={index}>{step}</li>
+                              ))}
+                            </ol>
+
+                            <div className="mt-4 rounded-[14px] bg-white p-3.5 border border-[#E2E0D8]">
+                              <p className="text-[12px] font-semibold text-[#4A504C] mb-1">
+                                Mensagem pronta para suporte:
+                              </p>
+                              <p className="text-[13px] text-[#181C1A] leading-relaxed">
+                                &ldquo;{item.cancelGuide.script}&rdquo;
+                              </p>
+                            </div>
+
+                            <div className="mt-3.5 flex flex-wrap items-center gap-2.5">
+                              <button
+                                type="button"
+                                aria-label={`Copiar script de cancelamento de ${item.merchant}`}
+                                onClick={() =>
+                                  void handleCopyScript(
+                                    item.id,
+                                    item.cancelGuide.script
+                                  )
+                                }
+                                className="min-h-[44px] px-3.5 py-2 rounded-[12px] bg-white border border-[#D5D3CC] hover:border-[#181B19] text-[13px] font-semibold text-[#181C1A] inline-flex items-center gap-1.5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#181B19] cursor-pointer"
+                              >
+                                <CopyIcon className="w-4 h-4" />
+                                <span>
+                                  {isCopied ? "Copiado ✓" : "Copiar script"}
+                                </span>
+                              </button>
+
+                              <button
+                                type="button"
+                                aria-label={
+                                  isResolved
+                                    ? `Desmarcar ${item.merchant} como resolvida`
+                                    : `Marcar ${item.merchant} como já resolvida`
+                                }
+                                onClick={() => handleMarkResolved(item.id)}
+                                className="min-h-[44px] px-4 py-2 rounded-[12px] bg-[#181B19] hover:bg-[#272B28] text-white text-[13px] font-semibold inline-flex items-center gap-1.5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#181B19] cursor-pointer"
+                              >
+                                <CheckIcon className="w-4 h-4" />
+                                <span>
+                                  {isResolved
+                                    ? "Reativar cobrança"
+                                    : "Já resolvi"}
+                                </span>
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Dark Upsell Card: Não deixe voltar. */}
+              <div className="mt-8 rounded-[26px] bg-[#181B19] text-white p-6 shadow-[0_12px_30px_rgba(24,27,25,0.16)]">
+                <h2 className="text-[21px] font-semibold tracking-[-0.02em] text-white">
+                  Não deixe voltar.
+                </h2>
+                <p className="mt-2 text-[14px] leading-relaxed text-[#D5D8D6]">
+                  Todo mês analisamos sua fatura e avisamos no WhatsApp quando
+                  surgir uma cobrança nova ou um reajuste.
+                </p>
+
+                <button
+                  type="button"
+                  aria-label="Ativar monitoramento por R$ 14,90 por mês"
+                  onClick={handleActivateMonitoring}
+                  className="mt-5 w-full min-h-[50px] rounded-[16px] bg-white hover:bg-[#F0EFEA] text-[#181B19] font-semibold text-[15px] py-3.5 px-5 flex items-center justify-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white cursor-pointer"
+                >
+                  Ativar monitoramento · R$ 14,90/mês
+                </button>
+
+                {monitoringFeedback && (
+                  <p
+                    role="status"
+                    className="mt-3 text-[13px] text-[#A8D5BA] text-center font-medium"
+                  >
+                    Fluxo de assinatura em preparação (TODO: checkout).
+                  </p>
+                )}
+              </div>
+
+              {/* Discreet link at the end */}
+              <div className="mt-6 text-center">
+                <button
+                  type="button"
+                  aria-label="Enviar outra fatura"
+                  onClick={handleSendAnotherInvoice}
+                  className="min-h-[44px] px-4 py-2 text-[14px] font-medium text-[#4A504C] hover:text-[#161A18] underline underline-offset-4 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#181B19] cursor-pointer"
+                >
+                  Enviar outra fatura
+                </button>
+              </div>
             </section>
           )}
         </main>
