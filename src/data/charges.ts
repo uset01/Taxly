@@ -1,74 +1,98 @@
-export interface ChargeItem {
+import { CANCEL_GUIDES } from "./cancel-guides";
+
+export interface Charge {
   id: string;
-  name: string;
-  factSubtitle: string;
+  merchant: string;
+  color: string;
+  reason: string;
   amount: number;
-  initial: string;
-  bgColor: string;
-  needsReview: boolean;
-  reviewed: boolean;
+  status: "active" | "resolved";
+  cancelGuide: {
+    steps: string[];
+    script: string;
+  };
 }
 
-export const INITIAL_CHARGES: ChargeItem[] = [
+export interface AnalysisResult {
+  charges: Charge[];
+}
+
+/**
+ * Mock tipado com 6 cobranças somando exatamente R$ 347,90 para desenvolvimento:
+ * 39,90 + 21,90 + 19,90 + 139,00 + 89,90 + 37,30 = 347,90
+ */
+export const MOCK_CHARGES: Charge[] = [
   {
     id: "netflix",
-    name: "Netflix",
-    factSubtitle: "Cobrada todo dia 12",
+    merchant: "Netflix",
+    color: "#D93F32",
+    reason: "Cobrada todo dia 12",
     amount: 39.9,
-    initial: "N",
-    bgColor: "bg-[#D93F32]",
-    needsReview: true,
-    reviewed: false,
+    status: "active",
+    cancelGuide: {
+      steps: CANCEL_GUIDES["netflix"].steps,
+      script: CANCEL_GUIDES["netflix"].script,
+    },
   },
   {
     id: "spotify",
-    name: "Spotify",
-    factSubtitle: "Aumentou R$ 5 neste mês",
+    merchant: "Spotify",
+    color: "#158A3E",
+    reason: "Aumentou R$ 5 neste mês",
     amount: 21.9,
-    initial: "S",
-    bgColor: "bg-[#158A3E]",
-    needsReview: true,
-    reviewed: false,
+    status: "active",
+    cancelGuide: {
+      steps: CANCEL_GUIDES["spotify"].steps,
+      script: CANCEL_GUIDES["spotify"].script,
+    },
   },
   {
     id: "amazon-prime",
-    name: "Amazon Prime",
-    factSubtitle: "Cobrança duplicada",
+    merchant: "Amazon Prime",
+    color: "#225EA8",
+    reason: "Cobrança duplicada",
     amount: 19.9,
-    initial: "P",
-    bgColor: "bg-[#225EA8]",
-    needsReview: true,
-    reviewed: false,
+    status: "active",
+    cancelGuide: {
+      steps: CANCEL_GUIDES["amazon-prime"].steps,
+      script: CANCEL_GUIDES["amazon-prime"].script,
+    },
   },
   {
     id: "adobe-cc",
-    name: "Adobe Creative Cloud",
-    factSubtitle: "Renovação automática todo dia 05",
+    merchant: "Adobe Creative Cloud",
+    color: "#B8292F",
+    reason: "Teste gratuito virou pago",
     amount: 139.0,
-    initial: "A",
-    bgColor: "bg-[#B8292F]",
-    needsReview: true,
-    reviewed: true,
+    status: "active",
+    cancelGuide: {
+      steps: CANCEL_GUIDES["adobe-cc"].steps,
+      script: CANCEL_GUIDES["adobe-cc"].script,
+    },
   },
   {
     id: "wellhub",
-    name: "Wellhub (Gympass)",
-    factSubtitle: "Cobrada todo dia 18",
+    merchant: "Wellhub (Gympass)",
+    color: "#C24732",
+    reason: "Cobrada todo dia 18",
     amount: 89.9,
-    initial: "W",
-    bgColor: "bg-[#C24732]",
-    needsReview: true,
-    reviewed: true,
+    status: "active",
+    cancelGuide: {
+      steps: CANCEL_GUIDES["wellhub"].steps,
+      script: CANCEL_GUIDES["wellhub"].script,
+    },
   },
   {
     id: "icloud-plus",
-    name: "iCloud+ 200GB",
-    factSubtitle: "Aumentou R$ 7,40 neste mês",
+    merchant: "iCloud+ 200GB",
+    color: "#2563EB",
+    reason: "Aumentou R$ 7,40 neste mês",
     amount: 37.3,
-    initial: "i",
-    bgColor: "bg-[#2563EB]",
-    needsReview: true,
-    reviewed: false,
+    status: "active",
+    cancelGuide: {
+      steps: CANCEL_GUIDES["icloud-plus"].steps,
+      script: CANCEL_GUIDES["icloud-plus"].script,
+    },
   },
 ];
 
@@ -79,34 +103,45 @@ export function formatBRL(value: number): string {
   });
 }
 
-export interface ChargesSummary {
-  reviewableCharges: ChargeItem[];
-  totalPossibleSavings: number;
-  totalReviewableCount: number;
-  reviewedCount: number;
-  pendingReviewCount: number;
+export interface ChargesMetrics {
+  activeCharges: Charge[];
+  resolvedCharges: Charge[];
+  activeTotal: number;
+  annualActiveTotal: number;
+  resolvedTotal: number;
+  totalCount: number;
+  activeCount: number;
+  resolvedCount: number;
   progressPercent: number;
 }
 
-export function calculateChargesSummary(charges: ChargeItem[]): ChargesSummary {
-  const reviewableCharges = charges.filter((item) => item.needsReview);
-  const totalPossibleSavings = Number(
-    reviewableCharges.reduce((acc, item) => acc + item.amount, 0).toFixed(2)
+export function calculateChargesMetrics(charges: Charge[]): ChargesMetrics {
+  const activeCharges = charges.filter((item) => item.status === "active");
+  const resolvedCharges = charges.filter((item) => item.status === "resolved");
+
+  const activeTotal = Number(
+    activeCharges.reduce((acc, item) => acc + item.amount, 0).toFixed(2)
   );
-  const totalReviewableCount = reviewableCharges.length;
-  const reviewedCount = reviewableCharges.filter((item) => item.reviewed).length;
-  const pendingReviewCount = totalReviewableCount - reviewedCount;
+  const annualActiveTotal = Number((activeTotal * 12).toFixed(2));
+  const resolvedTotal = Number(
+    resolvedCharges.reduce((acc, item) => acc + item.amount, 0).toFixed(2)
+  );
+
+  const totalCount = charges.length;
+  const activeCount = activeCharges.length;
+  const resolvedCount = resolvedCharges.length;
   const progressPercent =
-    totalReviewableCount > 0
-      ? Math.round((reviewedCount / totalReviewableCount) * 100)
-      : 0;
+    totalCount > 0 ? Math.round((resolvedCount / totalCount) * 100) : 0;
 
   return {
-    reviewableCharges,
-    totalPossibleSavings,
-    totalReviewableCount,
-    reviewedCount,
-    pendingReviewCount,
+    activeCharges,
+    resolvedCharges,
+    activeTotal,
+    annualActiveTotal,
+    resolvedTotal,
+    totalCount,
+    activeCount,
+    resolvedCount,
     progressPercent,
   };
 }
