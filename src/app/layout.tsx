@@ -9,9 +9,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "VazamentoZero — Suas finanças mais leves",
+  title: "VazamentoZero — Possível economia e cobranças para revisar",
   description:
-    "Identifique assinaturas esquecidas, cobranças recorrentes e economize todos os meses com segurança.",
+    "Analise faturas com dados mascarados, identifique cobranças para revisar e descubra sua possível economia mensal.",
 };
 
 export default function RootLayout({

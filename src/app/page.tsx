@@ -199,18 +199,17 @@ export default function HomePage() {
                 </span>
               </button>
 
-              <p className="text-[12.5px] leading-[1.4] text-[#4A504C] text-center max-w-[295px] mx-auto mt-3.5">
-                Seus dados são processados com segurança e nunca são
-                armazenados.
+              <p className="text-[12.5px] leading-[1.4] text-[#4A504C] text-center max-w-[310px] mx-auto mt-3.5">
+                Seus dados são mascarados e não vendemos informações.
               </p>
             </div>
           </section>
 
-          {/* Section 3: Cobranças recentes - Vale a pena revisar */}
+          {/* Section 3: Cobranças recentes - Cobranças para revisar */}
           <section ref={chargesListRef} className="px-5 mt-8">
             <div>
               <p className="text-[11px] uppercase tracking-[0.12em] font-semibold text-[#4E5450]">
-                COBRANÇAS RECENTES
+                COBRANÇAS PARA REVISAR
               </p>
               <div className="mt-1 flex items-center justify-between">
                 <h2 className="text-[22px] sm:text-[23px] tracking-[-0.025em] font-medium text-[#161A18]">
@@ -317,7 +316,7 @@ export default function HomePage() {
                   Relatório completo
                 </p>
                 <p className="text-[13.5px] text-[#4E5450] mt-0.5">
-                  Veja onde você pode economizar
+                  Confira sua possível economia nas cobranças para revisar
                 </p>
               </div>
               <ChevronRightIcon className="w-[18px] h-[18px] text-[#4A504C] group-hover:translate-x-0.5 transition-transform" />
