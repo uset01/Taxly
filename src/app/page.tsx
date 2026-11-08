@@ -1,69 +1,339 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useRef, useState } from "react";
+import {
+  ChartBarIcon,
+  ChevronRightIcon,
+  GlobeIcon,
+  HomeIcon,
+  ShieldCheckIcon,
+  SparkleIcon,
+  UploadIcon,
+  UserIcon,
+} from "@/components/icons";
+
+interface SubscriptionItem {
+  id: string;
+  name: string;
+  plan: string;
+  price: string;
+  initial: string;
+  bgColor: string;
+}
+
+const RECENT_CHARGES: SubscriptionItem[] = [
+  {
+    id: "netflix",
+    name: "Netflix",
+    plan: "Plano padrão",
+    price: "R$ 39,90",
+    initial: "N",
+    bgColor: "bg-[#E84C3D]",
+  },
+  {
+    id: "spotify",
+    name: "Spotify",
+    plan: "Plano individual",
+    price: "R$ 21,90",
+    initial: "S",
+    bgColor: "bg-[#19B857]",
+  },
+  {
+    id: "amazon-prime",
+    name: "Amazon Prime",
+    plan: "Renovação mensal",
+    price: "R$ 19,90",
+    initial: "P",
+    bgColor: "bg-[#2B72C6]",
+  },
+];
+
+type NavTab = "inicio" | "relatorio" | "assinaturas" | "perfil";
+
+export default function HomePage() {
+  const [activeTab, setActiveTab] = useState<NavTab>("inicio");
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file.name);
+    }
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="min-h-screen bg-[#F8F7F3] text-[#161A18] flex justify-center">
+      {/* Mobile-first App Container */}
+      <div className="w-full max-w-[440px] min-h-screen bg-[#F8F7F3] pb-32 relative">
+        {/* Top Sticky Header */}
+        <header className="sticky top-0 z-30 bg-[#F8F7F3]/95 backdrop-blur-md border-b border-[#EAE8E2] px-5 py-3.5 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-[40px] h-[40px] rounded-[12px] bg-[#FAF9F6] border border-[#E5E3DD] shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex items-center justify-center text-[#181B19]">
+              <ShieldCheckIcon className="w-[20px] h-[20px]" />
+            </div>
+            <span className="text-[19px] tracking-[-0.025em] leading-none select-none">
+              <strong className="font-semibold text-[#181B19]">Vazamento</strong>
+              <span className="font-medium text-[#52856F]">Zero</span>
+            </span>
+          </div>
+
+          <button
+            type="button"
+            aria-label="Perfil do usuário DM"
+            className="w-[41px] h-[41px] rounded-full bg-[#1B1D1B] text-white text-[13px] font-bold tracking-wide flex items-center justify-center hover:opacity-90 transition-opacity cursor-pointer"
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            DM
+          </button>
+        </header>
+
+        {/* Main Content */}
+        <main>
+          {/* Greeting Hero */}
+          <section className="px-5 pt-8 pb-7">
+            <h1 className="text-[30px] sm:text-[32px] leading-[1.18] tracking-[-0.03em]">
+              <span className="block font-medium text-[#161A18]">
+                Bom dia, Davi.
+              </span>
+              <span className="block font-normal text-[#9B9E99] mt-0.5">
+                Suas finanças estão mais leves hoje.
+              </span>
+            </h1>
+          </section>
+
+          {/* Card 1: Economia encontrada */}
+          <section className="px-5">
+            <div className="rounded-[28px] bg-[#F0EFEA] p-6 sm:p-7">
+              <div className="flex items-center justify-between">
+                <span className="text-[14.5px] text-[#7A7E79]">
+                  Economia encontrada
+                </span>
+                <button
+                  type="button"
+                  className="text-[13.5px] font-medium text-[#5A5F5B] flex items-center gap-1 hover:text-[#161A18] transition-colors cursor-pointer"
+                >
+                  <span>Ver detalhes</span>
+                  <ChevronRightIcon className="w-3.5 h-3.5 text-[#7A7E79]" />
+                </button>
+              </div>
+
+              <div className="mt-7">
+                <p className="text-[48px] sm:text-[52px] leading-[1.04] tracking-[-0.035em] font-medium text-[#141F1B]">
+                  R$ 347,90
+                </p>
+                <p className="text-[14.5px] text-[#8E918C] mt-1.5">por mês</p>
+              </div>
+
+              <div className="mt-16 pt-2">
+                <p className="text-[13px] text-[#8E918C] mb-3">
+                  Potencial identificado nas suas assinaturas
+                </p>
+                <div className="h-[3.5px] w-full rounded-full bg-[#DFDDD7] overflow-hidden">
+                  <div className="h-full w-[68%] rounded-full bg-[#181B19]" />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Card 2: Nova análise - Envie uma fatura */}
+          <section className="px-5 mt-5">
+            <div className="rounded-[28px] invoice-card-gradient p-6 sm:p-7">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.12em] font-semibold text-[#6F7876]">
+                    NOVA ANÁLISE
+                  </p>
+                  <h2 className="text-[22px] leading-tight tracking-[-0.02em] font-medium text-[#363F3D] mt-1.5">
+                    Envie uma fatura
+                  </h2>
+                </div>
+                <ShieldCheckIcon className="w-[21px] h-[21px] text-[#5C6561] mt-0.5 shrink-0" />
+              </div>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,image/*"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="mt-5 w-full rounded-[22px] bg-white py-11 px-6 flex flex-col items-center justify-center text-center transition-all hover:bg-white/95 active:scale-[0.99] cursor-pointer shadow-[0_2px_10px_rgba(0,0,0,0.015)]"
+              >
+                <UploadIcon className="w-[22px] h-[22px] text-[#68706C] mb-3.5" />
+                <span className="text-[16px] font-semibold text-[#474D4A] tracking-[-0.01em]">
+                  {selectedFile ? selectedFile : "Selecionar fatura"}
+                </span>
+                <span className="text-[13.5px] text-[#9A9D99] mt-1">
+                  {selectedFile
+                    ? "Arquivo pronto para análise • Clique para trocar"
+                    : "PDF, imagem ou print"}
+                </span>
+              </button>
+
+              <p className="text-[12.5px] leading-[1.45] text-[#878B86] text-center max-w-[275px] mx-auto mt-6">
+                Seus dados são processados com segurança e nunca são
+                armazenados.
+              </p>
+            </div>
+          </section>
+
+          {/* Section 3: Cobranças recentes - Vale a pena revisar */}
+          <section className="px-5 mt-9">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.12em] font-semibold text-[#8C8F8A]">
+                COBRANÇAS RECENTES
+              </p>
+              <div className="mt-1.5 flex items-center justify-between">
+                <h2 className="text-[22px] sm:text-[23px] tracking-[-0.025em] font-medium text-[#161A18]">
+                  Vale a pena revisar
+                </h2>
+                <button
+                  type="button"
+                  className="text-[13.5px] font-medium text-[#626763] flex items-center gap-1 hover:text-[#161A18] transition-colors cursor-pointer"
+                >
+                  <span>Ver todas</span>
+                  <ChevronRightIcon className="w-3.5 h-3.5 text-[#7A7E79]" />
+                </button>
+              </div>
+            </div>
+
+            {/* Subscription List */}
+            <div className="mt-3 divide-y divide-[#EAE8E2] border-b border-[#EAE8E2]">
+              {RECENT_CHARGES.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className="w-full py-4 flex items-center justify-between text-left group hover:opacity-85 transition-opacity cursor-pointer"
+                >
+                  <div className="flex items-center gap-3.5">
+                    <div
+                      className={`w-[42px] h-[42px] rounded-full ${item.bgColor} text-white font-bold text-[15px] flex items-center justify-center shrink-0`}
+                    >
+                      {item.initial}
+                    </div>
+                    <div>
+                      <p className="text-[16px] font-semibold text-[#181C1A] leading-snug">
+                        {item.name}
+                      </p>
+                      <p className="text-[13.5px] text-[#949792] mt-0.5">
+                        {item.plan}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <p className="text-[16px] font-semibold text-[#181C1A] leading-snug tabular-nums">
+                        {item.price}
+                      </p>
+                      <p className="text-[13px] text-[#949792] mt-0.5">/mês</p>
+                    </div>
+                    <ChevronRightIcon className="w-4 h-4 text-[#8E918C] group-hover:translate-x-0.5 transition-transform" />
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Low-usage Insight Block */}
+            <div className="pt-6">
+              <SparkleIcon className="w-[20px] h-[20px] text-[#638D7B] mb-4" />
+              <p className="text-[15px] leading-relaxed text-[#5D625D]">
+                <strong className="font-semibold text-[#181C1A]">
+                  3 serviços
+                </strong>{" "}
+                tiveram pouco ou nenhum uso neste mês.
+              </p>
+              <button
+                type="button"
+                className="mt-4 inline-flex items-center gap-1.5 text-[14.5px] font-medium text-[#4A504C] hover:text-[#161A18] transition-colors cursor-pointer"
+              >
+                <span>Revisar</span>
+                <ChevronRightIcon className="w-4 h-4 text-[#6E736E]" />
+              </button>
+            </div>
+
+            <hr className="border-t border-[#EAE8E2] my-6" />
+
+            {/* Full Report CTA Row */}
+            <button
+              type="button"
+              className="w-full flex items-center justify-between py-1 text-left group cursor-pointer"
+            >
+              <div>
+                <p className="text-[16px] font-semibold text-[#181C1A]">
+                  Relatório completo
+                </p>
+                <p className="text-[13.5px] text-[#949792] mt-0.5">
+                  Veja onde você pode economizar
+                </p>
+              </div>
+              <ChevronRightIcon className="w-[18px] h-[18px] text-[#606560] group-hover:translate-x-0.5 transition-transform" />
+            </button>
+          </section>
+        </main>
+
+        {/* Floating Bottom Navigation Bar */}
+        <nav
+          aria-label="Navegação principal"
+          className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 w-[290px] bg-[#1E2022] rounded-[22px] px-6 py-3.5 shadow-[0_12px_28px_rgba(0,0,0,0.22)] flex items-center justify-between"
+        >
+          <button
+            type="button"
+            aria-label="Início"
+            onClick={() => setActiveTab("inicio")}
+            className={`p-1.5 transition-colors cursor-pointer ${
+              activeTab === "inicio"
+                ? "text-white"
+                : "text-[#C8CCCE] hover:text-white"
+            }`}
           >
-            Documentation
-          </a>
-        </div>
-      </main>
+            <HomeIcon className="w-[23px] h-[23px]" />
+          </button>
+
+          <button
+            type="button"
+            aria-label="Relatório"
+            onClick={() => setActiveTab("relatorio")}
+            className={`p-1.5 transition-colors cursor-pointer ${
+              activeTab === "relatorio"
+                ? "text-white"
+                : "text-[#C8CCCE] hover:text-white"
+            }`}
+          >
+            <ChartBarIcon className="w-[23px] h-[23px]" />
+          </button>
+
+          <button
+            type="button"
+            aria-label="Assinaturas"
+            onClick={() => setActiveTab("assinaturas")}
+            className={`p-1.5 transition-colors cursor-pointer ${
+              activeTab === "assinaturas"
+                ? "text-white"
+                : "text-[#C8CCCE] hover:text-white"
+            }`}
+          >
+            <GlobeIcon className="w-[23px] h-[23px]" />
+          </button>
+
+          <button
+            type="button"
+            aria-label="Perfil"
+            onClick={() => setActiveTab("perfil")}
+            className={`p-1.5 transition-colors cursor-pointer ${
+              activeTab === "perfil"
+                ? "text-white"
+                : "text-[#C8CCCE] hover:text-white"
+            }`}
+          >
+            <UserIcon className="w-[23px] h-[23px]" />
+          </button>
+        </nav>
+      </div>
     </div>
   );
 }
