@@ -7,7 +7,9 @@ import {
   ChevronDownIcon,
   CopyIcon,
   DocumentScannerIcon,
+  LogOutIcon,
   ShieldCheckIcon,
+  TrashIcon,
   UploadIcon,
 } from "@/components/icons";
 import {
@@ -51,13 +53,46 @@ export function HomeScreen() {
   const [expandedChargeId, setExpandedChargeId] = useState<string | null>(null);
   const [copiedChargeId, setCopiedChargeId] = useState<string | null>(null);
   const [monitoringFeedback, setMonitoringFeedback] = useState(false);
+  const [isAvatarMenuOpen, setIsAvatarMenuOpen] = useState(false);
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [statusBanner, setStatusBanner] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const avatarMenuRef = useRef<HTMLDivElement>(null);
 
   // Rola para o topo sempre que mudar de estado para evitar salto visual
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [screenState]);
+
+  // Fecha o menu do avatar ao clicar fora ou pressionar Escape
+  useEffect(() => {
+    if (!isAvatarMenuOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        avatarMenuRef.current &&
+        !avatarMenuRef.current.contains(event.target as Node)
+      ) {
+        setIsAvatarMenuOpen(false);
+        setIsConfirmingDelete(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsAvatarMenuOpen(false);
+        setIsConfirmingDelete(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isAvatarMenuOpen]);
 
   const readResolvedIdsFromStorage = (): string[] => {
     if (typeof window === "undefined") return [];
@@ -155,9 +190,40 @@ export function HomeScreen() {
   };
 
   const handleSendAnotherInvoice = () => {
+    setIsAvatarMenuOpen(false);
+    setIsConfirmingDelete(false);
     setAnalysisError(null);
     setExpandedChargeId(null);
     setScreenState("empty");
+  };
+
+  const handleConfirmDeleteData = () => {
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.removeItem(RESOLVED_STORAGE_KEY);
+      } catch {
+        // Ignora erro de storage
+      }
+    }
+    setCharges([]);
+    setSelectedFileName(null);
+    setExpandedChargeId(null);
+    setAnalysisError(null);
+    setIsConfirmingDelete(false);
+    setIsAvatarMenuOpen(false);
+    setScreenState("empty");
+    setStatusBanner("Seus dados locais foram apagados com sucesso (LGPD).");
+    window.setTimeout(() => setStatusBanner(null), 4000);
+  };
+
+  const handleSignOut = () => {
+    // TODO: Integrar ao provedor de autenticação real quando disponível
+    setIsAvatarMenuOpen(false);
+    setIsConfirmingDelete(false);
+    setExpandedChargeId(null);
+    setScreenState("empty");
+    setStatusBanner("Sessão encerrada.");
+    window.setTimeout(() => setStatusBanner(null), 3500);
   };
 
   const metrics = calculateChargesMetrics(charges);
@@ -211,14 +277,105 @@ export function HomeScreen() {
             </span>
           </div>
 
-          <button
-            type="button"
-            aria-label="Abrir menu da conta de Davi (DM)"
-            className="min-w-[44px] min-h-[44px] w-[44px] h-[44px] rounded-full bg-[#1B1D1B] text-white text-[13px] font-bold tracking-wide flex items-center justify-center hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#181B19] transition-opacity cursor-pointer"
-          >
-            DM
-          </button>
+          <div ref={avatarMenuRef} className="relative">
+            <button
+              type="button"
+              aria-label="Abrir menu da conta de Davi (DM)"
+              aria-haspopup="menu"
+              aria-expanded={isAvatarMenuOpen}
+              onClick={() => {
+                setIsAvatarMenuOpen((prev) => !prev);
+                setIsConfirmingDelete(false);
+              }}
+              className="min-w-[44px] min-h-[44px] w-[44px] h-[44px] rounded-full bg-[#1B1D1B] text-white text-[13px] font-bold tracking-wide flex items-center justify-center hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#181B19] transition-opacity cursor-pointer"
+            >
+              DM
+            </button>
+
+            {isAvatarMenuOpen && (
+              <div
+                role="menu"
+                aria-label="Opções da conta e privacidade"
+                className="absolute right-0 mt-2 w-[256px] rounded-[20px] bg-white border border-[#E2E0D8] shadow-[0_14px_34px_rgba(24,27,25,0.16)] p-2 z-50"
+              >
+                {!isConfirmingDelete ? (
+                  <>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={handleSendAnotherInvoice}
+                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-[12px] text-left text-[14px] font-medium text-[#181C1A] hover:bg-[#F0EFEA] flex items-center gap-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-[#181B19] cursor-pointer"
+                    >
+                      <UploadIcon className="w-4 h-4 text-[#4A504C] shrink-0" />
+                      <span>Enviar outra fatura</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => setIsConfirmingDelete(true)}
+                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-[12px] text-left text-[14px] font-medium text-[#B42318] hover:bg-[#FDF2F2] flex items-center gap-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-[#B42318] cursor-pointer"
+                    >
+                      <TrashIcon className="w-4 h-4 text-[#B42318] shrink-0" />
+                      <span>Apagar meus dados</span>
+                    </button>
+
+                    <hr className="my-1 border-t border-[#EAE8E2]" />
+
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={handleSignOut}
+                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-[12px] text-left text-[14px] font-medium text-[#4A504C] hover:bg-[#F0EFEA] hover:text-[#181C1A] flex items-center gap-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-[#181B19] cursor-pointer"
+                    >
+                      <LogOutIcon className="w-4 h-4 text-[#4A504C] shrink-0" />
+                      <span>Sair</span>
+                    </button>
+                  </>
+                ) : (
+                  <div
+                    role="alertdialog"
+                    aria-label="Confirmação para apagar dados"
+                    className="p-2"
+                  >
+                    <p className="text-[13.5px] font-semibold text-[#181C1A]">
+                      Apagar todos os seus dados?
+                    </p>
+                    <p className="mt-1 text-[12.5px] leading-relaxed text-[#4A504C]">
+                      Isso remove o histórico de cobranças resolvidas e análises
+                      salvas neste dispositivo (LGPD).
+                    </p>
+                    <div className="mt-3 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setIsConfirmingDelete(false)}
+                        className="flex-1 min-h-[44px] px-3 py-2 rounded-[12px] bg-[#F0EFEA] hover:bg-[#E4E2DC] text-[13px] font-semibold text-[#181C1A] transition-colors focus-visible:outline-2 focus-visible:outline-[#181B19] cursor-pointer"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleConfirmDeleteData}
+                        className="flex-1 min-h-[44px] px-3 py-2 rounded-[12px] bg-[#B42318] hover:bg-[#912018] text-[13px] font-semibold text-white transition-colors focus-visible:outline-2 focus-visible:outline-[#B42318] cursor-pointer"
+                      >
+                        Apagar
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </header>
+
+        {statusBanner && (
+          <div
+            role="status"
+            className="mx-5 mt-3 rounded-[14px] bg-[#E2ECE7] px-4 py-2.5 text-[13px] font-medium text-[#1E4635] text-center"
+          >
+            {statusBanner}
+          </div>
+        )}
 
         <input
           ref={fileInputRef}
