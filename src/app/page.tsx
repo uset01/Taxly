@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import {
   ChartBarIcon,
   ChevronRightIcon,
-  GlobeIcon,
+  CreditCardIcon,
   HomeIcon,
   ShieldCheckIcon,
   SparkleIcon,
@@ -297,58 +297,66 @@ export default function HomePage() {
         {/* Floating Bottom Navigation Bar */}
         <nav
           aria-label="Navegação principal"
-          className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 w-[290px] bg-[#1E2022] rounded-[22px] px-6 py-3.5 shadow-[0_12px_28px_rgba(0,0,0,0.22)] flex items-center justify-between"
+          className="fixed bottom-3 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-24px)] max-w-[416px] bg-[#1E2022] rounded-[24px] p-1.5 shadow-[0_14px_34px_rgba(0,0,0,0.24)] flex items-center justify-between"
         >
           <button
             type="button"
             aria-label="Início"
+            aria-current={activeTab === "inicio" ? "page" : undefined}
             onClick={() => setActiveTab("inicio")}
-            className={`p-1.5 transition-colors cursor-pointer ${
+            className={`flex-1 min-h-[52px] py-2 px-2 rounded-[18px] flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer ${
               activeTab === "inicio"
-                ? "text-white"
-                : "text-[#C8CCCE] hover:text-white"
+                ? "bg-[#353835] text-white font-bold"
+                : "text-[#C8CCCE] hover:text-white font-medium"
             }`}
           >
-            <HomeIcon className="w-[23px] h-[23px]" />
+            <HomeIcon className="w-[20px] h-[20px]" />
+            <span className="text-[11.5px] leading-none">Início</span>
           </button>
 
           <button
             type="button"
             aria-label="Relatório"
+            aria-current={activeTab === "relatorio" ? "page" : undefined}
             onClick={() => setActiveTab("relatorio")}
-            className={`p-1.5 transition-colors cursor-pointer ${
+            className={`flex-1 min-h-[52px] py-2 px-2 rounded-[18px] flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer ${
               activeTab === "relatorio"
-                ? "text-white"
-                : "text-[#C8CCCE] hover:text-white"
+                ? "bg-[#353835] text-white font-bold"
+                : "text-[#C8CCCE] hover:text-white font-medium"
             }`}
           >
-            <ChartBarIcon className="w-[23px] h-[23px]" />
+            <ChartBarIcon className="w-[20px] h-[20px]" />
+            <span className="text-[11.5px] leading-none">Relatório</span>
           </button>
 
           <button
             type="button"
             aria-label="Assinaturas"
+            aria-current={activeTab === "assinaturas" ? "page" : undefined}
             onClick={() => setActiveTab("assinaturas")}
-            className={`p-1.5 transition-colors cursor-pointer ${
+            className={`flex-1 min-h-[52px] py-2 px-2 rounded-[18px] flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer ${
               activeTab === "assinaturas"
-                ? "text-white"
-                : "text-[#C8CCCE] hover:text-white"
+                ? "bg-[#353835] text-white font-bold"
+                : "text-[#C8CCCE] hover:text-white font-medium"
             }`}
           >
-            <GlobeIcon className="w-[23px] h-[23px]" />
+            <CreditCardIcon className="w-[20px] h-[20px]" />
+            <span className="text-[11.5px] leading-none">Assinaturas</span>
           </button>
 
           <button
             type="button"
             aria-label="Perfil"
+            aria-current={activeTab === "perfil" ? "page" : undefined}
             onClick={() => setActiveTab("perfil")}
-            className={`p-1.5 transition-colors cursor-pointer ${
+            className={`flex-1 min-h-[52px] py-2 px-2 rounded-[18px] flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer ${
               activeTab === "perfil"
-                ? "text-white"
-                : "text-[#C8CCCE] hover:text-white"
+                ? "bg-[#353835] text-white font-bold"
+                : "text-[#C8CCCE] hover:text-white font-medium"
             }`}
           >
-            <UserIcon className="w-[23px] h-[23px]" />
+            <UserIcon className="w-[20px] h-[20px]" />
+            <span className="text-[11.5px] leading-none">Perfil</span>
           </button>
         </nav>
       </div>

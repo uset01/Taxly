@@ -105,20 +105,21 @@ export function ChartBarIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-export function GlobeIcon(props: SVGProps<SVGSVGElement>) {
+export function CreditCardIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth={1.75}
+      strokeWidth={1.85}
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
       {...props}
     >
-      <circle cx="12" cy="12" r="8.25" />
-      <path d="M11.5 3.8c-1 2.2-1 4.5.8 5.7 1.8 1.2 1.7 3.3-.3 4.5-1.6 1-2.5 2.7-2.2 5.7" />
-      <path d="M19.8 10.2c-2.2.2-3.8 1.4-3.8 3.2 0 1.6 1.2 2.8 2.8 3" />
+      <rect x="3.5" y="5.5" width="17" height="13" rx="2.5" />
+      <path d="M3.5 10h17" />
+      <path d="M7.5 14.5h3.5" />
     </svg>
   );
 }
