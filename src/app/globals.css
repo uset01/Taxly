@@ -27,3 +27,8 @@ body {
     radial-gradient(circle at 15% 100%, #e4eee8 0%, transparent 55%),
     #f1efe9;
 }
+
+.safe-bottom-padding {
+  padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
+}
+

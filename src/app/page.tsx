@@ -65,14 +65,14 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#F8F7F3] text-[#161A18] flex justify-center">
       {/* Mobile-first App Container */}
-      <div className="w-full max-w-[440px] min-h-screen bg-[#F8F7F3] pb-32 relative">
+      <div className="w-full max-w-[440px] min-h-screen bg-[#F8F7F3] safe-bottom-padding relative">
         {/* Top Sticky Header */}
-        <header className="sticky top-0 z-30 bg-[#F8F7F3]/95 backdrop-blur-md border-b border-[#EAE8E2] px-5 py-3.5 flex items-center justify-between">
+        <header className="sticky top-0 z-30 bg-[#F8F7F3]/95 backdrop-blur-md border-b border-[#EAE8E2] px-5 py-2.5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-[40px] h-[40px] rounded-[12px] bg-[#FAF9F6] border border-[#E5E3DD] shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex items-center justify-center text-[#181B19]">
-              <ShieldCheckIcon className="w-[20px] h-[20px]" />
+            <div className="w-[38px] h-[38px] rounded-[12px] bg-[#FAF9F6] border border-[#E5E3DD] shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex items-center justify-center text-[#181B19]">
+              <ShieldCheckIcon className="w-[19px] h-[19px]" />
             </div>
-            <span className="text-[19px] tracking-[-0.025em] leading-none select-none">
+            <span className="text-[18px] tracking-[-0.025em] leading-none select-none">
               <strong className="font-semibold text-[#181B19]">Vazamento</strong>
               <span className="font-medium text-[#52856F]">Zero</span>
             </span>
@@ -81,7 +81,7 @@ export default function HomePage() {
           <button
             type="button"
             aria-label="Perfil do usuário DM"
-            className="w-[41px] h-[41px] rounded-full bg-[#1B1D1B] text-white text-[13px] font-bold tracking-wide flex items-center justify-center hover:opacity-90 transition-opacity cursor-pointer"
+            className="w-[44px] h-[44px] rounded-full bg-[#1B1D1B] text-white text-[13px] font-bold tracking-wide flex items-center justify-center hover:opacity-90 transition-opacity cursor-pointer"
           >
             DM
           </button>
@@ -90,8 +90,8 @@ export default function HomePage() {
         {/* Main Content */}
         <main>
           {/* Greeting Hero */}
-          <section className="px-5 pt-8 pb-7">
-            <h1 className="text-[30px] sm:text-[32px] leading-[1.18] tracking-[-0.03em]">
+          <section className="px-5 pt-4 pb-3.5">
+            <h1 className="text-[24px] sm:text-[26px] leading-[1.2] tracking-[-0.03em]">
               <span className="block font-medium text-[#161A18]">
                 Bom dia, Davi.
               </span>
@@ -103,9 +103,9 @@ export default function HomePage() {
 
           {/* Card 1: Economia encontrada */}
           <section className="px-5">
-            <div className="rounded-[28px] bg-[#F0EFEA] p-6 sm:p-7">
+            <div className="rounded-[24px] bg-[#F0EFEA] p-5">
               <div className="flex items-center justify-between">
-                <span className="text-[14.5px] text-[#7A7E79]">
+                <span className="text-[14px] text-[#7A7E79]">
                   Economia encontrada
                 </span>
                 <button
@@ -117,15 +117,15 @@ export default function HomePage() {
                 </button>
               </div>
 
-              <div className="mt-7">
-                <p className="text-[48px] sm:text-[52px] leading-[1.04] tracking-[-0.035em] font-medium text-[#141F1B]">
+              <div className="mt-2.5">
+                <p className="text-[38px] sm:text-[42px] leading-[1.05] tracking-[-0.035em] font-medium text-[#141F1B]">
                   R$ 347,90
                 </p>
-                <p className="text-[14.5px] text-[#8E918C] mt-1.5">por mês</p>
+                <p className="text-[13.5px] text-[#8E918C] mt-1">por mês</p>
               </div>
 
-              <div className="mt-16 pt-2">
-                <p className="text-[13px] text-[#8E918C] mb-3">
+              <div className="mt-4 pt-1">
+                <p className="text-[12.5px] text-[#8E918C] mb-2">
                   Potencial identificado nas suas assinaturas
                 </p>
                 <div className="h-[3.5px] w-full rounded-full bg-[#DFDDD7] overflow-hidden">
@@ -136,18 +136,18 @@ export default function HomePage() {
           </section>
 
           {/* Card 2: Nova análise - Envie uma fatura */}
-          <section className="px-5 mt-5">
-            <div className="rounded-[28px] invoice-card-gradient p-6 sm:p-7">
+          <section className="px-5 mt-3.5">
+            <div className="rounded-[24px] invoice-card-gradient p-5">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-[11px] uppercase tracking-[0.12em] font-semibold text-[#6F7876]">
                     NOVA ANÁLISE
                   </p>
-                  <h2 className="text-[22px] leading-tight tracking-[-0.02em] font-medium text-[#363F3D] mt-1.5">
+                  <h2 className="text-[20px] leading-tight tracking-[-0.02em] font-medium text-[#363F3D] mt-1">
                     Envie uma fatura
                   </h2>
                 </div>
-                <ShieldCheckIcon className="w-[21px] h-[21px] text-[#5C6561] mt-0.5 shrink-0" />
+                <ShieldCheckIcon className="w-[20px] h-[20px] text-[#5C6561] mt-0.5 shrink-0" />
               </div>
 
               <input
@@ -161,20 +161,15 @@ export default function HomePage() {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="mt-5 w-full rounded-[22px] bg-white py-11 px-6 flex flex-col items-center justify-center text-center transition-all hover:bg-white/95 active:scale-[0.99] cursor-pointer shadow-[0_2px_10px_rgba(0,0,0,0.015)]"
+                className="mt-4 w-full min-h-[52px] rounded-[16px] bg-[#181B19] hover:bg-[#262A27] text-white py-3.5 px-5 flex items-center justify-center gap-2.5 text-center transition-all active:scale-[0.99] cursor-pointer shadow-[0_4px_14px_rgba(24,27,25,0.18)]"
               >
-                <UploadIcon className="w-[22px] h-[22px] text-[#68706C] mb-3.5" />
-                <span className="text-[16px] font-semibold text-[#474D4A] tracking-[-0.01em]">
-                  {selectedFile ? selectedFile : "Selecionar fatura"}
-                </span>
-                <span className="text-[13.5px] text-[#9A9D99] mt-1">
-                  {selectedFile
-                    ? "Arquivo pronto para análise • Clique para trocar"
-                    : "PDF, imagem ou print"}
+                <UploadIcon className="w-[20px] h-[20px] text-white shrink-0" />
+                <span className="text-[15.5px] font-semibold tracking-[-0.01em]">
+                  {selectedFile ? `Fatura: ${selectedFile}` : "Enviar fatura"}
                 </span>
               </button>
 
-              <p className="text-[12.5px] leading-[1.45] text-[#878B86] text-center max-w-[275px] mx-auto mt-6">
+              <p className="text-[12.5px] leading-[1.4] text-[#878B86] text-center max-w-[290px] mx-auto mt-3.5">
                 Seus dados são processados com segurança e nunca são
                 armazenados.
               </p>
