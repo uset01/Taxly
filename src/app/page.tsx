@@ -11,49 +11,35 @@ import {
   UploadIcon,
   UserIcon,
 } from "@/components/icons";
-
-interface SubscriptionItem {
-  id: string;
-  name: string;
-  plan: string;
-  price: string;
-  initial: string;
-  bgColor: string;
-}
-
-const RECENT_CHARGES: SubscriptionItem[] = [
-  {
-    id: "netflix",
-    name: "Netflix",
-    plan: "Plano padrão",
-    price: "R$ 39,90",
-    initial: "N",
-    bgColor: "bg-[#E84C3D]",
-  },
-  {
-    id: "spotify",
-    name: "Spotify",
-    plan: "Plano individual",
-    price: "R$ 21,90",
-    initial: "S",
-    bgColor: "bg-[#19B857]",
-  },
-  {
-    id: "amazon-prime",
-    name: "Amazon Prime",
-    plan: "Renovação mensal",
-    price: "R$ 19,90",
-    initial: "P",
-    bgColor: "bg-[#2B72C6]",
-  },
-];
+import {
+  INITIAL_CHARGES,
+  calculateChargesSummary,
+  formatBRL,
+} from "@/data/charges";
 
 type NavTab = "inicio" | "relatorio" | "assinaturas" | "perfil";
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<NavTab>("inicio");
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [showAllCharges, setShowAllCharges] = useState(false);
+  const [charges] = useState(INITIAL_CHARGES);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const chargesListRef = useRef<HTMLElement>(null);
+
+  const summary = calculateChargesSummary(charges);
+  const displayedCharges = showAllCharges
+    ? summary.reviewableCharges
+    : summary.reviewableCharges.slice(0, 3);
+  const displayedSum = Number(
+    displayedCharges.reduce((acc, item) => acc + item.amount, 0).toFixed(2)
+  );
+  const isPartialList = displayedSum !== summary.totalPossibleSavings;
+
+  const handleViewAllCharges = () => {
+    setShowAllCharges(true);
+    chargesListRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -110,6 +96,7 @@ export default function HomePage() {
                 </span>
                 <button
                   type="button"
+                  onClick={handleViewAllCharges}
                   className="text-[13.5px] font-medium text-[#5A5F5B] flex items-center gap-1 hover:text-[#161A18] transition-colors cursor-pointer"
                 >
                   <span>Ver detalhes</span>
@@ -118,10 +105,18 @@ export default function HomePage() {
               </div>
 
               <div className="mt-2.5">
-                <p className="text-[38px] sm:text-[42px] leading-[1.05] tracking-[-0.035em] font-medium text-[#141F1B]">
-                  R$ 347,90
+                <p className="text-[38px] sm:text-[42px] leading-[1.05] tracking-[-0.035em] font-medium text-[#141F1B] tabular-nums">
+                  R$ {formatBRL(summary.totalPossibleSavings)}
                 </p>
-                <p className="text-[13.5px] text-[#8E918C] mt-1">por mês</p>
+                <p className="text-[13.5px] text-[#8E918C] mt-1">
+                  por mês
+                  {isPartialList && (
+                    <span>
+                      {" "}
+                      • Baseado em {summary.totalReviewableCount} cobranças
+                    </span>
+                  )}
+                </p>
               </div>
 
               <div className="mt-4 pt-1">
@@ -129,7 +124,10 @@ export default function HomePage() {
                   Potencial identificado nas suas assinaturas
                 </p>
                 <div className="h-[3.5px] w-full rounded-full bg-[#DFDDD7] overflow-hidden">
-                  <div className="h-full w-[68%] rounded-full bg-[#181B19]" />
+                  <div
+                    className="h-full rounded-full bg-[#181B19] transition-all"
+                    style={{ width: `${summary.progressPercent}%` }}
+                  />
                 </div>
               </div>
             </div>
@@ -177,7 +175,7 @@ export default function HomePage() {
           </section>
 
           {/* Section 3: Cobranças recentes - Vale a pena revisar */}
-          <section className="px-5 mt-9">
+          <section ref={chargesListRef} className="px-5 mt-8">
             <div>
               <p className="text-[11px] uppercase tracking-[0.12em] font-semibold text-[#8C8F8A]">
                 COBRANÇAS RECENTES
@@ -188,9 +186,14 @@ export default function HomePage() {
                 </h2>
                 <button
                   type="button"
+                  onClick={() => setShowAllCharges((prev) => !prev)}
                   className="text-[13.5px] font-medium text-[#626763] flex items-center gap-1 hover:text-[#161A18] transition-colors cursor-pointer"
                 >
-                  <span>Ver todas</span>
+                  <span>
+                    {showAllCharges
+                      ? "Mostrar resumo"
+                      : `Ver todas (${summary.totalReviewableCount})`}
+                  </span>
                   <ChevronRightIcon className="w-3.5 h-3.5 text-[#7A7E79]" />
                 </button>
               </div>
@@ -198,7 +201,7 @@ export default function HomePage() {
 
             {/* Subscription List */}
             <div className="mt-3 divide-y divide-[#EAE8E2] border-b border-[#EAE8E2]">
-              {RECENT_CHARGES.map((item) => (
+              {displayedCharges.map((item) => (
                 <button
                   key={item.id}
                   type="button"
@@ -215,7 +218,7 @@ export default function HomePage() {
                         {item.name}
                       </p>
                       <p className="text-[13.5px] text-[#949792] mt-0.5">
-                        {item.plan}
+                        {item.factSubtitle}
                       </p>
                     </div>
                   </div>
@@ -223,7 +226,7 @@ export default function HomePage() {
                   <div className="flex items-center gap-3">
                     <div className="text-right">
                       <p className="text-[16px] font-semibold text-[#181C1A] leading-snug tabular-nums">
-                        {item.price}
+                        R$ {formatBRL(item.amount)}
                       </p>
                       <p className="text-[13px] text-[#949792] mt-0.5">/mês</p>
                     </div>
