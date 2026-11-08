@@ -23,7 +23,7 @@ export default function HomePage() {
   const [activeTab, setActiveTab] = useState<NavTab>("inicio");
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [showAllCharges, setShowAllCharges] = useState(false);
-  const [charges] = useState(INITIAL_CHARGES);
+  const [charges, setCharges] = useState(INITIAL_CHARGES);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chargesListRef = useRef<HTMLElement>(null);
 
@@ -39,6 +39,14 @@ export default function HomePage() {
   const handleViewAllCharges = () => {
     setShowAllCharges(true);
     chargesListRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleToggleReviewed = (id: string) => {
+    setCharges((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, reviewed: !item.reviewed } : item
+      )
+    );
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -82,17 +90,19 @@ export default function HomePage() {
                 Bom dia, Davi.
               </span>
               <span className="block font-normal text-[#9B9E99] mt-0.5">
-                Suas finanças estão mais leves hoje.
+                {summary.totalPossibleSavings > 0
+                  ? `Encontramos R$ ${formatBRL(summary.totalPossibleSavings)} para você recuperar.`
+                  : "Envie uma fatura para começar."}
               </span>
             </h1>
           </section>
 
-          {/* Card 1: Economia encontrada */}
+          {/* Card 1: Possível economia */}
           <section className="px-5">
             <div className="rounded-[24px] bg-[#F0EFEA] p-5">
               <div className="flex items-center justify-between">
                 <span className="text-[14px] text-[#7A7E79]">
-                  Economia encontrada
+                  Possível economia
                 </span>
                 <button
                   type="button"
@@ -119,17 +129,25 @@ export default function HomePage() {
                 </p>
               </div>
 
-              <div className="mt-4 pt-1">
-                <p className="text-[12.5px] text-[#8E918C] mb-2">
-                  Potencial identificado nas suas assinaturas
-                </p>
-                <div className="h-[3.5px] w-full rounded-full bg-[#DFDDD7] overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-[#181B19] transition-all"
-                    style={{ width: `${summary.progressPercent}%` }}
-                  />
+              {summary.totalReviewableCount > 0 && (
+                <div className="mt-4 pt-1">
+                  <div className="flex items-center justify-between text-[12.5px] text-[#8E918C] mb-2">
+                    <span>
+                      {summary.reviewedCount} de {summary.totalReviewableCount}{" "}
+                      cobranças revisadas
+                    </span>
+                    <span className="tabular-nums">
+                      {summary.progressPercent}%
+                    </span>
+                  </div>
+                  <div className="h-[3.5px] w-full rounded-full bg-[#DFDDD7] overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-[#181B19] transition-all"
+                      style={{ width: `${summary.progressPercent}%` }}
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </section>
 
@@ -205,6 +223,7 @@ export default function HomePage() {
                 <button
                   key={item.id}
                   type="button"
+                  onClick={() => handleToggleReviewed(item.id)}
                   className="w-full py-4 flex items-center justify-between text-left group hover:opacity-85 transition-opacity cursor-pointer"
                 >
                   <div className="flex items-center gap-3.5">
@@ -236,17 +255,18 @@ export default function HomePage() {
               ))}
             </div>
 
-            {/* Low-usage Insight Block */}
+            {/* Review Callout Block */}
             <div className="pt-6">
               <SparkleIcon className="w-[20px] h-[20px] text-[#638D7B] mb-4" />
               <p className="text-[15px] leading-relaxed text-[#5D625D]">
                 <strong className="font-semibold text-[#181C1A]">
-                  3 serviços
+                  {summary.pendingReviewCount} assinaturas
                 </strong>{" "}
-                tiveram pouco ou nenhum uso neste mês.
+                para você revisar.
               </p>
               <button
                 type="button"
+                onClick={handleViewAllCharges}
                 className="mt-4 inline-flex items-center gap-1.5 text-[14.5px] font-medium text-[#4A504C] hover:text-[#161A18] transition-colors cursor-pointer"
               >
                 <span>Revisar</span>

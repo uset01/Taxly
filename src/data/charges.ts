@@ -23,7 +23,7 @@ export const INITIAL_CHARGES: ChargeItem[] = [
   {
     id: "spotify",
     name: "Spotify",
-    factSubtitle: "Aumentou R$ 5,00 neste mês",
+    factSubtitle: "Aumentou R$ 5 neste mês",
     amount: 21.9,
     initial: "S",
     bgColor: "bg-[#158A3E]",
@@ -33,7 +33,7 @@ export const INITIAL_CHARGES: ChargeItem[] = [
   {
     id: "amazon-prime",
     name: "Amazon Prime",
-    factSubtitle: "Cobrança duplicada no mês",
+    factSubtitle: "Cobrança duplicada",
     amount: 19.9,
     initial: "P",
     bgColor: "bg-[#225EA8]",
