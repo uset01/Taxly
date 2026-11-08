@@ -63,19 +63,23 @@ export default function HomePage() {
         {/* Top Sticky Header */}
         <header className="sticky top-0 z-30 bg-[#F8F7F3]/95 backdrop-blur-md border-b border-[#EAE8E2] px-5 py-2.5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-[38px] h-[38px] rounded-[12px] bg-[#FAF9F6] border border-[#E5E3DD] shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex items-center justify-center text-[#181B19]">
+            <div
+              role="img"
+              aria-label="Escudo de proteção VazamentoZero"
+              className="w-[38px] h-[38px] rounded-[12px] bg-[#FAF9F6] border border-[#E5E3DD] shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex items-center justify-center text-[#181B19]"
+            >
               <ShieldCheckIcon className="w-[19px] h-[19px]" />
             </div>
             <span className="text-[18px] tracking-[-0.025em] leading-none select-none">
               <strong className="font-semibold text-[#181B19]">Vazamento</strong>
-              <span className="font-medium text-[#52856F]">Zero</span>
+              <span className="font-semibold text-[#3B6B56]">Zero</span>
             </span>
           </div>
 
           <button
             type="button"
-            aria-label="Perfil do usuário DM"
-            className="w-[44px] h-[44px] rounded-full bg-[#1B1D1B] text-white text-[13px] font-bold tracking-wide flex items-center justify-center hover:opacity-90 transition-opacity cursor-pointer"
+            aria-label="Abrir perfil de Davi (DM)"
+            className="min-w-[44px] min-h-[44px] w-[44px] h-[44px] rounded-full bg-[#1B1D1B] text-white text-[13px] font-bold tracking-wide flex items-center justify-center hover:opacity-90 transition-opacity cursor-pointer"
           >
             DM
           </button>
@@ -89,7 +93,7 @@ export default function HomePage() {
               <span className="block font-medium text-[#161A18]">
                 Bom dia, Davi.
               </span>
-              <span className="block font-normal text-[#9B9E99] mt-0.5">
+              <span className="block font-normal text-[#4B514D] mt-0.5">
                 {summary.totalPossibleSavings > 0
                   ? `Encontramos R$ ${formatBRL(summary.totalPossibleSavings)} para você recuperar.`
                   : "Envie uma fatura para começar."}
@@ -101,24 +105,25 @@ export default function HomePage() {
           <section className="px-5">
             <div className="rounded-[24px] bg-[#F0EFEA] p-5">
               <div className="flex items-center justify-between">
-                <span className="text-[14px] text-[#7A7E79]">
+                <span className="text-[14px] font-medium text-[#4A504C]">
                   Possível economia
                 </span>
                 <button
                   type="button"
+                  aria-label="Ver detalhes da possível economia"
                   onClick={handleViewAllCharges}
-                  className="text-[13.5px] font-medium text-[#5A5F5B] flex items-center gap-1 hover:text-[#161A18] transition-colors cursor-pointer"
+                  className="min-h-[44px] px-2 -mr-2 text-[13.5px] font-medium text-[#3F4541] flex items-center gap-1 hover:text-[#161A18] transition-colors cursor-pointer"
                 >
                   <span>Ver detalhes</span>
-                  <ChevronRightIcon className="w-3.5 h-3.5 text-[#7A7E79]" />
+                  <ChevronRightIcon className="w-3.5 h-3.5 text-[#4A504C]" />
                 </button>
               </div>
 
-              <div className="mt-2.5">
+              <div className="mt-1.5">
                 <p className="text-[38px] sm:text-[42px] leading-[1.05] tracking-[-0.035em] font-medium text-[#141F1B] tabular-nums">
                   R$ {formatBRL(summary.totalPossibleSavings)}
                 </p>
-                <p className="text-[13.5px] text-[#8E918C] mt-1">
+                <p className="text-[13.5px] text-[#4E5450] mt-1">
                   por mês
                   {isPartialList && (
                     <span>
@@ -131,8 +136,8 @@ export default function HomePage() {
 
               {summary.totalReviewableCount > 0 && (
                 <div className="mt-4 pt-1">
-                  <div className="flex items-center justify-between text-[12.5px] text-[#8E918C] mb-2">
-                    <span>
+                  <div className="flex items-center justify-between text-[12.5px] font-medium text-[#4E5450] mb-2">
+                    <span id="progress-label">
                       {summary.reviewedCount} de {summary.totalReviewableCount}{" "}
                       cobranças revisadas
                     </span>
@@ -140,7 +145,14 @@ export default function HomePage() {
                       {summary.progressPercent}%
                     </span>
                   </div>
-                  <div className="h-[3.5px] w-full rounded-full bg-[#DFDDD7] overflow-hidden">
+                  <div
+                    role="progressbar"
+                    aria-labelledby="progress-label"
+                    aria-valuenow={summary.reviewedCount}
+                    aria-valuemin={0}
+                    aria-valuemax={summary.totalReviewableCount}
+                    className="h-[4px] w-full rounded-full bg-[#D5D3CC] overflow-hidden"
+                  >
                     <div
                       className="h-full rounded-full bg-[#181B19] transition-all"
                       style={{ width: `${summary.progressPercent}%` }}
@@ -156,28 +168,30 @@ export default function HomePage() {
             <div className="rounded-[24px] invoice-card-gradient p-5">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-[11px] uppercase tracking-[0.12em] font-semibold text-[#6F7876]">
+                  <p className="text-[11px] uppercase tracking-[0.12em] font-semibold text-[#485250]">
                     NOVA ANÁLISE
                   </p>
-                  <h2 className="text-[20px] leading-tight tracking-[-0.02em] font-medium text-[#363F3D] mt-1">
+                  <h2 className="text-[20px] leading-tight tracking-[-0.02em] font-medium text-[#1F2725] mt-1">
                     Envie uma fatura
                   </h2>
                 </div>
-                <ShieldCheckIcon className="w-[20px] h-[20px] text-[#5C6561] mt-0.5 shrink-0" />
+                <ShieldCheckIcon className="w-[20px] h-[20px] text-[#485250] mt-0.5 shrink-0" />
               </div>
 
               <input
                 ref={fileInputRef}
                 type="file"
                 accept=".pdf,image/*"
+                aria-label="Selecionar arquivo de fatura em PDF, imagem ou print"
                 onChange={handleFileChange}
                 className="hidden"
               />
 
               <button
                 type="button"
+                aria-label="Enviar fatura em PDF, imagem ou print"
                 onClick={() => fileInputRef.current?.click()}
-                className="mt-4 w-full min-h-[52px] rounded-[16px] bg-[#181B19] hover:bg-[#262A27] text-white py-3.5 px-5 flex items-center justify-center gap-2.5 text-center transition-all active:scale-[0.99] cursor-pointer shadow-[0_4px_14px_rgba(24,27,25,0.18)]"
+                className="mt-4 w-full min-h-[50px] rounded-[16px] bg-[#181B19] hover:bg-[#262A27] text-white py-3.5 px-5 flex items-center justify-center gap-2.5 text-center transition-all active:scale-[0.99] cursor-pointer shadow-[0_4px_14px_rgba(24,27,25,0.18)]"
               >
                 <UploadIcon className="w-[20px] h-[20px] text-white shrink-0" />
                 <span className="text-[15.5px] font-semibold tracking-[-0.01em]">
@@ -185,7 +199,7 @@ export default function HomePage() {
                 </span>
               </button>
 
-              <p className="text-[12.5px] leading-[1.4] text-[#878B86] text-center max-w-[290px] mx-auto mt-3.5">
+              <p className="text-[12.5px] leading-[1.4] text-[#4A504C] text-center max-w-[295px] mx-auto mt-3.5">
                 Seus dados são processados com segurança e nunca são
                 armazenados.
               </p>
@@ -195,48 +209,62 @@ export default function HomePage() {
           {/* Section 3: Cobranças recentes - Vale a pena revisar */}
           <section ref={chargesListRef} className="px-5 mt-8">
             <div>
-              <p className="text-[11px] uppercase tracking-[0.12em] font-semibold text-[#8C8F8A]">
+              <p className="text-[11px] uppercase tracking-[0.12em] font-semibold text-[#4E5450]">
                 COBRANÇAS RECENTES
               </p>
-              <div className="mt-1.5 flex items-center justify-between">
+              <div className="mt-1 flex items-center justify-between">
                 <h2 className="text-[22px] sm:text-[23px] tracking-[-0.025em] font-medium text-[#161A18]">
                   Vale a pena revisar
                 </h2>
                 <button
                   type="button"
+                  aria-label={
+                    showAllCharges
+                      ? "Mostrar resumo de cobranças para revisar"
+                      : `Ver todas as ${summary.totalReviewableCount} cobranças para revisar`
+                  }
                   onClick={() => setShowAllCharges((prev) => !prev)}
-                  className="text-[13.5px] font-medium text-[#626763] flex items-center gap-1 hover:text-[#161A18] transition-colors cursor-pointer"
+                  className="min-h-[44px] px-2 -mr-2 text-[13.5px] font-medium text-[#434945] flex items-center gap-1 hover:text-[#161A18] transition-colors cursor-pointer"
                 >
                   <span>
                     {showAllCharges
                       ? "Mostrar resumo"
                       : `Ver todas (${summary.totalReviewableCount})`}
                   </span>
-                  <ChevronRightIcon className="w-3.5 h-3.5 text-[#7A7E79]" />
+                  <ChevronRightIcon className="w-3.5 h-3.5 text-[#4E5450]" />
                 </button>
               </div>
             </div>
 
             {/* Subscription List */}
-            <div className="mt-3 divide-y divide-[#EAE8E2] border-b border-[#EAE8E2]">
+            <div className="mt-2 divide-y divide-[#E4E2DC] border-b border-[#E4E2DC]">
               {displayedCharges.map((item) => (
                 <button
                   key={item.id}
                   type="button"
+                  aria-label={`Revisar cobrança ${item.name}, ${item.factSubtitle}, valor mensal R$ ${formatBRL(item.amount)}${item.reviewed ? ", já revisada" : ""}`}
                   onClick={() => handleToggleReviewed(item.id)}
-                  className="w-full py-4 flex items-center justify-between text-left group hover:opacity-85 transition-opacity cursor-pointer"
+                  className="w-full min-h-[68px] py-3.5 flex items-center justify-between text-left group hover:opacity-85 transition-opacity cursor-pointer"
                 >
                   <div className="flex items-center gap-3.5">
                     <div
-                      className={`w-[42px] h-[42px] rounded-full ${item.bgColor} text-white font-bold text-[15px] flex items-center justify-center shrink-0`}
+                      aria-hidden="true"
+                      className={`w-[44px] h-[44px] rounded-full ${item.bgColor} text-white font-bold text-[15px] flex items-center justify-center shrink-0`}
                     >
                       {item.initial}
                     </div>
                     <div>
-                      <p className="text-[16px] font-semibold text-[#181C1A] leading-snug">
-                        {item.name}
-                      </p>
-                      <p className="text-[13.5px] text-[#949792] mt-0.5">
+                      <div className="flex items-center gap-2">
+                        <p className="text-[16px] font-semibold text-[#181C1A] leading-snug">
+                          {item.name}
+                        </p>
+                        {item.reviewed && (
+                          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#E2ECE7] text-[#264D3B]">
+                            Revisada
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[13.5px] text-[#4E5450] mt-0.5">
                         {item.factSubtitle}
                       </p>
                     </div>
@@ -247,9 +275,9 @@ export default function HomePage() {
                       <p className="text-[16px] font-semibold text-[#181C1A] leading-snug tabular-nums">
                         R$ {formatBRL(item.amount)}
                       </p>
-                      <p className="text-[13px] text-[#949792] mt-0.5">/mês</p>
+                      <p className="text-[13px] text-[#4E5450] mt-0.5">/mês</p>
                     </div>
-                    <ChevronRightIcon className="w-4 h-4 text-[#8E918C] group-hover:translate-x-0.5 transition-transform" />
+                    <ChevronRightIcon className="w-4 h-4 text-[#4E5450] group-hover:translate-x-0.5 transition-transform" />
                   </div>
                 </button>
               ))}
@@ -257,8 +285,8 @@ export default function HomePage() {
 
             {/* Review Callout Block */}
             <div className="pt-6">
-              <SparkleIcon className="w-[20px] h-[20px] text-[#638D7B] mb-4" />
-              <p className="text-[15px] leading-relaxed text-[#5D625D]">
+              <SparkleIcon className="w-[20px] h-[20px] text-[#3B6B56] mb-3.5" />
+              <p className="text-[15px] leading-relaxed text-[#3F4541]">
                 <strong className="font-semibold text-[#181C1A]">
                   {summary.pendingReviewCount} assinaturas
                 </strong>{" "}
@@ -266,30 +294,33 @@ export default function HomePage() {
               </p>
               <button
                 type="button"
+                aria-label={`Revisar ${summary.pendingReviewCount} assinaturas pendentes`}
                 onClick={handleViewAllCharges}
-                className="mt-4 inline-flex items-center gap-1.5 text-[14.5px] font-medium text-[#4A504C] hover:text-[#161A18] transition-colors cursor-pointer"
+                className="mt-2 min-h-[44px] px-2 -ml-2 inline-flex items-center gap-1.5 text-[14.5px] font-medium text-[#2F3531] hover:text-[#161A18] transition-colors cursor-pointer"
               >
                 <span>Revisar</span>
-                <ChevronRightIcon className="w-4 h-4 text-[#6E736E]" />
+                <ChevronRightIcon className="w-4 h-4 text-[#4A504C]" />
               </button>
             </div>
 
-            <hr className="border-t border-[#EAE8E2] my-6" />
+            <hr className="border-t border-[#E4E2DC] my-5" />
 
             {/* Full Report CTA Row */}
             <button
               type="button"
-              className="w-full flex items-center justify-between py-1 text-left group cursor-pointer"
+              aria-label="Abrir relatório completo e ver possível economia"
+              onClick={handleViewAllCharges}
+              className="w-full min-h-[56px] flex items-center justify-between py-2 text-left group cursor-pointer"
             >
               <div>
                 <p className="text-[16px] font-semibold text-[#181C1A]">
                   Relatório completo
                 </p>
-                <p className="text-[13.5px] text-[#949792] mt-0.5">
+                <p className="text-[13.5px] text-[#4E5450] mt-0.5">
                   Veja onde você pode economizar
                 </p>
               </div>
-              <ChevronRightIcon className="w-[18px] h-[18px] text-[#606560] group-hover:translate-x-0.5 transition-transform" />
+              <ChevronRightIcon className="w-[18px] h-[18px] text-[#4A504C] group-hover:translate-x-0.5 transition-transform" />
             </button>
           </section>
         </main>

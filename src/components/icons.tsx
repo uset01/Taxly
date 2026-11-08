@@ -9,6 +9,7 @@ export function ShieldCheckIcon(props: SVGProps<SVGSVGElement>) {
       strokeWidth={1.85}
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
       {...props}
     >
       <path d="M12 3L4.5 6.2v5.4c0 5.1 3.2 9.8 7.5 11.4 4.3-1.6 7.5-6.3 7.5-11.4V6.2L12 3z" />
@@ -26,6 +27,7 @@ export function ChevronRightIcon(props: SVGProps<SVGSVGElement>) {
       strokeWidth={1.9}
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
       {...props}
     >
       <path d="M9 6l6 6-6 6" />
@@ -42,6 +44,7 @@ export function UploadIcon(props: SVGProps<SVGSVGElement>) {
       strokeWidth={1.85}
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
       {...props}
     >
       <path d="M12 15V4" />
@@ -60,6 +63,7 @@ export function SparkleIcon(props: SVGProps<SVGSVGElement>) {
       strokeWidth={1.75}
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
       {...props}
     >
       <path d="M12 3.5c.8 4.4 4.1 7.7 8.5 8.5-4.4.8-7.7 4.1-8.5 8.5-.8-4.4-4.1-7.7-8.5-8.5 4.4-.8 7.7-4.1 8.5-8.5z" />
@@ -76,6 +80,7 @@ export function HomeIcon(props: SVGProps<SVGSVGElement>) {
       strokeWidth={1.75}
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
       {...props}
     >
       <path d="M3.5 11L12 3.8 20.5 11" />
@@ -95,6 +100,7 @@ export function ChartBarIcon(props: SVGProps<SVGSVGElement>) {
       strokeWidth={1.75}
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
       {...props}
     >
       <path d="M4 19.5H20" />
@@ -133,6 +139,7 @@ export function UserIcon(props: SVGProps<SVGSVGElement>) {
       strokeWidth={1.75}
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
       {...props}
     >
       <circle cx="12" cy="8.5" r="3.75" />
