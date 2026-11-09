@@ -208,10 +208,10 @@ export function HomeScreen() {
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("pointerdown", handleClickOutside);
     document.addEventListener("keydown", handleKeyDown);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("pointerdown", handleClickOutside);
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isAvatarMenuOpen]);
@@ -475,19 +475,19 @@ export function HomeScreen() {
     e.target.value = "";
   };
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDragOver = (e: React.DragEvent<HTMLElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(true);
   };
 
-  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDragLeave = (e: React.DragEvent<HTMLElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
   };
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDrop = (e: React.DragEvent<HTMLElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
@@ -619,12 +619,13 @@ export function HomeScreen() {
         )}
 
         <input
+          id="vault-file-input"
           ref={fileInputRef}
           type="file"
           accept=".pdf,image/*,.heic"
           aria-label="Selecionar arquivo de fatura em PDF, imagem ou print"
           onChange={handleFileInputChange}
-          className="hidden"
+          className="sr-only"
         />
 
         {/* Main Content */}
@@ -675,21 +676,13 @@ export function HomeScreen() {
                   ) : (
                     <>
                       {/* Área de dropzone interna com fundo #F9F8F6 e borda tracejada fina #C7C4BC */}
-                      <div
-                        role="button"
-                        tabIndex={0}
+                      <label
+                        htmlFor="vault-file-input"
                         aria-label="Toque para escolher seu arquivo de fatura ou comprovante em PDF, imagem ou print"
                         onDragOver={handleDragOver}
                         onDragLeave={handleDragLeave}
                         onDrop={handleDrop}
-                        onClick={() => fileInputRef.current?.click()}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            fileInputRef.current?.click();
-                          }
-                        }}
-                        className={`mt-4 w-full rounded-md bg-[#F9F8F6] py-6 px-4 flex flex-col items-center justify-center text-center border border-dashed transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#111111] ${
+                        className={`mt-4 w-full rounded-md bg-[#F9F8F6] active:bg-[#EAE8E1] py-6 px-4 flex flex-col items-center justify-center text-center border border-dashed transition-colors cursor-pointer select-none focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#111111] ${
                           isDragging
                             ? "border-[#111111] bg-[#F4F3EF]"
                             : "border-[#C7C4BC] hover:border-[#111111]"
@@ -702,14 +695,14 @@ export function HomeScreen() {
                         <span className="text-[12.5px] text-[#52524E] mt-0.5">
                           Aceita PDF, imagem ou print do app do banco
                         </span>
-                      </div>
+                      </label>
 
                       {/* Botão primário preto (#111111) "Enviar documento" com canto rounded-md */}
                       <button
                         type="button"
                         aria-label="Enviar documento para análise"
                         onClick={() => handleSimulatedVaultUpload()}
-                        className="mt-3 w-full min-h-[44px] rounded-md bg-[#111111] hover:bg-[#262626] text-white py-2.5 px-4 flex items-center justify-center gap-2 text-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#111111] cursor-pointer"
+                        className="mt-3 w-full min-h-[44px] rounded-md bg-[#111111] hover:bg-[#262626] active:bg-[#262626] text-white py-2.5 px-4 flex items-center justify-center gap-2 text-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#111111] cursor-pointer select-none"
                       >
                         <UploadIcon className="w-[17px] h-[17px] text-white shrink-0" />
                         <span className="text-[14px] font-semibold tracking-tight">
@@ -832,7 +825,7 @@ export function HomeScreen() {
                               setSelectedModalReceiptId(item.id);
                             }
                           }}
-                          className="h-[64px] px-3.5 flex items-center justify-between gap-3 hover:bg-[#F9F8F6] transition-colors cursor-pointer"
+                          className="h-[64px] px-3.5 flex items-center justify-between gap-3 hover:bg-[#F9F8F6] active:bg-[#F4F3EF] transition-colors cursor-pointer select-none"
                         >
                           {/* Esquerda: Ícone técnico (rounded-md) */}
                           <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -878,7 +871,7 @@ export function HomeScreen() {
                               aria-label={`Baixar ou compartilhar comprovante original de ${item.receiver}`}
                               title="Baixar/compartilhar comprovante original"
                               onClick={(e) => handleQuickDownload(e, item)}
-                              className="w-[32px] h-[32px] rounded-md bg-[#F4F3EF] hover:bg-[#E2E0D8] border border-[#E2E0D8] text-[#111111] flex items-center justify-center transition-colors cursor-pointer"
+                              className="w-[32px] h-[32px] rounded-md bg-[#F4F3EF] hover:bg-[#E2E0D8] active:bg-[#E2E0D8] border border-[#E2E0D8] text-[#111111] flex items-center justify-center transition-colors cursor-pointer"
                             >
                               {isDownloaded ? (
                                 <CheckIcon className="w-3.5 h-3.5 text-[#111111]" />

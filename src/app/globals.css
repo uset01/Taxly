@@ -20,6 +20,15 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+button,
+[role="button"],
+label,
+a,
+input {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
 @keyframes scanner-beam {
   0% {
     top: 8%;
