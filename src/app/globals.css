@@ -1,14 +1,15 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8f7f4;
-  --foreground: #141414;
+  --background: #f4f3ef;
+  --foreground: #111111;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 body {
@@ -17,15 +18,6 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-/* Custom gradient matching the "Envie uma fatura" card */
-.invoice-card-gradient {
-  background:
-    radial-gradient(circle at 0% 0%, #d8e8ee 0%, transparent 58%),
-    radial-gradient(circle at 100% 70%, #efe9d4 0%, transparent 58%),
-    radial-gradient(circle at 15% 100%, #e4eee8 0%, transparent 55%),
-    #f1efe9;
 }
 
 @keyframes scanner-beam {

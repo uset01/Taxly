@@ -500,21 +500,21 @@ export function HomeScreen() {
   const totalVaultFilesCount = 8 + vaultReceipts.length;
 
   return (
-    <div className="min-h-screen bg-[#F8F7F4] text-[#161A18] flex justify-center">
-      <div className="w-full max-w-[430px] min-h-screen bg-[#F8F7F4] pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] relative">
+    <div className="min-h-screen bg-[#F4F3EF] text-[#111111] flex justify-center">
+      <div className="w-full max-w-[430px] min-h-screen bg-[#F4F3EF] pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] relative">
         {/* Top Sticky Header */}
-        <header className="sticky top-0 z-30 bg-[#F8F7F4]/95 backdrop-blur-md border-b border-[#EAE8E2] px-5 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <header className="sticky top-0 z-30 bg-[#F4F3EF]/95 backdrop-blur-sm border-b border-[#E2E0D8] px-5 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
             <div
               role="img"
               aria-label="Escudo de proteção VazamentoZero"
-              className="w-[38px] h-[38px] rounded-[12px] bg-[#FAF9F6] border border-[#E5E3DD] shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex items-center justify-center text-[#181B19]"
+              className="w-[34px] h-[34px] rounded-md bg-white border border-[#D6D3CD] flex items-center justify-center text-[#111111]"
             >
-              <ShieldCheckIcon className="w-[19px] h-[19px]" />
+              <ShieldCheckIcon className="w-[18px] h-[18px]" />
             </div>
-            <span className="text-[18px] tracking-[-0.025em] leading-none select-none">
-              <strong className="font-semibold text-[#181B19]">Vazamento</strong>
-              <span className="font-semibold text-[#3B6B56]">Zero</span>
+            <span className="text-[17px] tracking-tight leading-none select-none">
+              <strong className="font-semibold text-[#111111]">Vazamento</strong>
+              <span className="font-semibold text-[#2E5945]">Zero</span>
             </span>
           </div>
 
@@ -528,7 +528,7 @@ export function HomeScreen() {
                 setIsAvatarMenuOpen((prev) => !prev);
                 setIsConfirmingDelete(false);
               }}
-              className="min-w-[44px] min-h-[44px] w-[44px] h-[44px] rounded-full bg-[#1B1D1B] text-white text-[13px] font-bold tracking-wide flex items-center justify-center hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#181B19] transition-opacity cursor-pointer"
+              className="min-w-[38px] min-h-[38px] w-[38px] h-[38px] rounded-md bg-[#111111] text-white font-mono text-[12px] font-bold tracking-tight flex items-center justify-center hover:bg-[#262626] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#111111] transition-colors cursor-pointer"
             >
               DM
             </button>
@@ -537,7 +537,7 @@ export function HomeScreen() {
               <div
                 role="menu"
                 aria-label="Opções da conta e privacidade"
-                className="absolute right-0 mt-2 w-[256px] rounded-[20px] bg-white border border-[#E2E0D8] shadow-[0_14px_34px_rgba(24,27,25,0.16)] p-2 z-50"
+                className="absolute right-0 mt-2 w-[252px] rounded-lg bg-white border border-[#D6D3CD] p-1.5 z-50"
               >
                 {!isConfirmingDelete ? (
                   <>
@@ -545,9 +545,9 @@ export function HomeScreen() {
                       type="button"
                       role="menuitem"
                       onClick={handleSendAnotherInvoice}
-                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-[12px] text-left text-[14px] font-medium text-[#181C1A] hover:bg-[#F0EFEA] flex items-center gap-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-[#181B19] cursor-pointer"
+                      className="w-full min-h-[40px] px-3 py-2 rounded-md text-left text-[13.5px] font-medium text-[#111111] hover:bg-[#F4F3EF] flex items-center gap-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-[#111111] cursor-pointer"
                     >
-                      <UploadIcon className="w-4 h-4 text-[#4A504C] shrink-0" />
+                      <UploadIcon className="w-4 h-4 text-[#52524E] shrink-0" />
                       <span>Enviar outra fatura</span>
                     </button>
 
@@ -555,21 +555,21 @@ export function HomeScreen() {
                       type="button"
                       role="menuitem"
                       onClick={() => setIsConfirmingDelete(true)}
-                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-[12px] text-left text-[14px] font-medium text-[#B42318] hover:bg-[#FDF2F2] flex items-center gap-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-[#B42318] cursor-pointer"
+                      className="w-full min-h-[40px] px-3 py-2 rounded-md text-left text-[13.5px] font-medium text-[#B42318] hover:bg-[#FEF2F2] flex items-center gap-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-[#B42318] cursor-pointer"
                     >
                       <TrashIcon className="w-4 h-4 text-[#B42318] shrink-0" />
                       <span>Apagar meus dados</span>
                     </button>
 
-                    <hr className="my-1 border-t border-[#EAE8E2]" />
+                    <hr className="my-1 border-t border-[#E2E0D8]" />
 
                     <button
                       type="button"
                       role="menuitem"
                       onClick={handleSignOut}
-                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-[12px] text-left text-[14px] font-medium text-[#4A504C] hover:bg-[#F0EFEA] hover:text-[#181C1A] flex items-center gap-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-[#181B19] cursor-pointer"
+                      className="w-full min-h-[40px] px-3 py-2 rounded-md text-left text-[13.5px] font-medium text-[#52524E] hover:bg-[#F4F3EF] hover:text-[#111111] flex items-center gap-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-[#111111] cursor-pointer"
                     >
-                      <LogOutIcon className="w-4 h-4 text-[#4A504C] shrink-0" />
+                      <LogOutIcon className="w-4 h-4 text-[#52524E] shrink-0" />
                       <span>Sair</span>
                     </button>
                   </>
@@ -579,10 +579,10 @@ export function HomeScreen() {
                     aria-label="Confirmação para apagar dados"
                     className="p-2"
                   >
-                    <p className="text-[13.5px] font-semibold text-[#181C1A]">
+                    <p className="text-[13px] font-semibold text-[#111111] tracking-tight">
                       Apagar todos os seus dados?
                     </p>
-                    <p className="mt-1 text-[12.5px] leading-relaxed text-[#4A504C]">
+                    <p className="mt-1 text-[12px] leading-relaxed text-[#52524E]">
                       Isso remove o histórico de cobranças resolvidas e análises
                       salvas neste dispositivo (LGPD).
                     </p>
@@ -590,14 +590,14 @@ export function HomeScreen() {
                       <button
                         type="button"
                         onClick={() => setIsConfirmingDelete(false)}
-                        className="flex-1 min-h-[44px] px-3 py-2 rounded-[12px] bg-[#F0EFEA] hover:bg-[#E4E2DC] text-[13px] font-semibold text-[#181C1A] transition-colors focus-visible:outline-2 focus-visible:outline-[#181B19] cursor-pointer"
+                        className="flex-1 min-h-[38px] px-3 py-1.5 rounded-md bg-[#F4F3EF] hover:bg-[#E2E0D8] text-[12.5px] font-semibold text-[#111111] transition-colors focus-visible:outline-2 focus-visible:outline-[#111111] cursor-pointer"
                       >
                         Cancelar
                       </button>
                       <button
                         type="button"
                         onClick={handleConfirmDeleteData}
-                        className="flex-1 min-h-[44px] px-3 py-2 rounded-[12px] bg-[#B42318] hover:bg-[#912018] text-[13px] font-semibold text-white transition-colors focus-visible:outline-2 focus-visible:outline-[#B42318] cursor-pointer"
+                        className="flex-1 min-h-[38px] px-3 py-1.5 rounded-md bg-[#B42318] hover:bg-[#912018] text-[12.5px] font-semibold text-white transition-colors focus-visible:outline-2 focus-visible:outline-[#B42318] cursor-pointer"
                       >
                         Apagar
                       </button>
@@ -612,7 +612,7 @@ export function HomeScreen() {
         {statusBanner && (
           <div
             role="status"
-            className="mx-5 mt-3 rounded-[14px] bg-[#E2ECE7] px-4 py-2.5 text-[13px] font-medium text-[#1E4635] text-center"
+            className="mx-5 mt-3 rounded-md bg-[#111111] px-4 py-2.5 text-[12.5px] font-medium text-white text-center"
           >
             {statusBanner}
           </div>
@@ -631,144 +631,162 @@ export function HomeScreen() {
         <main className="px-5 pt-5">
           {screenState === "empty" && (
             <section aria-label="Boas-vindas e envio de fatura ou comprovante">
-              {/* Subtítulo ajustado para caber em até 3 linhas no mobile */}
+              {/* Subtítulo técnico com tracking-tight */}
               <div>
-                <h1 className="text-[19px] sm:text-[20px] leading-[1.35] tracking-[-0.02em] font-medium text-[#141414]">
+                <h1 className="text-[18px] sm:text-[19px] leading-[1.35] tracking-tight font-semibold text-[#111111]">
                   Descubra vazamentos nas faturas e guarde comprovantes PIX sem
                   bagunça.
                 </h1>
               </div>
 
-              {/* Card NOVA ANÁLISE / Envie fatura ou comprovante (sem botão Enviar documento) */}
-              <div className="mt-5 rounded-[28px] invoice-card-gradient p-5 sm:p-6">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-[11px] uppercase tracking-[0.12em] font-semibold text-[#485250]">
-                      NOVA ANÁLISE
-                    </p>
-                    <h2 className="text-[21px] leading-tight tracking-[-0.02em] font-medium text-[#1F2725] mt-1">
-                      Envie fatura ou comprovante
-                    </h2>
+              {/* 4. Card de Upload ("NOVA ANÁLISE") como Componente Técnico */}
+              <div className="mt-4 rounded-lg bg-white border border-[#D6D3CD] overflow-hidden">
+                <div className="p-5">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="font-mono text-[10.5px] uppercase tracking-[0.1em] font-semibold text-[#52524E]">
+                        NOVA ANÁLISE
+                      </p>
+                      <h2 className="text-[19px] leading-tight tracking-tight font-semibold text-[#111111] mt-1">
+                        Envie fatura ou comprovante
+                      </h2>
+                    </div>
+                    <div className="w-8 h-8 rounded-md bg-[#F9F8F6] border border-[#E2E0D8] flex items-center justify-center text-[#111111] shrink-0">
+                      <ShieldCheckIcon className="w-[17px] h-[17px]" />
+                    </div>
                   </div>
-                  <ShieldCheckIcon className="w-[21px] h-[21px] text-[#485250] mt-0.5 shrink-0" />
+
+                  {isCardScanning ? (
+                    <div
+                      role="status"
+                      aria-live="polite"
+                      className="mt-4 w-full rounded-md bg-[#F9F8F6] py-8 px-4 flex flex-col items-center justify-center text-center border border-dashed border-[#C7C4BC]"
+                    >
+                      <div className="w-9 h-9 rounded-md bg-white border border-[#E2E0D8] text-[#111111] flex items-center justify-center mb-2.5 animate-pulse">
+                        <DocumentScannerIcon className="w-5 h-5" />
+                      </div>
+                      <p className="text-[13.5px] font-semibold tracking-tight text-[#111111]">
+                        Varrendo documento e mascarando dados sensíveis...
+                      </p>
+                      <div className="mt-3 w-40 h-1 rounded-sm bg-[#E2E0D8] overflow-hidden">
+                        <div className="h-full w-2/3 bg-[#111111] animate-pulse" />
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Área de dropzone interna com fundo #F9F8F6 e borda tracejada fina #C7C4BC */}
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        aria-label="Toque para escolher seu arquivo de fatura ou comprovante em PDF, imagem ou print"
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDrop}
+                        onClick={() => fileInputRef.current?.click()}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            fileInputRef.current?.click();
+                          }
+                        }}
+                        className={`mt-4 w-full rounded-md bg-[#F9F8F6] py-6 px-4 flex flex-col items-center justify-center text-center border border-dashed transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#111111] ${
+                          isDragging
+                            ? "border-[#111111] bg-[#F4F3EF]"
+                            : "border-[#C7C4BC] hover:border-[#111111]"
+                        }`}
+                      >
+                        <UploadIcon className="w-[19px] h-[19px] text-[#111111] mb-2" />
+                        <span className="text-[14px] font-semibold tracking-tight text-[#111111]">
+                          Toque para escolher seu arquivo
+                        </span>
+                        <span className="text-[12.5px] text-[#52524E] mt-0.5">
+                          Aceita PDF, imagem ou print do app do banco
+                        </span>
+                      </div>
+
+                      {/* Botão primário preto (#111111) "Enviar documento" com canto rounded-md */}
+                      <button
+                        type="button"
+                        aria-label="Enviar documento para análise"
+                        onClick={() => handleSimulatedVaultUpload()}
+                        className="mt-3 w-full min-h-[44px] rounded-md bg-[#111111] hover:bg-[#262626] text-white py-2.5 px-4 flex items-center justify-center gap-2 text-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#111111] cursor-pointer"
+                      >
+                        <UploadIcon className="w-[17px] h-[17px] text-white shrink-0" />
+                        <span className="text-[14px] font-semibold tracking-tight">
+                          Enviar documento
+                        </span>
+                      </button>
+                    </>
+                  )}
+
+                  <p className="text-[11.5px] leading-[1.4] text-[#52524E] text-center mt-3">
+                    Seus dados são mascarados e não vendemos informações.
+                  </p>
                 </div>
 
-                {isCardScanning ? (
-                  <div
-                    role="status"
-                    aria-live="polite"
-                    className="mt-4 w-full rounded-[20px] bg-white py-10 px-5 flex flex-col items-center justify-center text-center border border-[#E5E5E0] shadow-xs"
+                {/* Barra compacta integrada ao rodapé do próprio card de upload com os 3 benefícios */}
+                <div className="bg-[#F9F8F6] border-t border-[#E2E0D8] px-4 py-3">
+                  <ul
+                    aria-label="Benefícios da análise de fatura"
+                    className="space-y-1.5"
                   >
-                    <div className="w-11 h-11 rounded-2xl bg-[#EBF3EE] text-[#285A44] flex items-center justify-center mb-3 animate-pulse">
-                      <DocumentScannerIcon className="w-6 h-6" />
-                    </div>
-                    <p className="text-[14.5px] font-semibold text-[#141414]">
-                      Varrendo documento e mascarando dados sensíveis...
-                    </p>
-                    <div className="mt-3.5 w-44 h-1.5 rounded-full bg-[#EFECE6] overflow-hidden">
-                      <div className="h-full w-2/3 rounded-full bg-[#141414] animate-pulse" />
-                    </div>
-                  </div>
-                ) : (
-                  /* Selector dropzone */
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    aria-label="Toque para escolher seu arquivo de fatura ou comprovante em PDF, imagem ou print"
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onDrop={handleDrop}
-                    onClick={() => fileInputRef.current?.click()}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        fileInputRef.current?.click();
-                      }
-                    }}
-                    className={`mt-4 w-full rounded-[20px] bg-white py-8 px-5 flex flex-col items-center justify-center text-center border-2 border-dashed transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#141414] ${
-                      isDragging
-                        ? "border-[#141414] bg-[#F8F7F4]"
-                        : "border-[#D5D3CC] hover:border-[#485250]"
-                    }`}
-                  >
-                    <UploadIcon className="w-[22px] h-[22px] text-[#485250] mb-2.5" />
-                    <span className="text-[15.5px] font-semibold text-[#1F2725]">
-                      Toque para escolher seu arquivo
-                    </span>
-                    <span className="text-[13.5px] text-[#4E5450] mt-1">
-                      Aceita PDF, imagem ou print do app do banco
-                    </span>
-                  </div>
-                )}
-
-                <p className="text-[12.5px] leading-[1.45] text-[#4A504C] text-center max-w-[310px] mx-auto mt-4">
-                  Seus dados são mascarados e não vendemos informações.
-                </p>
+                    {BENEFITS.map((benefit) => (
+                      <li key={benefit} className="flex items-center gap-2">
+                        <span
+                          aria-hidden="true"
+                          className="w-4 h-4 rounded-sm bg-[#E2E0D8]/70 text-[#111111] flex items-center justify-center shrink-0"
+                        >
+                          <CheckIcon className="w-2.5 h-2.5" />
+                        </span>
+                        <span className="text-[12px] text-[#383835] leading-tight font-medium">
+                          {benefit}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
 
-              {/* 3 Benefits List (logo abaixo do card principal de upload, antes de MEU COFRE) */}
-              <ul
-                aria-label="Benefícios da análise de fatura"
-                className="mt-5 space-y-2.5 px-1"
-              >
-                {BENEFITS.map((benefit) => (
-                  <li key={benefit} className="flex items-center gap-2.5">
-                    <span
-                      aria-hidden="true"
-                      className="w-[20px] h-[20px] rounded-full bg-[#E3EDE8] text-[#285A44] flex items-center justify-center shrink-0"
-                    >
-                      <CheckIcon className="w-3 h-3" />
-                    </span>
-                    <span className="text-[14px] text-[#2F3531] leading-snug font-medium">
-                      {benefit}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-
-              {/* Nova Seção: Cofre de Comprovantes */}
-              <div
-                aria-label="Cofre de Comprovantes"
-                className="mt-7 pt-5 border-t border-[#EAE8E2]"
-              >
-                {/* Cabeçalho discreto alinhado à esquerda com contador lateral */}
-                <div className="flex items-center justify-between px-0.5">
-                  <h2 className="text-[11px] uppercase tracking-[0.12em] font-semibold text-[#4E5450]">
+              {/* 5. "MEU COFRE" em formato Ledger (Lista Unificada) */}
+              <div aria-label="Cofre de Comprovantes" className="mt-6">
+                {/* Cabeçalho discreto alinhado à esquerda com contador lateral monoespaçado */}
+                <div className="flex items-center justify-between">
+                  <h2 className="font-mono text-[11px] uppercase tracking-[0.08em] font-semibold text-[#52524E]">
                     MEU COFRE
                   </h2>
-                  <span className="text-[12px] font-medium text-[#686D68]">
+                  <span className="font-mono text-[11.5px] font-medium text-[#52524E]">
                     {totalVaultFilesCount} arquivos
                   </span>
                 </div>
 
-                {/* Mini-banner de Resumo de Impacto no Cofre */}
-                <div className="mt-2.5 rounded-2xl bg-[#EBF3EE] border border-[#D4E5DA] px-3.5 py-2.5 flex items-center justify-between gap-2">
-                  <span className="text-[13px] font-medium text-[#244B39]">
+                {/* Alerta de Vazamentos: Fundo âmbar suave (#FEF3C7) com borda (#F59E0B) e texto escuro (#92400E) */}
+                <div className="mt-2 rounded-lg bg-[#FEF3C7] border border-[#F59E0B] px-3.5 py-2.5 flex items-center justify-between gap-2">
+                  <span className="text-[12.5px] font-semibold tracking-tight text-[#92400E]">
                     Vazamentos detectados no mês
                   </span>
-                  <span className="text-[13.5px] font-bold text-[#193829] tabular-nums whitespace-nowrap">
+                  <span className="font-mono text-[13px] font-bold text-[#92400E] tabular-nums whitespace-nowrap">
                     R$ 184,70 / mês
                   </span>
                 </div>
 
-                {/* Barra de busca minimalista */}
+                {/* Barra de busca minimalista (rounded-md) */}
                 <div className="mt-2.5 relative">
-                  <SearchIcon className="w-[17px] h-[17px] text-[#686D68] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <SearchIcon className="w-[16px] h-[16px] text-[#52524E] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     type="search"
                     value={vaultSearchQuery}
                     onChange={(e) => setVaultSearchQuery(e.target.value)}
                     aria-label="Buscar comprovantes no cofre"
                     placeholder="Buscar por nome, valor ou #tag..."
-                    className="w-full h-[44px] pl-10 pr-3.5 rounded-2xl bg-white border border-[#E5E5E0] text-[13.5px] text-[#141414] placeholder:text-[#787C77] focus:outline-none focus:border-[#141414] transition-colors"
+                    className="w-full h-[40px] pl-9 pr-3 rounded-md bg-white border border-[#E2E0D8] text-[13px] text-[#111111] placeholder:text-[#78766F] focus:outline-none focus:border-[#111111] transition-colors"
                   />
                 </div>
 
-                {/* Pílulas de filtro rápido (scroll horizontal no mobile) */}
+                {/* Filtros rápidos em formato técnico (rounded-md) */}
                 <div
                   role="tablist"
                   aria-label="Filtrar comprovantes por categoria"
-                  className="mt-3 flex items-center gap-2 overflow-x-auto no-scrollbar pb-1"
+                  className="mt-2.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1"
                 >
                   {VAULT_FILTER_PILLS.map((pill) => {
                     const isActive = activeVaultCategory === pill;
@@ -779,10 +797,10 @@ export function HomeScreen() {
                         role="tab"
                         aria-selected={isActive}
                         onClick={() => setActiveVaultCategory(pill)}
-                        className={`px-3.5 py-1.5 rounded-full text-[12.5px] font-medium whitespace-nowrap transition-colors shrink-0 cursor-pointer ${
+                        className={`px-3 py-1.5 rounded-md text-[12px] font-medium whitespace-nowrap transition-colors shrink-0 cursor-pointer ${
                           isActive
-                            ? "bg-[#141414] text-white border border-[#141414]"
-                            : "bg-white text-[#4A504C] border border-[#E5E5E0] hover:border-[#141414]/40"
+                            ? "bg-[#111111] text-white border border-[#111111]"
+                            : "bg-white text-[#52524E] border border-[#E2E0D8] hover:border-[#111111]"
                         }`}
                       >
                         {pill}
@@ -791,8 +809,8 @@ export function HomeScreen() {
                   })}
                 </div>
 
-                {/* Lista de Comprovantes (Cards compactos) */}
-                <div className="mt-3 space-y-2.5">
+                {/* Container Único em formato Ledger (bg-white, border-[#E2E0D8], rounded-lg, divide-y divide-[#EAE8E1]) */}
+                <div className="mt-2.5 rounded-lg bg-white border border-[#E2E0D8] divide-y divide-[#EAE8E1] overflow-hidden">
                   {filteredVaultReceipts.length > 0 ? (
                     filteredVaultReceipts.map((item) => {
                       const isDownloaded = downloadedReceiptId === item.id;
@@ -814,45 +832,45 @@ export function HomeScreen() {
                               setSelectedModalReceiptId(item.id);
                             }
                           }}
-                          className="h-[68px] rounded-2xl bg-white border border-[#E5E5E0]/90 hover:border-[#141414]/30 px-3.5 flex items-center justify-between gap-3 shadow-[0_1px_2px_rgba(0,0,0,0.02)] transition-colors cursor-pointer"
+                          className="h-[64px] px-3.5 flex items-center justify-between gap-3 hover:bg-[#F9F8F6] transition-colors cursor-pointer"
                         >
-                          {/* Esquerda: Ícone minimalista indicando o tipo */}
+                          {/* Esquerda: Ícone técnico (rounded-md) */}
                           <div className="flex items-center gap-3 min-w-0 flex-1">
                             <div
                               aria-label={`Tipo: ${item.type}`}
                               title={item.type}
-                              className="w-[38px] h-[38px] rounded-xl bg-[#F8F7F4] border border-[#E5E5E0] text-[#141414] flex items-center justify-center shrink-0"
+                              className="w-[34px] h-[34px] rounded-md bg-[#F4F3EF] border border-[#E2E0D8] text-[#111111] flex items-center justify-center shrink-0"
                             >
                               {item.type === "PIX" && (
-                                <PixIcon className="w-[18px] h-[18px]" />
+                                <PixIcon className="w-[16px] h-[16px]" />
                               )}
                               {item.type === "Boleto" && (
-                                <BarcodeIcon className="w-[18px] h-[18px]" />
+                                <BarcodeIcon className="w-[16px] h-[16px]" />
                               )}
                               {item.type === "Fatura" && (
-                                <InvoiceDocIcon className="w-[18px] h-[18px]" />
+                                <InvoiceDocIcon className="w-[16px] h-[16px]" />
                               )}
                             </div>
 
-                            {/* Centro: Nome do recebedor (truncate) e data + tag na mesma linha horizontal */}
+                            {/* Centro: Nome do recebedor (tracking-tight, truncate) e data + tag na mesma linha em font-mono */}
                             <div className="min-w-0 flex-1">
-                              <p className="text-[14.5px] font-semibold text-[#141414] leading-tight truncate">
+                              <p className="text-[14px] font-semibold tracking-tight text-[#111111] leading-tight truncate">
                                 {item.receiver}
                               </p>
                               <div className="mt-1 flex items-center gap-2 whitespace-nowrap overflow-hidden">
-                                <span className="text-[12px] text-[#686D68] shrink-0">
+                                <span className="font-mono text-[11.5px] text-[#52524E] shrink-0">
                                   {item.date}
                                 </span>
-                                <span className="px-2 py-0.5 rounded-md bg-[#F3F2EE] text-[11px] font-medium text-[#3B6B56] shrink-0">
+                                <span className="px-1.5 py-0.5 rounded-sm bg-[#F4F3EF] border border-[#E2E0D8] text-xs font-mono font-medium text-[#111111] shrink-0">
                                   {item.tag}
                                 </span>
                               </div>
                             </div>
                           </div>
 
-                          {/* Direita: Valor formatado em Real em negrito e ação rápida */}
+                          {/* Direita: Valor em font-mono e botão de ação rápida (rounded-md) */}
                           <div className="flex items-center gap-2.5 shrink-0">
-                            <span className="text-[14.5px] font-bold text-[#141414] tabular-nums whitespace-nowrap">
+                            <span className="font-mono text-[13.5px] font-bold text-[#111111] tabular-nums whitespace-nowrap">
                               R$ {formatBRL(item.amount)}
                             </span>
                             <button
@@ -860,12 +878,12 @@ export function HomeScreen() {
                               aria-label={`Baixar ou compartilhar comprovante original de ${item.receiver}`}
                               title="Baixar/compartilhar comprovante original"
                               onClick={(e) => handleQuickDownload(e, item)}
-                              className="w-[34px] h-[34px] rounded-xl bg-[#F8F7F4] hover:bg-[#ECEAE4] border border-[#E5E5E0] text-[#141414] flex items-center justify-center transition-colors cursor-pointer"
+                              className="w-[32px] h-[32px] rounded-md bg-[#F4F3EF] hover:bg-[#E2E0D8] border border-[#E2E0D8] text-[#111111] flex items-center justify-center transition-colors cursor-pointer"
                             >
                               {isDownloaded ? (
-                                <CheckIcon className="w-4 h-4 text-[#285A44]" />
+                                <CheckIcon className="w-3.5 h-3.5 text-[#111111]" />
                               ) : (
-                                <ShareDownloadIcon className="w-4 h-4" />
+                                <ShareDownloadIcon className="w-3.5 h-3.5" />
                               )}
                             </button>
                           </div>
@@ -873,8 +891,8 @@ export function HomeScreen() {
                       );
                     })
                   ) : (
-                    <div className="rounded-2xl bg-white border border-[#E5E5E0]/80 py-6 px-4 text-center">
-                      <p className="text-[13.5px] text-[#4E5450]">
+                    <div className="py-6 px-4 text-center">
+                      <p className="text-[13px] text-[#52524E]">
                         Nenhum comprovante encontrado para essa busca.
                       </p>
                     </div>
@@ -887,31 +905,30 @@ export function HomeScreen() {
           {screenState === "analyzing" && (
             <section aria-label="Análise da fatura em andamento" className="pt-2">
               {!analysisError ? (
-                <div className="rounded-[28px] bg-[#F0EFEA] p-6">
+                <div className="rounded-lg bg-white border border-[#E2E0D8] p-6">
                   {/* Scanner Document Illustration */}
-                  <div className="mx-auto w-[124px] h-[148px] rounded-[20px] bg-white border border-[#E2E0D8] shadow-sm relative overflow-hidden flex flex-col items-center justify-center p-4">
-                    <DocumentScannerIcon className="w-12 h-12 text-[#3B6B56]" />
+                  <div className="mx-auto w-[120px] h-[144px] rounded-md bg-[#F9F8F6] border border-[#E2E0D8] relative overflow-hidden flex flex-col items-center justify-center p-4">
+                    <DocumentScannerIcon className="w-11 h-11 text-[#111111]" />
                     <div
                       aria-hidden="true"
                       className="w-full mt-3 space-y-1.5 px-2"
                     >
-                      <div className="h-1.5 w-3/4 rounded-full bg-[#E5E3DD]" />
-                      <div className="h-1.5 w-full rounded-full bg-[#E5E3DD]" />
-                      <div className="h-1.5 w-2/3 rounded-full bg-[#E5E3DD]" />
+                      <div className="h-1.5 w-3/4 rounded-sm bg-[#E2E0D8]" />
+                      <div className="h-1.5 w-full rounded-sm bg-[#E2E0D8]" />
+                      <div className="h-1.5 w-2/3 rounded-sm bg-[#E2E0D8]" />
                     </div>
-                    {/* Animated Scanner Beam (respects prefers-reduced-motion) */}
                     <div
                       aria-hidden="true"
-                      className="scanner-line absolute left-0 right-0 h-[3px] bg-[#3B6B56] shadow-[0_0_12px_2px_rgba(59,107,86,0.45)]"
+                      className="scanner-line absolute left-0 right-0 h-[2px] bg-[#111111]"
                     />
                   </div>
 
                   <div className="text-center mt-5">
-                    <h1 className="text-[22px] font-medium tracking-[-0.02em] text-[#161A18]">
+                    <h1 className="text-[20px] font-semibold tracking-tight text-[#111111]">
                       Analisando sua fatura
                     </h1>
                     {selectedFileName && (
-                      <p className="text-[13.5px] text-[#4E5450] mt-1 truncate max-w-[280px] mx-auto">
+                      <p className="font-mono text-[12px] text-[#52524E] mt-1 truncate max-w-[280px] mx-auto">
                         {selectedFileName}
                       </p>
                     )}
@@ -919,11 +936,13 @@ export function HomeScreen() {
 
                   {/* Progress bar */}
                   <div className="mt-5">
-                    <div className="flex items-center justify-between text-[13px] font-medium text-[#4A504C] mb-2">
+                    <div className="flex items-center justify-between text-[12.5px] font-medium text-[#52524E] mb-2">
                       <span id="analysis-progress-label">
                         Progresso da leitura
                       </span>
-                      <span className="tabular-nums">{analysisProgress}%</span>
+                      <span className="font-mono tabular-nums">
+                        {analysisProgress}%
+                      </span>
                     </div>
                     <div
                       role="progressbar"
@@ -931,10 +950,10 @@ export function HomeScreen() {
                       aria-valuenow={analysisProgress}
                       aria-valuemin={0}
                       aria-valuemax={100}
-                      className="h-[5px] w-full rounded-full bg-[#D8D6CF] overflow-hidden"
+                      className="h-[4px] w-full rounded-sm bg-[#E2E0D8] overflow-hidden"
                     >
                       <div
-                        className="h-full rounded-full bg-[#181B19] transition-all duration-200"
+                        className="h-full bg-[#111111] transition-all duration-200"
                         style={{ width: `${analysisProgress}%` }}
                       />
                     </div>
@@ -943,7 +962,7 @@ export function HomeScreen() {
                   {/* Checklist by real event stages */}
                   <ul
                     aria-label="Etapas do processamento"
-                    className="mt-6 space-y-3 border-t border-[#E2E0D8] pt-5"
+                    className="mt-6 space-y-2.5 border-t border-[#E2E0D8] pt-4"
                   >
                     {ANALYSIS_STEPS.map((step) => {
                       const isCompleted = completedStages.includes(step.id);
@@ -953,29 +972,29 @@ export function HomeScreen() {
                       return (
                         <li
                           key={step.id}
-                          className="flex items-center gap-3 text-[14.5px]"
+                          className="flex items-center gap-3 text-[13.5px]"
                         >
                           <span
                             aria-hidden="true"
-                            className={`w-[22px] h-[22px] rounded-full flex items-center justify-center shrink-0 transition-colors ${
+                            className={`w-[20px] h-[20px] rounded-sm flex items-center justify-center shrink-0 transition-colors ${
                               isCompleted
-                                ? "bg-[#181B19] text-white"
+                                ? "bg-[#111111] text-white"
                                 : isCurrent
-                                  ? "border-2 border-[#181B19] bg-white text-[#181B19]"
-                                  : "border border-[#C5C3BC] bg-[#FAF9F6] text-transparent"
+                                  ? "border border-[#111111] bg-white text-[#111111]"
+                                  : "border border-[#D6D3CD] bg-[#F4F3EF] text-transparent"
                             }`}
                           >
                             {isCompleted ? (
-                              <CheckIcon className="w-3.5 h-3.5" />
+                              <CheckIcon className="w-3 h-3" />
                             ) : isCurrent ? (
-                              <span className="w-2 h-2 rounded-full bg-[#181B19]" />
+                              <span className="w-1.5 h-1.5 rounded-sm bg-[#111111]" />
                             ) : null}
                           </span>
                           <span
                             className={
                               isCompleted || isCurrent
-                                ? "font-medium text-[#161A18]"
-                                : "text-[#4E5450]"
+                                ? "font-medium text-[#111111]"
+                                : "text-[#52524E]"
                             }
                           >
                             {step.label}
@@ -989,25 +1008,25 @@ export function HomeScreen() {
                 /* Error Handling State */
                 <div
                   role="alert"
-                  className="rounded-[28px] bg-[#F0EFEA] p-6 text-center"
+                  className="rounded-lg bg-white border border-[#E2E0D8] p-6 text-center"
                 >
-                  <div className="mx-auto w-[52px] h-[52px] rounded-full bg-[#F9E6E4] text-[#B42318] flex items-center justify-center">
-                    <AlertCircleIcon className="w-7 h-7" />
+                  <div className="mx-auto w-[44px] h-[44px] rounded-md bg-[#FEF3C7] border border-[#F59E0B] text-[#92400E] flex items-center justify-center">
+                    <AlertCircleIcon className="w-6 h-6" />
                   </div>
 
-                  <h1 className="text-[22px] font-semibold tracking-[-0.02em] text-[#161A18] mt-4">
+                  <h1 className="text-[20px] font-semibold tracking-tight text-[#111111] mt-4">
                     Não conseguimos ler esta fatura
                   </h1>
 
-                  <p className="text-[14.5px] text-[#4A504C] mt-2 leading-relaxed">
+                  <p className="text-[13.5px] text-[#52524E] mt-2 leading-relaxed">
                     {analysisError}
                   </p>
 
-                  <div className="mt-4 rounded-[18px] bg-white p-4 text-left border border-[#E2E0D8]">
-                    <p className="text-[13px] font-semibold text-[#181C1A]">
+                  <div className="mt-4 rounded-md bg-[#F9F8F6] p-3.5 text-left border border-[#E2E0D8]">
+                    <p className="text-[12.5px] font-semibold text-[#111111]">
                       Orientação de formato:
                     </p>
-                    <ul className="mt-1.5 text-[13px] text-[#4A504C] space-y-1 list-disc list-inside">
+                    <ul className="mt-1.5 text-[12.5px] text-[#52524E] space-y-1 list-disc list-inside">
                       <li>Envie o PDF original baixado no app do banco</li>
                       <li>
                         Ou envie print/foto nítida (PNG, JPG ou WebP) da lista
@@ -1026,7 +1045,7 @@ export function HomeScreen() {
                       setAnalysisError(null);
                       setScreenState("empty");
                     }}
-                    className="mt-5 w-full min-h-[50px] rounded-[16px] bg-[#181B19] hover:bg-[#272B28] text-white font-semibold text-[15px] py-3.5 px-5 flex items-center justify-center gap-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#181B19] cursor-pointer"
+                    className="mt-5 w-full min-h-[44px] rounded-md bg-[#111111] hover:bg-[#262626] text-white font-semibold text-[14px] py-3 px-4 flex items-center justify-center gap-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#111111] cursor-pointer"
                   >
                     Tentar de novo
                   </button>
@@ -1038,26 +1057,27 @@ export function HomeScreen() {
           {screenState === "result" && (
             <section aria-label="Resultado da análise de cobranças">
               {/* Greeting / Dynamic Title */}
-              <h1 className="text-[26px] sm:text-[28px] leading-[1.2] tracking-[-0.03em]">
-                <span className="block font-medium text-[#161A18]">
-                  Encontramos R$ {formatBRL(metrics.activeTotal)} para você
-                  recuperar.
-                </span>
+              <h1 className="text-[22px] sm:text-[24px] leading-[1.2] tracking-tight font-semibold text-[#111111]">
+                Encontramos{" "}
+                <span className="font-mono">
+                  R$ {formatBRL(metrics.activeTotal)}
+                </span>{" "}
+                para você recuperar.
               </h1>
 
               {/* Card Possível economia */}
-              <div className="mt-5 rounded-[26px] bg-[#F0EFEA] p-6">
+              <div className="mt-4 rounded-lg bg-white border border-[#E2E0D8] p-5">
                 <div className="flex items-center justify-between">
-                  <span className="text-[14px] font-medium text-[#4A504C]">
+                  <span className="font-mono text-[11.5px] uppercase tracking-[0.08em] font-semibold text-[#52524E]">
                     Possível economia
                   </span>
                 </div>
 
-                <div className="mt-2.5">
-                  <p className="text-[42px] sm:text-[46px] leading-[1.04] tracking-[-0.035em] font-medium text-[#141F1B] tabular-nums">
+                <div className="mt-2">
+                  <p className="font-mono text-[36px] sm:text-[40px] leading-[1.05] tracking-tight font-bold text-[#111111] tabular-nums">
                     R$ {formatBRL(metrics.activeTotal)}
                   </p>
-                  <p className="text-[13.5px] text-[#4A504C] mt-1.5 tabular-nums">
+                  <p className="font-mono text-[12px] text-[#52524E] mt-1.5 tabular-nums">
                     por mês • R$ {formatBRL(metrics.annualActiveTotal)} por ano
                     • {metrics.totalCount} cobranças
                   </p>
@@ -1066,7 +1086,7 @@ export function HomeScreen() {
                 {metrics.resolvedTotal > 0 && (
                   <div
                     role="status"
-                    className="mt-4 rounded-[14px] bg-[#E2ECE7] px-3.5 py-2.5 text-[13.5px] font-semibold text-[#1E4635] flex items-center gap-2"
+                    className="mt-4 rounded-md bg-[#F4F3EF] border border-[#E2E0D8] px-3 py-2 font-mono text-[12px] font-semibold text-[#111111] flex items-center gap-2"
                   >
                     <span>
                       ✓ Você já recuperou R$ {formatBRL(metrics.resolvedTotal)}
@@ -1075,8 +1095,8 @@ export function HomeScreen() {
                   </div>
                 )}
 
-                <div className="mt-5 pt-1">
-                  <div className="flex items-center justify-between text-[13px] font-medium text-[#4A504C] mb-2">
+                <div className="mt-4 pt-3 border-t border-[#EAE8E1]">
+                  <div className="flex items-center justify-between font-mono text-[12px] font-medium text-[#52524E] mb-2">
                     <span id="resolved-progress-label">
                       {metrics.resolvedCount} de {metrics.totalCount} resolvidas
                     </span>
@@ -1090,10 +1110,10 @@ export function HomeScreen() {
                     aria-valuenow={metrics.resolvedCount}
                     aria-valuemin={0}
                     aria-valuemax={metrics.totalCount}
-                    className="h-[4px] w-full rounded-full bg-[#D5D3CC] overflow-hidden"
+                    className="h-[4px] w-full rounded-sm bg-[#E2E0D8] overflow-hidden"
                   >
                     <div
-                      className="h-full rounded-full bg-[#181B19] transition-all duration-300"
+                      className="h-full bg-[#111111] transition-all duration-300"
                       style={{ width: `${metrics.progressPercent}%` }}
                     />
                   </div>
@@ -1101,12 +1121,12 @@ export function HomeScreen() {
               </div>
 
               {/* Section COBRANÇAS PARA REVISAR */}
-              <div className="mt-8">
-                <p className="text-[11px] uppercase tracking-[0.12em] font-semibold text-[#4E5450]">
+              <div className="mt-6">
+                <p className="font-mono text-[11px] uppercase tracking-[0.08em] font-semibold text-[#52524E]">
                   COBRANÇAS PARA REVISAR
                 </p>
 
-                <div className="mt-2 divide-y divide-[#E4E2DC] border-t border-b border-[#E4E2DC]">
+                <div className="mt-2 rounded-lg bg-white border border-[#E2E0D8] divide-y divide-[#EAE8E1] overflow-hidden">
                   {charges.map((item) => {
                     const isResolved = item.status === "resolved";
                     const isExpanded = expandedChargeId === item.id;
@@ -1114,13 +1134,13 @@ export function HomeScreen() {
                     const initial = item.merchant.charAt(0).toUpperCase();
 
                     return (
-                      <div key={item.id} className="py-4">
+                      <div key={item.id} className="p-4">
                         <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-start gap-3.5 min-w-0">
+                          <div className="flex items-start gap-3 min-w-0">
                             <div
                               aria-hidden="true"
                               style={{ backgroundColor: item.color }}
-                              className={`w-[44px] h-[44px] rounded-full text-white font-bold text-[15px] flex items-center justify-center shrink-0 transition-opacity ${
+                              className={`w-[38px] h-[38px] rounded-md text-white font-mono font-bold text-[14px] flex items-center justify-center shrink-0 transition-opacity ${
                                 isResolved ? "opacity-50" : ""
                               }`}
                             >
@@ -1128,16 +1148,16 @@ export function HomeScreen() {
                             </div>
                             <div className="min-w-0">
                               <p
-                                className={`text-[16px] font-semibold leading-snug ${
+                                className={`text-[15px] font-semibold tracking-tight leading-snug ${
                                   isResolved
-                                    ? "line-through text-[#4E5450]"
-                                    : "text-[#181C1A]"
+                                    ? "line-through text-[#52524E]"
+                                    : "text-[#111111]"
                                 }`}
                               >
                                 {item.merchant}
                               </p>
                               <p
-                                className={`text-[13.5px] text-[#4E5450] mt-0.5 ${
+                                className={`text-[12.5px] text-[#52524E] mt-0.5 ${
                                   isResolved ? "line-through" : ""
                                 }`}
                               >
@@ -1148,70 +1168,70 @@ export function HomeScreen() {
 
                           <div className="text-right shrink-0">
                             <p
-                              className={`text-[16px] font-semibold leading-snug tabular-nums ${
+                              className={`font-mono text-[14.5px] font-bold leading-snug tabular-nums ${
                                 isResolved
-                                  ? "line-through text-[#4E5450]"
-                                  : "text-[#181C1A]"
+                                  ? "line-through text-[#52524E]"
+                                  : "text-[#111111]"
                               }`}
                             >
                               R$ {formatBRL(item.amount)}
                             </p>
-                            <p className="text-[13px] text-[#4E5450] mt-0.5">
+                            <p className="font-mono text-[11.5px] text-[#52524E] mt-0.5">
                               /mês
                             </p>
                           </div>
                         </div>
 
                         {/* Action Bar: Como cancelar */}
-                        <div className="mt-2.5 pl-[58px] flex items-center justify-between">
+                        <div className="mt-2 pl-[50px] flex items-center justify-between">
                           <button
                             type="button"
                             aria-expanded={isExpanded}
                             aria-controls={`cancel-guide-${item.id}`}
                             aria-label={`Como cancelar ${item.merchant}`}
                             onClick={() => handleToggleAccordion(item.id)}
-                            className="min-h-[44px] px-2 -ml-2 inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-[#2E5945] hover:text-[#181B19] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#181B19] transition-colors cursor-pointer"
+                            className="min-h-[36px] px-2 -ml-2 inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-[#111111] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#111111] transition-colors cursor-pointer"
                           >
                             <span>Como cancelar</span>
                             <ChevronDownIcon
-                              className={`w-4 h-4 transition-transform ${
+                              className={`w-3.5 h-3.5 transition-transform ${
                                 isExpanded ? "rotate-180" : ""
                               }`}
                             />
                           </button>
 
                           {isResolved && (
-                            <span className="text-[12px] font-semibold px-2.5 py-1 rounded-full bg-[#E2ECE7] text-[#1E4635]">
+                            <span className="font-mono text-[11px] font-semibold px-2 py-0.5 rounded-sm bg-[#F4F3EF] border border-[#E2E0D8] text-[#111111]">
                               Resolvida ✓
                             </span>
                           )}
                         </div>
 
-                        {/* Accordion Content (only one open at a time) */}
+                        {/* Accordion Content */}
                         {isExpanded && (
                           <div
                             id={`cancel-guide-${item.id}`}
-                            className="mt-2 ml-[58px] rounded-[18px] bg-[#F0EFEA] p-4 border border-[#E2E0D8]"
+                            className="mt-2.5 ml-[50px] rounded-md bg-[#F9F8F6] p-3.5 border border-[#E2E0D8]"
                           >
-                            <p className="text-[12.5px] font-semibold uppercase tracking-[0.08em] text-[#4A504C]">
+                            <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.08em] text-[#52524E]">
                               Passo a passo
                             </p>
-                            <ol className="mt-2 space-y-2 text-[13.5px] text-[#181C1A] list-decimal list-inside leading-relaxed">
+                            <ol className="mt-2 space-y-1.5 text-[13px] text-[#111111] list-decimal list-inside leading-relaxed">
                               {item.cancelGuide.steps.map((step, index) => (
                                 <li key={index}>{step}</li>
                               ))}
                             </ol>
 
-                            <div className="mt-4 rounded-[14px] bg-white p-3.5 border border-[#E2E0D8]">
-                              <p className="text-[12px] font-semibold text-[#4A504C] mb-1">
+                            <div className="mt-3 rounded-md bg-white p-3 border border-[#E2E0D8]">
+                              <p className="font-mono text-[11px] font-semibold text-[#52524E] mb-1">
                                 Mensagem pronta para suporte:
                               </p>
-                              <p className="text-[13px] text-[#181C1A] leading-relaxed">
+                              <p className="text-[12.5px] text-[#111111] leading-relaxed">
                                 &ldquo;{item.cancelGuide.script}&rdquo;
                               </p>
                             </div>
 
-                            <div className="mt-3.5 flex flex-wrap items-center gap-2.5">
+                            <div className="mt-3 flex flex-wrap items-center gap-2">
                               <button
                                 type="button"
                                 aria-label={`Copiar script de cancelamento de ${item.merchant}`}
@@ -1221,9 +1241,9 @@ export function HomeScreen() {
                                     item.cancelGuide.script
                                   )
                                 }
-                                className="min-h-[44px] px-3.5 py-2 rounded-[12px] bg-white border border-[#D5D3CC] hover:border-[#181B19] text-[13px] font-semibold text-[#181C1A] inline-flex items-center gap-1.5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#181B19] cursor-pointer"
+                                className="min-h-[38px] px-3 py-1.5 rounded-md bg-white border border-[#D6D3CD] hover:border-[#111111] text-[12.5px] font-semibold text-[#111111] inline-flex items-center gap-1.5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#111111] cursor-pointer"
                               >
-                                <CopyIcon className="w-4 h-4" />
+                                <CopyIcon className="w-3.5 h-3.5" />
                                 <span>
                                   {isCopied ? "Copiado ✓" : "Copiar script"}
                                 </span>
@@ -1237,9 +1257,9 @@ export function HomeScreen() {
                                     : `Marcar ${item.merchant} como já resolvida`
                                 }
                                 onClick={() => handleMarkResolved(item.id)}
-                                className="min-h-[44px] px-4 py-2 rounded-[12px] bg-[#181B19] hover:bg-[#272B28] text-white text-[13px] font-semibold inline-flex items-center gap-1.5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#181B19] cursor-pointer"
+                                className="min-h-[38px] px-3.5 py-1.5 rounded-md bg-[#111111] hover:bg-[#262626] text-white text-[12.5px] font-semibold inline-flex items-center gap-1.5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#111111] cursor-pointer"
                               >
-                                <CheckIcon className="w-4 h-4" />
+                                <CheckIcon className="w-3.5 h-3.5" />
                                 <span>
                                   {isResolved
                                     ? "Reativar cobrança"
@@ -1256,11 +1276,11 @@ export function HomeScreen() {
               </div>
 
               {/* Dark Upsell Card: Não deixe voltar. */}
-              <div className="mt-8 rounded-[26px] bg-[#181B19] text-white p-6 shadow-[0_12px_30px_rgba(24,27,25,0.16)]">
-                <h2 className="text-[21px] font-semibold tracking-[-0.02em] text-white">
+              <div className="mt-6 rounded-lg bg-[#111111] text-white p-5 border border-[#111111]">
+                <h2 className="text-[19px] font-semibold tracking-tight text-white">
                   Não deixe voltar.
                 </h2>
-                <p className="mt-2 text-[14px] leading-relaxed text-[#D5D8D6]">
+                <p className="mt-1.5 text-[13.5px] leading-relaxed text-[#D4D3CE]">
                   Todo mês analisamos sua fatura e avisamos no WhatsApp quando
                   surgir uma cobrança nova ou um reajuste.
                 </p>
@@ -1269,15 +1289,16 @@ export function HomeScreen() {
                   type="button"
                   aria-label="Ativar monitoramento por R$ 14,90 por mês"
                   onClick={handleActivateMonitoring}
-                  className="mt-5 w-full min-h-[50px] rounded-[16px] bg-white hover:bg-[#F0EFEA] text-[#181B19] font-semibold text-[15px] py-3.5 px-5 flex items-center justify-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white cursor-pointer"
+                  className="mt-4 w-full min-h-[44px] rounded-md bg-white hover:bg-[#F4F3EF] text-[#111111] font-semibold text-[14px] py-2.5 px-4 flex items-center justify-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white cursor-pointer"
                 >
-                  Ativar monitoramento · R$ 14,90/mês
+                  <span>Ativar monitoramento · </span>
+                  <span className="font-mono ml-1">R$ 14,90/mês</span>
                 </button>
 
                 {monitoringFeedback && (
                   <p
                     role="status"
-                    className="mt-3 text-[13px] text-[#A8D5BA] text-center font-medium"
+                    className="mt-2.5 font-mono text-[12px] text-[#FEF3C7] text-center font-medium"
                   >
                     Fluxo de assinatura em preparação (TODO: checkout).
                   </p>
@@ -1285,12 +1306,12 @@ export function HomeScreen() {
               </div>
 
               {/* Discreet link at the end */}
-              <div className="mt-6 text-center">
+              <div className="mt-5 text-center">
                 <button
                   type="button"
                   aria-label="Enviar outra fatura"
                   onClick={handleSendAnotherInvoice}
-                  className="min-h-[44px] px-4 py-2 text-[14px] font-medium text-[#4A504C] hover:text-[#161A18] underline underline-offset-4 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#181B19] cursor-pointer"
+                  className="min-h-[40px] px-4 py-2 text-[13.5px] font-medium text-[#52524E] hover:text-[#111111] underline underline-offset-4 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#111111] cursor-pointer"
                 >
                   Enviar outra fatura
                 </button>
@@ -1299,23 +1320,23 @@ export function HomeScreen() {
           )}
         </main>
 
-        {/* Modal / Bottom Sheet de Detalhes do Documento */}
+        {/* Modal / Bottom Sheet de Detalhes do Documento (Geometria Técnica) */}
         {selectedModalReceipt && (
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-receipt-title"
-            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-[2px] p-0 sm:p-4"
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4"
             onClick={() => setSelectedModalReceiptId(null)}
           >
             <div
-              className="w-full max-w-[430px] rounded-t-[28px] sm:rounded-[28px] bg-[#F8F7F4] border border-[#E5E5E0] p-5 sm:p-6 shadow-[0_-12px_36px_rgba(0,0,0,0.16)] max-h-[90vh] overflow-y-auto"
+              className="w-full max-w-[430px] rounded-t-lg sm:rounded-lg bg-[#F4F3EF] border border-[#D6D3CD] p-5 max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Cabeçalho do Modal */}
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-[44px] h-[44px] rounded-2xl bg-white border border-[#E5E5E0] text-[#141414] flex items-center justify-center shrink-0">
+                  <div className="w-[40px] h-[40px] rounded-md bg-white border border-[#E2E0D8] text-[#111111] flex items-center justify-center shrink-0">
                     {selectedModalReceipt.type === "PIX" && (
                       <PixIcon className="w-5 h-5" />
                     )}
@@ -1327,12 +1348,12 @@ export function HomeScreen() {
                     )}
                   </div>
                   <div className="min-w-0">
-                    <span className="text-[11px] uppercase tracking-[0.1em] font-semibold text-[#686D68]">
+                    <span className="font-mono text-[11px] uppercase tracking-[0.06em] font-semibold text-[#52524E]">
                       {selectedModalReceipt.type} • {selectedModalReceipt.date}
                     </span>
                     <h3
                       id="modal-receipt-title"
-                      className="text-[18px] font-semibold text-[#141414] leading-snug truncate"
+                      className="text-[17px] font-semibold tracking-tight text-[#111111] leading-snug truncate"
                     >
                       {selectedModalReceipt.receiver}
                     </h3>
@@ -1343,25 +1364,25 @@ export function HomeScreen() {
                   type="button"
                   aria-label="Fechar detalhes do documento"
                   onClick={() => setSelectedModalReceiptId(null)}
-                  className="w-[38px] h-[38px] rounded-full bg-white border border-[#E5E5E0] text-[#4A504C] hover:text-[#141414] flex items-center justify-center shrink-0 transition-colors cursor-pointer"
+                  className="w-[34px] h-[34px] rounded-md bg-white border border-[#E2E0D8] text-[#52524E] hover:text-[#111111] hover:border-[#111111] flex items-center justify-center shrink-0 transition-colors cursor-pointer"
                 >
                   <CloseIcon className="w-4 h-4" />
                 </button>
               </div>
 
-              {/* Valor Total em destaque */}
-              <div className="mt-4 rounded-2xl bg-white border border-[#E5E5E0] px-4 py-3.5 flex items-center justify-between">
-                <span className="text-[13px] font-medium text-[#4A504C]">
+              {/* Valor Total em destaque (font-mono) */}
+              <div className="mt-4 rounded-lg bg-white border border-[#E2E0D8] px-4 py-3 flex items-center justify-between">
+                <span className="text-[12.5px] font-medium text-[#52524E]">
                   Valor total do documento
                 </span>
-                <span className="text-[22px] font-bold text-[#141414] tabular-nums">
+                <span className="font-mono text-[20px] font-bold text-[#111111] tabular-nums">
                   R$ {formatBRL(selectedModalReceipt.amount)}
                 </span>
               </div>
 
-              {/* Edição de Tag com pequenas pílulas */}
+              {/* Edição de Tag com botões técnicos em font-mono */}
               <div className="mt-4">
-                <p className="text-[11.5px] uppercase tracking-[0.1em] font-semibold text-[#4E5450] mb-2">
+                <p className="font-mono text-[10.5px] uppercase tracking-[0.08em] font-semibold text-[#52524E] mb-2">
                   ETIQUETA / CATEGORIA
                 </p>
                 <div className="flex items-center gap-1.5 flex-wrap">
@@ -1379,10 +1400,10 @@ export function HomeScreen() {
                             tagOption
                           )
                         }
-                        className={`px-3 py-1.5 rounded-full text-[12px] font-medium transition-colors cursor-pointer ${
+                        className={`px-2.5 py-1 rounded-sm font-mono text-xs font-medium transition-colors cursor-pointer ${
                           isSelectedTag
-                            ? "bg-[#141414] text-white border border-[#141414]"
-                            : "bg-white text-[#4A504C] border border-[#E5E5E0] hover:border-[#141414]/40"
+                            ? "bg-[#111111] text-white border border-[#111111]"
+                            : "bg-white text-[#52524E] border border-[#E2E0D8] hover:border-[#111111]"
                         }`}
                       >
                         {tagOption}
@@ -1395,17 +1416,17 @@ export function HomeScreen() {
               {/* Condicional para FATURAS vs PIX/BOLETOS */}
               {selectedModalReceipt.type === "Fatura" ? (
                 <div className="mt-5">
-                  <p className="text-[11.5px] uppercase tracking-[0.1em] font-semibold text-[#912018] mb-2.5">
+                  <p className="font-mono text-[10.5px] uppercase tracking-[0.08em] font-semibold text-[#92400E] mb-2">
                     ALERTAS E VAZAMENTOS ENCONTRADOS (3)
                   </p>
                   <div className="space-y-2">
                     {INVOICE_LEAK_ALERTS.map((alertText, idx) => (
                       <div
                         key={idx}
-                        className="rounded-2xl bg-[#FAF0EE] border border-[#F1D5D0] p-3.5 flex items-start gap-2.5"
+                        className="rounded-lg bg-[#FEF3C7] border border-[#F59E0B] p-3 flex items-start gap-2.5"
                       >
-                        <AlertCircleIcon className="w-4 h-4 text-[#B42318] shrink-0 mt-0.5" />
-                        <p className="text-[13px] leading-snug text-[#3A1A18] font-medium">
+                        <AlertCircleIcon className="w-4 h-4 text-[#92400E] shrink-0 mt-0.5" />
+                        <p className="text-[12.5px] leading-snug text-[#92400E] font-medium">
                           {alertText}
                         </p>
                       </div>
@@ -1414,39 +1435,39 @@ export function HomeScreen() {
                 </div>
               ) : (
                 <div className="mt-5">
-                  <p className="text-[11.5px] uppercase tracking-[0.1em] font-semibold text-[#4E5450] mb-2.5">
-                    Dados do Comprovante Validado
+                  <p className="font-mono text-[10.5px] uppercase tracking-[0.08em] font-semibold text-[#52524E] mb-2">
+                    DADOS DO COMPROVANTE VALIDADO
                   </p>
-                  <div className="rounded-2xl bg-white border border-[#E5E5E0] p-4 space-y-2.5 text-[13px]">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-[#686D68]">Destinatário</span>
-                      <span className="font-semibold text-[#141414] text-right">
+                  <div className="rounded-lg bg-white border border-[#E2E0D8] divide-y divide-[#EAE8E1] text-[12.5px]">
+                    <div className="px-3.5 py-2.5 flex items-center justify-between gap-2">
+                      <span className="text-[#52524E]">Destinatário</span>
+                      <span className="font-semibold tracking-tight text-[#111111] text-right">
                         {selectedModalReceipt.receiver}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-[#686D68]">CPF/CNPJ mascarado</span>
-                      <span className="font-mono text-[12.5px] text-[#141414]">
+                    <div className="px-3.5 py-2.5 flex items-center justify-between gap-2">
+                      <span className="text-[#52524E]">CPF/CNPJ mascarado</span>
+                      <span className="font-mono text-[12px] text-[#111111]">
                         {selectedModalReceipt.maskedDocument}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-[#686D68]">Instituição</span>
-                      <span className="font-medium text-[#141414] text-right">
+                    <div className="px-3.5 py-2.5 flex items-center justify-between gap-2">
+                      <span className="text-[#52524E]">Instituição</span>
+                      <span className="font-medium text-[#111111] text-right">
                         {selectedModalReceipt.institution}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between gap-2 pt-1 border-t border-[#F0EFEA]">
-                      <span className="text-[#686D68]">Status</span>
-                      <span className="font-semibold text-[#245942]">
+                    <div className="px-3.5 py-2.5 flex items-center justify-between gap-2">
+                      <span className="text-[#52524E]">Status</span>
+                      <span className="font-mono text-[11.5px] font-semibold text-[#111111]">
                         Autenticado / Sem duplicidade no mês
                       </span>
                     </div>
 
                     {(selectedModalReceipt.tag === "#Saúde" ||
                       selectedModalReceipt.tag === "#ImpostoDeRenda") && (
-                      <div className="mt-2 pt-2 border-t border-[#F0EFEA] flex items-center justify-between">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#EBF3EE] text-[#1E4635] text-[12px] font-semibold w-full justify-center">
+                      <div className="px-3.5 py-2.5 bg-[#F9F8F6] flex items-center justify-center">
+                        <span className="inline-flex items-center gap-1.5 font-mono text-[11.5px] font-semibold text-[#111111]">
                           <CheckIcon className="w-3.5 h-3.5" />
                           <span>Elegível para dedução IRPF</span>
                         </span>
@@ -1457,14 +1478,14 @@ export function HomeScreen() {
               )}
 
               {/* Rodapé do Modal (Ações) */}
-              <div className="mt-6 space-y-2">
+              <div className="mt-5 space-y-2">
                 <button
                   type="button"
                   onClick={() => {
                     setModalSharedFeedback(true);
                     window.setTimeout(() => setModalSharedFeedback(false), 2200);
                   }}
-                  className="w-full min-h-[48px] rounded-2xl bg-[#141414] hover:bg-[#262626] text-white text-[14.5px] font-semibold py-3 px-4 flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                  className="w-full min-h-[44px] rounded-md bg-[#111111] hover:bg-[#262626] text-white text-[13.5px] font-semibold py-2.5 px-4 flex items-center justify-center gap-2 transition-colors cursor-pointer"
                 >
                   <ShareDownloadIcon className="w-4 h-4" />
                   <span>
@@ -1477,7 +1498,7 @@ export function HomeScreen() {
                 <button
                   type="button"
                   onClick={() => handleDeleteFromVault(selectedModalReceipt.id)}
-                  className="w-full min-h-[42px] rounded-2xl bg-transparent hover:bg-[#EFECE6] text-[#8A2921] text-[13.5px] font-medium py-2.5 px-4 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  className="w-full min-h-[40px] rounded-md bg-white hover:bg-[#FEF2F2] border border-[#E2E0D8] text-[#B42318] text-[13px] font-medium py-2 px-4 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <TrashIcon className="w-4 h-4" />
                   <span>Excluir do Cofre</span>
