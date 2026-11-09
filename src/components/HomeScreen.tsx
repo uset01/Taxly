@@ -145,7 +145,6 @@ const ANALYSIS_STEPS: { id: AnalysisStageId; label: string }[] = [
 ];
 
 export function HomeScreen() {
-  const userName = "Davi";
   const [screenState, setScreenState] = useState<ScreenState>("empty");
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
@@ -632,15 +631,12 @@ export function HomeScreen() {
         <main className="px-5 pt-5">
           {screenState === "empty" && (
             <section aria-label="Boas-vindas e envio de fatura ou comprovante">
-              {/* Greeting com subtítulo ajustado para caber em até 3 linhas no mobile */}
+              {/* Subtítulo ajustado para caber em até 3 linhas no mobile */}
               <div>
-                <h1 className="text-[28px] sm:text-[30px] leading-[1.15] tracking-[-0.03em] font-medium text-[#141414]">
-                  Bom dia, {userName}.
-                </h1>
-                <p className="text-[17px] sm:text-[18px] leading-[1.35] tracking-[-0.015em] font-normal text-[#4B514D] mt-1.5">
+                <h1 className="text-[19px] sm:text-[20px] leading-[1.35] tracking-[-0.02em] font-medium text-[#141414]">
                   Descubra vazamentos nas faturas e guarde comprovantes PIX sem
                   bagunça.
-                </p>
+                </h1>
               </div>
 
               {/* Card NOVA ANÁLISE / Envie fatura ou comprovante (sem botão Enviar documento) */}
@@ -674,11 +670,11 @@ export function HomeScreen() {
                     </div>
                   </div>
                 ) : (
-                  /* Drag-and-drop + selector dropzone */
+                  /* Selector dropzone */
                   <div
                     role="button"
                     tabIndex={0}
-                    aria-label="Área para arrastar ou selecionar fatura ou comprovante em PDF, imagem ou print"
+                    aria-label="Toque para escolher seu arquivo de fatura ou comprovante em PDF, imagem ou print"
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
                     onDrop={handleDrop}
@@ -697,7 +693,7 @@ export function HomeScreen() {
                   >
                     <UploadIcon className="w-[22px] h-[22px] text-[#485250] mb-2.5" />
                     <span className="text-[15.5px] font-semibold text-[#1F2725]">
-                      Arraste seu arquivo ou toque para escolher
+                      Toque para escolher seu arquivo
                     </span>
                     <span className="text-[13.5px] text-[#4E5450] mt-1">
                       Aceita PDF, imagem ou print do app do banco
