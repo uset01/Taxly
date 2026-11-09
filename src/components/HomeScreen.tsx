@@ -161,7 +161,7 @@ export function HomeScreen() {
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [statusBanner, setStatusBanner] = useState<string | null>(null);
 
-  // States do Cofre de Comprovantes e Upload Simulado In-Card
+  // States do Cofre de Comprovantes
   const [vaultReceipts, setVaultReceipts] = useState<VaultReceiptItem[]>(
     INITIAL_VAULT_RECEIPTS
   );
@@ -188,15 +188,9 @@ export function HomeScreen() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [screenState]);
 
-  // Fecha o menu do avatar ou o modal ao pressionar Escape
+  // Fecha o menu do avatar ao clicar fora ou pressionar Escape
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setIsAvatarMenuOpen(false);
-        setIsConfirmingDelete(false);
-        setSelectedModalReceiptId(null);
-      }
-    };
+    if (!isAvatarMenuOpen) return;
 
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -208,13 +202,20 @@ export function HomeScreen() {
       }
     };
 
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsAvatarMenuOpen(false);
+        setIsConfirmingDelete(false);
+      }
+    };
+
     document.addEventListener("mousedown", handleClickOutside);
     document.addEventListener("keydown", handleKeyDown);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, []);
+  }, [isAvatarMenuOpen]);
 
   const readResolvedIdsFromStorage = (): string[] => {
     if (typeof window === "undefined") return [];
@@ -235,62 +236,6 @@ export function HomeScreen() {
     } catch {
       // Ignora indisponibilidade de storage privado
     }
-  };
-
-  /**
-   * Fluxo de Upload Simulado / Funcional no card:
-   * Exibe "Varrendo documento e mascarando dados sensíveis..." por 2 segundos,
-   * adiciona o documento no topo de MEU COFRE e abre automaticamente o Modal de Detalhes.
-   */
-  const handleSimulatedVaultUpload = (file?: File) => {
-    if (isCardScanning) return;
-    setIsCardScanning(true);
-
-    const rawName = file?.name
-      ? file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ")
-      : "";
-    const lowerName = rawName.toLowerCase();
-
-    const isPix = lowerName.includes("pix") || lowerName.includes("comprovante");
-    const isBoleto = lowerName.includes("boleto");
-    const detectedType: VaultReceiptType = isPix
-      ? "PIX"
-      : isBoleto
-        ? "Boleto"
-        : "Fatura";
-
-    const formattedReceiver = rawName
-      ? rawName.charAt(0).toUpperCase() + rawName.slice(1)
-      : "Fatura Cartão Itaú";
-
-    window.setTimeout(() => {
-      const newReceipt: VaultReceiptItem = {
-        id: `rec-${Date.now()}`,
-        receiver: formattedReceiver,
-        date: "09 Nov 2026",
-        tag:
-          detectedType === "Fatura"
-            ? "#Cartão"
-            : detectedType === "Boleto"
-              ? "#Moradia"
-              : "#Saúde",
-        amount: detectedType === "Fatura" ? 1890.4 : 265.0,
-        type: detectedType,
-        isHealthIR: detectedType === "PIX",
-        maskedDocument: "***.452.890-**",
-        institution:
-          detectedType === "Fatura"
-            ? "Itaú Unibanco S.A."
-            : "Nu Pagamentos S.A.",
-        extractedText: `CNPJ 60.701.190/0001-04 ${formattedReceiver} documento analisado e mascarado`,
-      };
-
-      setVaultReceipts((prev) => [newReceipt, ...prev]);
-      setActiveVaultCategory("Todos");
-      setVaultSearchQuery("");
-      setIsCardScanning(false);
-      setSelectedModalReceiptId(newReceipt.id);
-    }, 2000);
   };
 
   const handleStartAnalysis = async (file: File) => {
@@ -418,7 +363,6 @@ export function HomeScreen() {
         (item.isHealthIR ||
           item.tag.toLowerCase().includes("saúde") ||
           item.tag.toLowerCase().includes("saude") ||
-          item.tag.toLowerCase().includes("impostoderenda") ||
           item.tag.toLowerCase().includes("ir")));
 
     if (!matchesCategory) return false;
@@ -441,6 +385,57 @@ export function HomeScreen() {
 
     return searchableContent.includes(normalizedQuery);
   });
+
+  const handleSimulatedVaultUpload = (file?: File) => {
+    if (isCardScanning) return;
+    setIsCardScanning(true);
+
+    const rawName = file?.name
+      ? file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ")
+      : "";
+    const lowerName = rawName.toLowerCase();
+
+    const isPix = lowerName.includes("pix") || lowerName.includes("comprovante");
+    const isBoleto = lowerName.includes("boleto");
+    const detectedType: VaultReceiptType = isPix
+      ? "PIX"
+      : isBoleto
+        ? "Boleto"
+        : "Fatura";
+
+    const formattedReceiver = rawName
+      ? rawName.charAt(0).toUpperCase() + rawName.slice(1)
+      : "Fatura Cartão Itaú";
+
+    window.setTimeout(() => {
+      const newReceipt: VaultReceiptItem = {
+        id: `rec-${Date.now()}`,
+        receiver: formattedReceiver,
+        date: "09 Nov 2026",
+        tag:
+          detectedType === "Fatura"
+            ? "#Cartão"
+            : detectedType === "Boleto"
+              ? "#Moradia"
+              : "#Saúde",
+        amount: detectedType === "Fatura" ? 1890.4 : 265.0,
+        type: detectedType,
+        isHealthIR: detectedType === "PIX",
+        maskedDocument: "***.452.890-**",
+        institution:
+          detectedType === "Fatura"
+            ? "Itaú Unibanco S.A."
+            : "Nu Pagamentos S.A.",
+        extractedText: `CNPJ 60.701.190/0001-04 ${formattedReceiver} documento analisado e mascarado`,
+      };
+
+      setVaultReceipts((prev) => [newReceipt, ...prev]);
+      setActiveVaultCategory("Todos");
+      setVaultSearchQuery("");
+      setIsCardScanning(false);
+      setSelectedModalReceiptId(newReceipt.id);
+    }, 2000);
+  };
 
   const handleSelectModalTag = (id: string, newTag: string) => {
     setVaultReceipts((prev) =>
@@ -506,7 +501,7 @@ export function HomeScreen() {
   const totalVaultFilesCount = 8 + vaultReceipts.length;
 
   return (
-    <div className="min-h-screen bg-[#F8F7F4] text-[#141414] flex justify-center">
+    <div className="min-h-screen bg-[#F8F7F4] text-[#161A18] flex justify-center">
       <div className="w-full max-w-[430px] min-h-screen bg-[#F8F7F4] pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] relative">
         {/* Top Sticky Header */}
         <header className="sticky top-0 z-30 bg-[#F8F7F4]/95 backdrop-blur-md border-b border-[#EAE8E2] px-5 py-3 flex items-center justify-between">
@@ -514,12 +509,12 @@ export function HomeScreen() {
             <div
               role="img"
               aria-label="Escudo de proteção VazamentoZero"
-              className="w-[38px] h-[38px] rounded-[12px] bg-[#FAF9F6] border border-[#E5E3DD] shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex items-center justify-center text-[#141414]"
+              className="w-[38px] h-[38px] rounded-[12px] bg-[#FAF9F6] border border-[#E5E3DD] shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex items-center justify-center text-[#181B19]"
             >
               <ShieldCheckIcon className="w-[19px] h-[19px]" />
             </div>
             <span className="text-[18px] tracking-[-0.025em] leading-none select-none">
-              <strong className="font-semibold text-[#141414]">Vazamento</strong>
+              <strong className="font-semibold text-[#181B19]">Vazamento</strong>
               <span className="font-semibold text-[#3B6B56]">Zero</span>
             </span>
           </div>
@@ -534,7 +529,7 @@ export function HomeScreen() {
                 setIsAvatarMenuOpen((prev) => !prev);
                 setIsConfirmingDelete(false);
               }}
-              className="min-w-[44px] min-h-[44px] w-[44px] h-[44px] rounded-full bg-[#141414] text-white text-[13px] font-bold tracking-wide flex items-center justify-center hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#141414] transition-opacity cursor-pointer"
+              className="min-w-[44px] min-h-[44px] w-[44px] h-[44px] rounded-full bg-[#1B1D1B] text-white text-[13px] font-bold tracking-wide flex items-center justify-center hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#181B19] transition-opacity cursor-pointer"
             >
               DM
             </button>
@@ -543,7 +538,7 @@ export function HomeScreen() {
               <div
                 role="menu"
                 aria-label="Opções da conta e privacidade"
-                className="absolute right-0 mt-2 w-[256px] rounded-[20px] bg-white border border-[#E2E0D8] shadow-[0_14px_34px_rgba(20,20,20,0.16)] p-2 z-50"
+                className="absolute right-0 mt-2 w-[256px] rounded-[20px] bg-white border border-[#E2E0D8] shadow-[0_14px_34px_rgba(24,27,25,0.16)] p-2 z-50"
               >
                 {!isConfirmingDelete ? (
                   <>
@@ -551,7 +546,7 @@ export function HomeScreen() {
                       type="button"
                       role="menuitem"
                       onClick={handleSendAnotherInvoice}
-                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-[12px] text-left text-[14px] font-medium text-[#141414] hover:bg-[#F0EFEA] flex items-center gap-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-[#141414] cursor-pointer"
+                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-[12px] text-left text-[14px] font-medium text-[#181C1A] hover:bg-[#F0EFEA] flex items-center gap-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-[#181B19] cursor-pointer"
                     >
                       <UploadIcon className="w-4 h-4 text-[#4A504C] shrink-0" />
                       <span>Enviar outra fatura</span>
@@ -573,7 +568,7 @@ export function HomeScreen() {
                       type="button"
                       role="menuitem"
                       onClick={handleSignOut}
-                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-[12px] text-left text-[14px] font-medium text-[#4A504C] hover:bg-[#F0EFEA] hover:text-[#141414] flex items-center gap-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-[#141414] cursor-pointer"
+                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-[12px] text-left text-[14px] font-medium text-[#4A504C] hover:bg-[#F0EFEA] hover:text-[#181C1A] flex items-center gap-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-[#181B19] cursor-pointer"
                     >
                       <LogOutIcon className="w-4 h-4 text-[#4A504C] shrink-0" />
                       <span>Sair</span>
@@ -585,7 +580,7 @@ export function HomeScreen() {
                     aria-label="Confirmação para apagar dados"
                     className="p-2"
                   >
-                    <p className="text-[13.5px] font-semibold text-[#141414]">
+                    <p className="text-[13.5px] font-semibold text-[#181C1A]">
                       Apagar todos os seus dados?
                     </p>
                     <p className="mt-1 text-[12.5px] leading-relaxed text-[#4A504C]">
@@ -596,7 +591,7 @@ export function HomeScreen() {
                       <button
                         type="button"
                         onClick={() => setIsConfirmingDelete(false)}
-                        className="flex-1 min-h-[44px] px-3 py-2 rounded-[12px] bg-[#F0EFEA] hover:bg-[#E4E2DC] text-[13px] font-semibold text-[#141414] transition-colors focus-visible:outline-2 focus-visible:outline-[#141414] cursor-pointer"
+                        className="flex-1 min-h-[44px] px-3 py-2 rounded-[12px] bg-[#F0EFEA] hover:bg-[#E4E2DC] text-[13px] font-semibold text-[#181C1A] transition-colors focus-visible:outline-2 focus-visible:outline-[#181B19] cursor-pointer"
                       >
                         Cancelar
                       </button>
@@ -628,7 +623,7 @@ export function HomeScreen() {
           ref={fileInputRef}
           type="file"
           accept=".pdf,image/*,.heic"
-          aria-label="Selecionar arquivo de fatura ou comprovante em PDF, imagem ou print"
+          aria-label="Selecionar arquivo de fatura em PDF, imagem ou print"
           onChange={handleFileInputChange}
           className="hidden"
         />
@@ -636,8 +631,8 @@ export function HomeScreen() {
         {/* Main Content */}
         <main className="px-5 pt-5">
           {screenState === "empty" && (
-            <section aria-label="Boas-vindas, upload e cofre de comprovantes">
-              {/* 1. Greeting com subtítulo ajustado para caber em até 3 linhas no mobile */}
+            <section aria-label="Boas-vindas e envio de fatura ou comprovante">
+              {/* Greeting com subtítulo ajustado para caber em até 3 linhas no mobile */}
               <div>
                 <h1 className="text-[28px] sm:text-[30px] leading-[1.15] tracking-[-0.03em] font-medium text-[#141414]">
                   Bom dia, {userName}.
@@ -648,7 +643,7 @@ export function HomeScreen() {
                 </p>
               </div>
 
-              {/* Card NOVA ANÁLISE / Envie fatura ou comprovante */}
+              {/* Card NOVA ANÁLISE / Envie fatura ou comprovante (sem botão Enviar documento) */}
               <div className="mt-5 rounded-[28px] invoice-card-gradient p-5 sm:p-6">
                 <div className="flex items-start justify-between">
                   <div>
@@ -663,7 +658,6 @@ export function HomeScreen() {
                 </div>
 
                 {isCardScanning ? (
-                  /* Estado de carregamento elegante dentro do próprio card por 2 segundos */
                   <div
                     role="status"
                     aria-live="polite"
@@ -680,60 +674,45 @@ export function HomeScreen() {
                     </div>
                   </div>
                 ) : (
-                  <>
-                    {/* Drag-and-drop + selector dropzone */}
-                    <div
-                      role="button"
-                      tabIndex={0}
-                      aria-label="Área para arrastar ou selecionar fatura ou comprovante em PDF, imagem ou print"
-                      onDragOver={handleDragOver}
-                      onDragLeave={handleDragLeave}
-                      onDrop={handleDrop}
-                      onClick={() => fileInputRef.current?.click()}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          fileInputRef.current?.click();
-                        }
-                      }}
-                      className={`mt-4 w-full rounded-[20px] bg-white py-6 px-4 flex flex-col items-center justify-center text-center border-2 border-dashed transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#141414] ${
-                        isDragging
-                          ? "border-[#141414] bg-[#F8F7F4]"
-                          : "border-[#D5D3CC] hover:border-[#485250]"
-                      }`}
-                    >
-                      <UploadIcon className="w-[21px] h-[21px] text-[#485250] mb-2" />
-                      <span className="text-[15px] font-semibold text-[#1F2725]">
-                        Arraste seu arquivo ou toque para escolher
-                      </span>
-                      <span className="text-[13px] text-[#4E5450] mt-0.5">
-                        Aceita PDF, imagem ou print do app do banco
-                      </span>
-                    </div>
-
-                    {/* Solid dark full-width CTA button */}
-                    <button
-                      type="button"
-                      aria-label="Enviar documento para análise"
-                      onClick={() => handleSimulatedVaultUpload()}
-                      className="mt-3.5 w-full min-h-[50px] rounded-[16px] bg-[#141414] hover:bg-[#262626] text-white py-3.5 px-5 flex items-center justify-center gap-2.5 text-center transition-all active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#141414] cursor-pointer shadow-[0_4px_14px_rgba(20,20,20,0.16)]"
-                    >
-                      <UploadIcon className="w-[19px] h-[19px] text-white shrink-0" />
-                      <span className="text-[15px] font-semibold tracking-[-0.01em]">
-                        Enviar documento
-                      </span>
-                    </button>
-                  </>
+                  /* Drag-and-drop + selector dropzone */
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    aria-label="Área para arrastar ou selecionar fatura ou comprovante em PDF, imagem ou print"
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        fileInputRef.current?.click();
+                      }
+                    }}
+                    className={`mt-4 w-full rounded-[20px] bg-white py-8 px-5 flex flex-col items-center justify-center text-center border-2 border-dashed transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#141414] ${
+                      isDragging
+                        ? "border-[#141414] bg-[#F8F7F4]"
+                        : "border-[#D5D3CC] hover:border-[#485250]"
+                    }`}
+                  >
+                    <UploadIcon className="w-[22px] h-[22px] text-[#485250] mb-2.5" />
+                    <span className="text-[15.5px] font-semibold text-[#1F2725]">
+                      Arraste seu arquivo ou toque para escolher
+                    </span>
+                    <span className="text-[13.5px] text-[#4E5450] mt-1">
+                      Aceita PDF, imagem ou print do app do banco
+                    </span>
+                  </div>
                 )}
 
-                <p className="text-[12px] leading-[1.4] text-[#4A504C] text-center max-w-[310px] mx-auto mt-3.5">
+                <p className="text-[12.5px] leading-[1.45] text-[#4A504C] text-center max-w-[310px] mx-auto mt-4">
                   Seus dados são mascarados e não vendemos informações.
                 </p>
               </div>
 
-              {/* Benefícios com checkmarks logo abaixo do card de upload, antes de MEU COFRE */}
+              {/* 3 Benefits List (logo abaixo do card principal de upload, antes de MEU COFRE) */}
               <ul
-                aria-label="Benefícios da análise de documentos"
+                aria-label="Benefícios da análise de fatura"
                 className="mt-5 space-y-2.5 px-1"
               >
                 {BENEFITS.map((benefit) => (
@@ -751,7 +730,7 @@ export function HomeScreen() {
                 ))}
               </ul>
 
-              {/* 2. Seção "Cofre de Comprovantes" */}
+              {/* Nova Seção: Cofre de Comprovantes */}
               <div
                 aria-label="Cofre de Comprovantes"
                 className="mt-7 pt-5 border-t border-[#EAE8E2]"
@@ -776,7 +755,7 @@ export function HomeScreen() {
                   </span>
                 </div>
 
-                {/* Barra de busca minimalista com placeholder curto */}
+                {/* Barra de busca minimalista */}
                 <div className="mt-2.5 relative">
                   <SearchIcon className="w-[17px] h-[17px] text-[#686D68] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
@@ -816,7 +795,7 @@ export function HomeScreen() {
                   })}
                 </div>
 
-                {/* 3. Lista de Comprovantes (Cards compactos com altura uniforme e linha horizontal garantida) */}
+                {/* Lista de Comprovantes (Cards compactos) */}
                 <div className="mt-3 space-y-2.5">
                   {filteredVaultReceipts.length > 0 ? (
                     filteredVaultReceipts.map((item) => {
@@ -859,7 +838,7 @@ export function HomeScreen() {
                               )}
                             </div>
 
-                            {/* Centro: Título com truncate na 1ª linha e data + tag SEMPRE na mesma linha horizontal */}
+                            {/* Centro: Nome do recebedor (truncate) e data + tag na mesma linha horizontal */}
                             <div className="min-w-0 flex-1">
                               <p className="text-[14.5px] font-semibold text-[#141414] leading-tight truncate">
                                 {item.receiver}
@@ -924,6 +903,7 @@ export function HomeScreen() {
                       <div className="h-1.5 w-full rounded-full bg-[#E5E3DD]" />
                       <div className="h-1.5 w-2/3 rounded-full bg-[#E5E3DD]" />
                     </div>
+                    {/* Animated Scanner Beam (respects prefers-reduced-motion) */}
                     <div
                       aria-hidden="true"
                       className="scanner-line absolute left-0 right-0 h-[3px] bg-[#3B6B56] shadow-[0_0_12px_2px_rgba(59,107,86,0.45)]"
@@ -931,7 +911,7 @@ export function HomeScreen() {
                   </div>
 
                   <div className="text-center mt-5">
-                    <h1 className="text-[22px] font-medium tracking-[-0.02em] text-[#141414]">
+                    <h1 className="text-[22px] font-medium tracking-[-0.02em] text-[#161A18]">
                       Analisando sua fatura
                     </h1>
                     {selectedFileName && (
@@ -958,7 +938,7 @@ export function HomeScreen() {
                       className="h-[5px] w-full rounded-full bg-[#D8D6CF] overflow-hidden"
                     >
                       <div
-                        className="h-full rounded-full bg-[#141414] transition-all duration-200"
+                        className="h-full rounded-full bg-[#181B19] transition-all duration-200"
                         style={{ width: `${analysisProgress}%` }}
                       />
                     </div>
@@ -983,22 +963,22 @@ export function HomeScreen() {
                             aria-hidden="true"
                             className={`w-[22px] h-[22px] rounded-full flex items-center justify-center shrink-0 transition-colors ${
                               isCompleted
-                                ? "bg-[#141414] text-white"
+                                ? "bg-[#181B19] text-white"
                                 : isCurrent
-                                  ? "border-2 border-[#141414] bg-white text-[#141414]"
+                                  ? "border-2 border-[#181B19] bg-white text-[#181B19]"
                                   : "border border-[#C5C3BC] bg-[#FAF9F6] text-transparent"
                             }`}
                           >
                             {isCompleted ? (
                               <CheckIcon className="w-3.5 h-3.5" />
                             ) : isCurrent ? (
-                              <span className="w-2 h-2 rounded-full bg-[#141414]" />
+                              <span className="w-2 h-2 rounded-full bg-[#181B19]" />
                             ) : null}
                           </span>
                           <span
                             className={
                               isCompleted || isCurrent
-                                ? "font-medium text-[#141414]"
+                                ? "font-medium text-[#161A18]"
                                 : "text-[#4E5450]"
                             }
                           >
@@ -1019,7 +999,7 @@ export function HomeScreen() {
                     <AlertCircleIcon className="w-7 h-7" />
                   </div>
 
-                  <h1 className="text-[22px] font-semibold tracking-[-0.02em] text-[#141414] mt-4">
+                  <h1 className="text-[22px] font-semibold tracking-[-0.02em] text-[#161A18] mt-4">
                     Não conseguimos ler esta fatura
                   </h1>
 
@@ -1028,7 +1008,7 @@ export function HomeScreen() {
                   </p>
 
                   <div className="mt-4 rounded-[18px] bg-white p-4 text-left border border-[#E2E0D8]">
-                    <p className="text-[13px] font-semibold text-[#141414]">
+                    <p className="text-[13px] font-semibold text-[#181C1A]">
                       Orientação de formato:
                     </p>
                     <ul className="mt-1.5 text-[13px] text-[#4A504C] space-y-1 list-disc list-inside">
@@ -1050,7 +1030,7 @@ export function HomeScreen() {
                       setAnalysisError(null);
                       setScreenState("empty");
                     }}
-                    className="mt-5 w-full min-h-[50px] rounded-[16px] bg-[#141414] hover:bg-[#262626] text-white font-semibold text-[15px] py-3.5 px-5 flex items-center justify-center gap-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#141414] cursor-pointer"
+                    className="mt-5 w-full min-h-[50px] rounded-[16px] bg-[#181B19] hover:bg-[#272B28] text-white font-semibold text-[15px] py-3.5 px-5 flex items-center justify-center gap-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#181B19] cursor-pointer"
                   >
                     Tentar de novo
                   </button>
@@ -1063,7 +1043,7 @@ export function HomeScreen() {
             <section aria-label="Resultado da análise de cobranças">
               {/* Greeting / Dynamic Title */}
               <h1 className="text-[26px] sm:text-[28px] leading-[1.2] tracking-[-0.03em]">
-                <span className="block font-medium text-[#141414]">
+                <span className="block font-medium text-[#161A18]">
                   Encontramos R$ {formatBRL(metrics.activeTotal)} para você
                   recuperar.
                 </span>
@@ -1117,7 +1097,7 @@ export function HomeScreen() {
                     className="h-[4px] w-full rounded-full bg-[#D5D3CC] overflow-hidden"
                   >
                     <div
-                      className="h-full rounded-full bg-[#141414] transition-all duration-300"
+                      className="h-full rounded-full bg-[#181B19] transition-all duration-300"
                       style={{ width: `${metrics.progressPercent}%` }}
                     />
                   </div>
@@ -1155,7 +1135,7 @@ export function HomeScreen() {
                                 className={`text-[16px] font-semibold leading-snug ${
                                   isResolved
                                     ? "line-through text-[#4E5450]"
-                                    : "text-[#141414]"
+                                    : "text-[#181C1A]"
                                 }`}
                               >
                                 {item.merchant}
@@ -1175,7 +1155,7 @@ export function HomeScreen() {
                               className={`text-[16px] font-semibold leading-snug tabular-nums ${
                                 isResolved
                                   ? "line-through text-[#4E5450]"
-                                  : "text-[#141414]"
+                                  : "text-[#181C1A]"
                               }`}
                             >
                               R$ {formatBRL(item.amount)}
@@ -1194,7 +1174,7 @@ export function HomeScreen() {
                             aria-controls={`cancel-guide-${item.id}`}
                             aria-label={`Como cancelar ${item.merchant}`}
                             onClick={() => handleToggleAccordion(item.id)}
-                            className="min-h-[44px] px-2 -ml-2 inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-[#2E5945] hover:text-[#141414] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#141414] transition-colors cursor-pointer"
+                            className="min-h-[44px] px-2 -ml-2 inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-[#2E5945] hover:text-[#181B19] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#181B19] transition-colors cursor-pointer"
                           >
                             <span>Como cancelar</span>
                             <ChevronDownIcon
@@ -1211,7 +1191,7 @@ export function HomeScreen() {
                           )}
                         </div>
 
-                        {/* Accordion Content */}
+                        {/* Accordion Content (only one open at a time) */}
                         {isExpanded && (
                           <div
                             id={`cancel-guide-${item.id}`}
@@ -1220,7 +1200,7 @@ export function HomeScreen() {
                             <p className="text-[12.5px] font-semibold uppercase tracking-[0.08em] text-[#4A504C]">
                               Passo a passo
                             </p>
-                            <ol className="mt-2 space-y-2 text-[13.5px] text-[#141414] list-decimal list-inside leading-relaxed">
+                            <ol className="mt-2 space-y-2 text-[13.5px] text-[#181C1A] list-decimal list-inside leading-relaxed">
                               {item.cancelGuide.steps.map((step, index) => (
                                 <li key={index}>{step}</li>
                               ))}
@@ -1230,7 +1210,7 @@ export function HomeScreen() {
                               <p className="text-[12px] font-semibold text-[#4A504C] mb-1">
                                 Mensagem pronta para suporte:
                               </p>
-                              <p className="text-[13px] text-[#141414] leading-relaxed">
+                              <p className="text-[13px] text-[#181C1A] leading-relaxed">
                                 &ldquo;{item.cancelGuide.script}&rdquo;
                               </p>
                             </div>
@@ -1245,7 +1225,7 @@ export function HomeScreen() {
                                     item.cancelGuide.script
                                   )
                                 }
-                                className="min-h-[44px] px-3.5 py-2 rounded-[12px] bg-white border border-[#D5D3CC] hover:border-[#141414] text-[13px] font-semibold text-[#141414] inline-flex items-center gap-1.5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#141414] cursor-pointer"
+                                className="min-h-[44px] px-3.5 py-2 rounded-[12px] bg-white border border-[#D5D3CC] hover:border-[#181B19] text-[13px] font-semibold text-[#181C1A] inline-flex items-center gap-1.5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#181B19] cursor-pointer"
                               >
                                 <CopyIcon className="w-4 h-4" />
                                 <span>
@@ -1261,7 +1241,7 @@ export function HomeScreen() {
                                     : `Marcar ${item.merchant} como já resolvida`
                                 }
                                 onClick={() => handleMarkResolved(item.id)}
-                                className="min-h-[44px] px-4 py-2 rounded-[12px] bg-[#141414] hover:bg-[#262626] text-white text-[13px] font-semibold inline-flex items-center gap-1.5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#141414] cursor-pointer"
+                                className="min-h-[44px] px-4 py-2 rounded-[12px] bg-[#181B19] hover:bg-[#272B28] text-white text-[13px] font-semibold inline-flex items-center gap-1.5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#181B19] cursor-pointer"
                               >
                                 <CheckIcon className="w-4 h-4" />
                                 <span>
@@ -1280,7 +1260,7 @@ export function HomeScreen() {
               </div>
 
               {/* Dark Upsell Card: Não deixe voltar. */}
-              <div className="mt-8 rounded-[26px] bg-[#141414] text-white p-6 shadow-[0_12px_30px_rgba(20,20,20,0.16)]">
+              <div className="mt-8 rounded-[26px] bg-[#181B19] text-white p-6 shadow-[0_12px_30px_rgba(24,27,25,0.16)]">
                 <h2 className="text-[21px] font-semibold tracking-[-0.02em] text-white">
                   Não deixe voltar.
                 </h2>
@@ -1293,7 +1273,7 @@ export function HomeScreen() {
                   type="button"
                   aria-label="Ativar monitoramento por R$ 14,90 por mês"
                   onClick={handleActivateMonitoring}
-                  className="mt-5 w-full min-h-[50px] rounded-[16px] bg-white hover:bg-[#F0EFEA] text-[#141414] font-semibold text-[15px] py-3.5 px-5 flex items-center justify-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white cursor-pointer"
+                  className="mt-5 w-full min-h-[50px] rounded-[16px] bg-white hover:bg-[#F0EFEA] text-[#181B19] font-semibold text-[15px] py-3.5 px-5 flex items-center justify-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white cursor-pointer"
                 >
                   Ativar monitoramento · R$ 14,90/mês
                 </button>
@@ -1314,7 +1294,7 @@ export function HomeScreen() {
                   type="button"
                   aria-label="Enviar outra fatura"
                   onClick={handleSendAnotherInvoice}
-                  className="min-h-[44px] px-4 py-2 text-[14px] font-medium text-[#4A504C] hover:text-[#141414] underline underline-offset-4 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#141414] cursor-pointer"
+                  className="min-h-[44px] px-4 py-2 text-[14px] font-medium text-[#4A504C] hover:text-[#161A18] underline underline-offset-4 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#181B19] cursor-pointer"
                 >
                   Enviar outra fatura
                 </button>
@@ -1323,7 +1303,7 @@ export function HomeScreen() {
           )}
         </main>
 
-        {/* 4. Modal / Bottom Sheet de Detalhes do Documento */}
+        {/* Modal / Bottom Sheet de Detalhes do Documento */}
         {selectedModalReceipt && (
           <div
             role="dialog"
