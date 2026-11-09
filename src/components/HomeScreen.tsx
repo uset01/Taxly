@@ -6,6 +6,7 @@ import {
   BarcodeIcon,
   CheckIcon,
   ChevronDownIcon,
+  CloseIcon,
   CopyIcon,
   DocumentScannerIcon,
   InvoiceDocIcon,
@@ -54,6 +55,8 @@ export interface VaultReceiptItem {
   amount: number;
   type: VaultReceiptType;
   isHealthIR?: boolean;
+  maskedDocument: string;
+  institution: string;
   extractedText: string;
 }
 
@@ -65,6 +68,20 @@ const VAULT_FILTER_PILLS: VaultFilterCategory[] = [
   "Saúde/IR",
 ];
 
+const AVAILABLE_MODAL_TAGS = [
+  "#Carro",
+  "#Saúde",
+  "#Moradia",
+  "#Cartão",
+  "#ImpostoDeRenda",
+];
+
+const INVOICE_LEAK_ALERTS = [
+  "Assinatura esquecida: Streaming Vídeo (R$ 39,90/mês) - Cobrado há 8 meses seguidos.",
+  "Cobrança duplicada: App de Entrega (R$ 44,90) duas vezes no dia 14 Out.",
+  "Tarifa oculta: Seguro Fatura Protegida (R$ 19,90) - Cobrança opcional cancelável.",
+];
+
 const INITIAL_VAULT_RECEIPTS: VaultReceiptItem[] = [
   {
     id: "rec-1",
@@ -74,6 +91,8 @@ const INITIAL_VAULT_RECEIPTS: VaultReceiptItem[] = [
     amount: 350.0,
     type: "PIX",
     isHealthIR: false,
+    maskedDocument: "***.452.890-**",
+    institution: "Itaú Unibanco S.A.",
     extractedText:
       "CNPJ 12.345.678/0001-90 Comprovante PIX Revisão freios e troca de óleo automotivo veículo carro",
   },
@@ -85,6 +104,8 @@ const INITIAL_VAULT_RECEIPTS: VaultReceiptItem[] = [
     amount: 420.0,
     type: "PIX",
     isHealthIR: true,
+    maskedDocument: "***.452.890-**",
+    institution: "Banco Bradesco S.A.",
     extractedText:
       "CNPJ 45.987.123/0001-11 Consulta médica cardiologia exames recibo dedutível Imposto de Renda IRPF saúde",
   },
@@ -96,6 +117,8 @@ const INITIAL_VAULT_RECEIPTS: VaultReceiptItem[] = [
     amount: 890.5,
     type: "Boleto",
     isHealthIR: false,
+    maskedDocument: "***.452.890-**",
+    institution: "Caixa Econômica Federal",
     extractedText:
       "CNPJ 33.222.111/0001-55 Boleto bancário taxa condominial mensal novembro",
   },
@@ -107,6 +130,8 @@ const INITIAL_VAULT_RECEIPTS: VaultReceiptItem[] = [
     amount: 2140.8,
     type: "Fatura",
     isHealthIR: false,
+    maskedDocument: "***.452.890-**",
+    institution: "Nu Pagamentos S.A.",
     extractedText:
       "CNPJ 18.236.120/0001-58 Fatura fechada cartão de crédito assinaturas e compras",
   },
@@ -136,30 +161,42 @@ export function HomeScreen() {
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [statusBanner, setStatusBanner] = useState<string | null>(null);
 
-  // States do Cofre de Comprovantes
+  // States do Cofre de Comprovantes e Upload Simulado In-Card
   const [vaultReceipts, setVaultReceipts] = useState<VaultReceiptItem[]>(
     INITIAL_VAULT_RECEIPTS
   );
   const [vaultSearchQuery, setVaultSearchQuery] = useState("");
   const [activeVaultCategory, setActiveVaultCategory] =
     useState<VaultFilterCategory>("Todos");
-  const [editingTagId, setEditingTagId] = useState<string | null>(null);
-  const [editingTagValue, setEditingTagValue] = useState("");
   const [downloadedReceiptId, setDownloadedReceiptId] = useState<string | null>(
     null
   );
+  const [isCardScanning, setIsCardScanning] = useState(false);
+  const [selectedModalReceiptId, setSelectedModalReceiptId] = useState<
+    string | null
+  >(null);
+  const [modalSharedFeedback, setModalSharedFeedback] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const avatarMenuRef = useRef<HTMLDivElement>(null);
+
+  const selectedModalReceipt =
+    vaultReceipts.find((item) => item.id === selectedModalReceiptId) ?? null;
 
   // Rola para o topo sempre que mudar de estado para evitar salto visual
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [screenState]);
 
-  // Fecha o menu do avatar ao clicar fora ou pressionar Escape
+  // Fecha o menu do avatar ou o modal ao pressionar Escape
   useEffect(() => {
-    if (!isAvatarMenuOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsAvatarMenuOpen(false);
+        setIsConfirmingDelete(false);
+        setSelectedModalReceiptId(null);
+      }
+    };
 
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -171,20 +208,13 @@ export function HomeScreen() {
       }
     };
 
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setIsAvatarMenuOpen(false);
-        setIsConfirmingDelete(false);
-      }
-    };
-
     document.addEventListener("mousedown", handleClickOutside);
     document.addEventListener("keydown", handleKeyDown);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isAvatarMenuOpen]);
+  }, []);
 
   const readResolvedIdsFromStorage = (): string[] => {
     if (typeof window === "undefined") return [];
@@ -205,6 +235,62 @@ export function HomeScreen() {
     } catch {
       // Ignora indisponibilidade de storage privado
     }
+  };
+
+  /**
+   * Fluxo de Upload Simulado / Funcional no card:
+   * Exibe "Varrendo documento e mascarando dados sensíveis..." por 2 segundos,
+   * adiciona o documento no topo de MEU COFRE e abre automaticamente o Modal de Detalhes.
+   */
+  const handleSimulatedVaultUpload = (file?: File) => {
+    if (isCardScanning) return;
+    setIsCardScanning(true);
+
+    const rawName = file?.name
+      ? file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ")
+      : "";
+    const lowerName = rawName.toLowerCase();
+
+    const isPix = lowerName.includes("pix") || lowerName.includes("comprovante");
+    const isBoleto = lowerName.includes("boleto");
+    const detectedType: VaultReceiptType = isPix
+      ? "PIX"
+      : isBoleto
+        ? "Boleto"
+        : "Fatura";
+
+    const formattedReceiver = rawName
+      ? rawName.charAt(0).toUpperCase() + rawName.slice(1)
+      : "Fatura Cartão Itaú";
+
+    window.setTimeout(() => {
+      const newReceipt: VaultReceiptItem = {
+        id: `rec-${Date.now()}`,
+        receiver: formattedReceiver,
+        date: "09 Nov 2026",
+        tag:
+          detectedType === "Fatura"
+            ? "#Cartão"
+            : detectedType === "Boleto"
+              ? "#Moradia"
+              : "#Saúde",
+        amount: detectedType === "Fatura" ? 1890.4 : 265.0,
+        type: detectedType,
+        isHealthIR: detectedType === "PIX",
+        maskedDocument: "***.452.890-**",
+        institution:
+          detectedType === "Fatura"
+            ? "Itaú Unibanco S.A."
+            : "Nu Pagamentos S.A.",
+        extractedText: `CNPJ 60.701.190/0001-04 ${formattedReceiver} documento analisado e mascarado`,
+      };
+
+      setVaultReceipts((prev) => [newReceipt, ...prev]);
+      setActiveVaultCategory("Todos");
+      setVaultSearchQuery("");
+      setIsCardScanning(false);
+      setSelectedModalReceiptId(newReceipt.id);
+    }, 2000);
   };
 
   const handleStartAnalysis = async (file: File) => {
@@ -332,6 +418,7 @@ export function HomeScreen() {
         (item.isHealthIR ||
           item.tag.toLowerCase().includes("saúde") ||
           item.tag.toLowerCase().includes("saude") ||
+          item.tag.toLowerCase().includes("impostoderenda") ||
           item.tag.toLowerCase().includes("ir")));
 
     if (!matchesCategory) return false;
@@ -355,25 +442,31 @@ export function HomeScreen() {
     return searchableContent.includes(normalizedQuery);
   });
 
-  const handleStartEditTag = (item: VaultReceiptItem) => {
-    setEditingTagId(item.id);
-    setEditingTagValue(item.tag);
+  const handleSelectModalTag = (id: string, newTag: string) => {
+    setVaultReceipts((prev) =>
+      prev.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              tag: newTag,
+              isHealthIR:
+                newTag === "#Saúde" || newTag === "#ImpostoDeRenda",
+            }
+          : item
+      )
+    );
   };
 
-  const handleSaveTag = (id: string) => {
-    const trimmed = editingTagValue.trim();
-    if (trimmed) {
-      const formattedTag = trimmed.startsWith("#") ? trimmed : `#${trimmed}`;
-      setVaultReceipts((prev) =>
-        prev.map((item) =>
-          item.id === id ? { ...item, tag: formattedTag } : item
-        )
-      );
-    }
-    setEditingTagId(null);
+  const handleDeleteFromVault = (id: string) => {
+    setVaultReceipts((prev) => prev.filter((item) => item.id !== id));
+    setSelectedModalReceiptId(null);
   };
 
-  const handleQuickDownload = (item: VaultReceiptItem) => {
+  const handleQuickDownload = (
+    e: React.MouseEvent<HTMLButtonElement>,
+    item: VaultReceiptItem
+  ) => {
+    e.stopPropagation();
     setDownloadedReceiptId(item.id);
     window.setTimeout(() => {
       setDownloadedReceiptId((prev) => (prev === item.id ? null : prev));
@@ -383,7 +476,7 @@ export function HomeScreen() {
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      void handleStartAnalysis(file);
+      handleSimulatedVaultUpload(file);
     }
     e.target.value = "";
   };
@@ -406,12 +499,14 @@ export function HomeScreen() {
     setIsDragging(false);
     const file = e.dataTransfer.files?.[0];
     if (file) {
-      void handleStartAnalysis(file);
+      handleSimulatedVaultUpload(file);
     }
   };
 
+  const totalVaultFilesCount = 8 + vaultReceipts.length;
+
   return (
-    <div className="min-h-screen bg-[#F8F7F4] text-[#161A18] flex justify-center">
+    <div className="min-h-screen bg-[#F8F7F4] text-[#141414] flex justify-center">
       <div className="w-full max-w-[430px] min-h-screen bg-[#F8F7F4] pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] relative">
         {/* Top Sticky Header */}
         <header className="sticky top-0 z-30 bg-[#F8F7F4]/95 backdrop-blur-md border-b border-[#EAE8E2] px-5 py-3 flex items-center justify-between">
@@ -419,12 +514,12 @@ export function HomeScreen() {
             <div
               role="img"
               aria-label="Escudo de proteção VazamentoZero"
-              className="w-[38px] h-[38px] rounded-[12px] bg-[#FAF9F6] border border-[#E5E3DD] shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex items-center justify-center text-[#181B19]"
+              className="w-[38px] h-[38px] rounded-[12px] bg-[#FAF9F6] border border-[#E5E3DD] shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex items-center justify-center text-[#141414]"
             >
               <ShieldCheckIcon className="w-[19px] h-[19px]" />
             </div>
             <span className="text-[18px] tracking-[-0.025em] leading-none select-none">
-              <strong className="font-semibold text-[#181B19]">Vazamento</strong>
+              <strong className="font-semibold text-[#141414]">Vazamento</strong>
               <span className="font-semibold text-[#3B6B56]">Zero</span>
             </span>
           </div>
@@ -439,7 +534,7 @@ export function HomeScreen() {
                 setIsAvatarMenuOpen((prev) => !prev);
                 setIsConfirmingDelete(false);
               }}
-              className="min-w-[44px] min-h-[44px] w-[44px] h-[44px] rounded-full bg-[#1B1D1B] text-white text-[13px] font-bold tracking-wide flex items-center justify-center hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#181B19] transition-opacity cursor-pointer"
+              className="min-w-[44px] min-h-[44px] w-[44px] h-[44px] rounded-full bg-[#141414] text-white text-[13px] font-bold tracking-wide flex items-center justify-center hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#141414] transition-opacity cursor-pointer"
             >
               DM
             </button>
@@ -448,7 +543,7 @@ export function HomeScreen() {
               <div
                 role="menu"
                 aria-label="Opções da conta e privacidade"
-                className="absolute right-0 mt-2 w-[256px] rounded-[20px] bg-white border border-[#E2E0D8] shadow-[0_14px_34px_rgba(24,27,25,0.16)] p-2 z-50"
+                className="absolute right-0 mt-2 w-[256px] rounded-[20px] bg-white border border-[#E2E0D8] shadow-[0_14px_34px_rgba(20,20,20,0.16)] p-2 z-50"
               >
                 {!isConfirmingDelete ? (
                   <>
@@ -456,7 +551,7 @@ export function HomeScreen() {
                       type="button"
                       role="menuitem"
                       onClick={handleSendAnotherInvoice}
-                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-[12px] text-left text-[14px] font-medium text-[#181C1A] hover:bg-[#F0EFEA] flex items-center gap-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-[#181B19] cursor-pointer"
+                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-[12px] text-left text-[14px] font-medium text-[#141414] hover:bg-[#F0EFEA] flex items-center gap-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-[#141414] cursor-pointer"
                     >
                       <UploadIcon className="w-4 h-4 text-[#4A504C] shrink-0" />
                       <span>Enviar outra fatura</span>
@@ -478,7 +573,7 @@ export function HomeScreen() {
                       type="button"
                       role="menuitem"
                       onClick={handleSignOut}
-                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-[12px] text-left text-[14px] font-medium text-[#4A504C] hover:bg-[#F0EFEA] hover:text-[#181C1A] flex items-center gap-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-[#181B19] cursor-pointer"
+                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-[12px] text-left text-[14px] font-medium text-[#4A504C] hover:bg-[#F0EFEA] hover:text-[#141414] flex items-center gap-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-[#141414] cursor-pointer"
                     >
                       <LogOutIcon className="w-4 h-4 text-[#4A504C] shrink-0" />
                       <span>Sair</span>
@@ -490,7 +585,7 @@ export function HomeScreen() {
                     aria-label="Confirmação para apagar dados"
                     className="p-2"
                   >
-                    <p className="text-[13.5px] font-semibold text-[#181C1A]">
+                    <p className="text-[13.5px] font-semibold text-[#141414]">
                       Apagar todos os seus dados?
                     </p>
                     <p className="mt-1 text-[12.5px] leading-relaxed text-[#4A504C]">
@@ -501,7 +596,7 @@ export function HomeScreen() {
                       <button
                         type="button"
                         onClick={() => setIsConfirmingDelete(false)}
-                        className="flex-1 min-h-[44px] px-3 py-2 rounded-[12px] bg-[#F0EFEA] hover:bg-[#E4E2DC] text-[13px] font-semibold text-[#181C1A] transition-colors focus-visible:outline-2 focus-visible:outline-[#181B19] cursor-pointer"
+                        className="flex-1 min-h-[44px] px-3 py-2 rounded-[12px] bg-[#F0EFEA] hover:bg-[#E4E2DC] text-[13px] font-semibold text-[#141414] transition-colors focus-visible:outline-2 focus-visible:outline-[#141414] cursor-pointer"
                       >
                         Cancelar
                       </button>
@@ -533,92 +628,133 @@ export function HomeScreen() {
           ref={fileInputRef}
           type="file"
           accept=".pdf,image/*,.heic"
-          aria-label="Selecionar arquivo de fatura em PDF, imagem ou print"
+          aria-label="Selecionar arquivo de fatura ou comprovante em PDF, imagem ou print"
           onChange={handleFileInputChange}
           className="hidden"
         />
 
         {/* Main Content */}
-        <main className="px-5 pt-6">
+        <main className="px-5 pt-5">
           {screenState === "empty" && (
-            <section aria-label="Boas-vindas e envio de fatura ou comprovante">
-              {/* Greeting */}
-              <h1 className="text-[28px] sm:text-[30px] leading-[1.18] tracking-[-0.03em]">
-                <span className="block font-medium text-[#161A18]">
+            <section aria-label="Boas-vindas, upload e cofre de comprovantes">
+              {/* 1. Greeting com subtítulo ajustado para caber em até 3 linhas no mobile */}
+              <div>
+                <h1 className="text-[28px] sm:text-[30px] leading-[1.15] tracking-[-0.03em] font-medium text-[#141414]">
                   Bom dia, {userName}.
-                </span>
-                <span className="block font-normal text-[#4B514D] mt-1">
+                </h1>
+                <p className="text-[17px] sm:text-[18px] leading-[1.35] tracking-[-0.015em] font-normal text-[#4B514D] mt-1.5">
                   Descubra vazamentos nas faturas e guarde comprovantes PIX sem
                   bagunça.
-                </span>
-              </h1>
+                </p>
+              </div>
 
               {/* Card NOVA ANÁLISE / Envie fatura ou comprovante */}
-              <div className="mt-6 rounded-[28px] invoice-card-gradient p-6">
+              <div className="mt-5 rounded-[28px] invoice-card-gradient p-5 sm:p-6">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-[11px] uppercase tracking-[0.12em] font-semibold text-[#485250]">
                       NOVA ANÁLISE
                     </p>
-                    <h2 className="text-[22px] leading-tight tracking-[-0.02em] font-medium text-[#1F2725] mt-1">
+                    <h2 className="text-[21px] leading-tight tracking-[-0.02em] font-medium text-[#1F2725] mt-1">
                       Envie fatura ou comprovante
                     </h2>
                   </div>
                   <ShieldCheckIcon className="w-[21px] h-[21px] text-[#485250] mt-0.5 shrink-0" />
                 </div>
 
-                {/* Drag-and-drop + selector dropzone */}
-                <div
-                  role="button"
-                  tabIndex={0}
-                  aria-label="Área para arrastar ou selecionar fatura ou comprovante em PDF, imagem ou print"
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                  onClick={() => fileInputRef.current?.click()}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      fileInputRef.current?.click();
-                    }
-                  }}
-                  className={`mt-5 w-full rounded-[20px] bg-white py-7 px-5 flex flex-col items-center justify-center text-center border-2 border-dashed transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#141414] ${
-                    isDragging
-                      ? "border-[#141414] bg-[#F8F7F4]"
-                      : "border-[#D5D3CC] hover:border-[#485250]"
-                  }`}
-                >
-                  <UploadIcon className="w-[22px] h-[22px] text-[#485250] mb-2.5" />
-                  <span className="text-[15.5px] font-semibold text-[#1F2725]">
-                    Arraste seu arquivo ou toque para escolher
-                  </span>
-                  <span className="text-[13.5px] text-[#4E5450] mt-1">
-                    Aceita PDF, imagem ou print do app do banco
-                  </span>
-                </div>
+                {isCardScanning ? (
+                  /* Estado de carregamento elegante dentro do próprio card por 2 segundos */
+                  <div
+                    role="status"
+                    aria-live="polite"
+                    className="mt-4 w-full rounded-[20px] bg-white py-10 px-5 flex flex-col items-center justify-center text-center border border-[#E5E5E0] shadow-xs"
+                  >
+                    <div className="w-11 h-11 rounded-2xl bg-[#EBF3EE] text-[#285A44] flex items-center justify-center mb-3 animate-pulse">
+                      <DocumentScannerIcon className="w-6 h-6" />
+                    </div>
+                    <p className="text-[14.5px] font-semibold text-[#141414]">
+                      Varrendo documento e mascarando dados sensíveis...
+                    </p>
+                    <div className="mt-3.5 w-44 h-1.5 rounded-full bg-[#EFECE6] overflow-hidden">
+                      <div className="h-full w-2/3 rounded-full bg-[#141414] animate-pulse" />
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {/* Drag-and-drop + selector dropzone */}
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      aria-label="Área para arrastar ou selecionar fatura ou comprovante em PDF, imagem ou print"
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                      onClick={() => fileInputRef.current?.click()}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          fileInputRef.current?.click();
+                        }
+                      }}
+                      className={`mt-4 w-full rounded-[20px] bg-white py-6 px-4 flex flex-col items-center justify-center text-center border-2 border-dashed transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#141414] ${
+                        isDragging
+                          ? "border-[#141414] bg-[#F8F7F4]"
+                          : "border-[#D5D3CC] hover:border-[#485250]"
+                      }`}
+                    >
+                      <UploadIcon className="w-[21px] h-[21px] text-[#485250] mb-2" />
+                      <span className="text-[15px] font-semibold text-[#1F2725]">
+                        Arraste seu arquivo ou toque para escolher
+                      </span>
+                      <span className="text-[13px] text-[#4E5450] mt-0.5">
+                        Aceita PDF, imagem ou print do app do banco
+                      </span>
+                    </div>
 
-                {/* Solid dark full-width CTA button */}
-                <button
-                  type="button"
-                  aria-label="Enviar documento para análise"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="mt-4 w-full min-h-[52px] rounded-[16px] bg-[#141414] hover:bg-[#262626] text-white py-3.5 px-5 flex items-center justify-center gap-2.5 text-center transition-all active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#141414] cursor-pointer shadow-[0_4px_14px_rgba(20,20,20,0.18)]"
-                >
-                  <UploadIcon className="w-[20px] h-[20px] text-white shrink-0" />
-                  <span className="text-[15.5px] font-semibold tracking-[-0.01em]">
-                    Enviar documento
-                  </span>
-                </button>
+                    {/* Solid dark full-width CTA button */}
+                    <button
+                      type="button"
+                      aria-label="Enviar documento para análise"
+                      onClick={() => handleSimulatedVaultUpload()}
+                      className="mt-3.5 w-full min-h-[50px] rounded-[16px] bg-[#141414] hover:bg-[#262626] text-white py-3.5 px-5 flex items-center justify-center gap-2.5 text-center transition-all active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#141414] cursor-pointer shadow-[0_4px_14px_rgba(20,20,20,0.16)]"
+                    >
+                      <UploadIcon className="w-[19px] h-[19px] text-white shrink-0" />
+                      <span className="text-[15px] font-semibold tracking-[-0.01em]">
+                        Enviar documento
+                      </span>
+                    </button>
+                  </>
+                )}
 
-                <p className="text-[12.5px] leading-[1.45] text-[#4A504C] text-center max-w-[310px] mx-auto mt-4">
+                <p className="text-[12px] leading-[1.4] text-[#4A504C] text-center max-w-[310px] mx-auto mt-3.5">
                   Seus dados são mascarados e não vendemos informações.
                 </p>
               </div>
 
-              {/* Nova Seção: Cofre de Comprovantes */}
+              {/* Benefícios com checkmarks logo abaixo do card de upload, antes de MEU COFRE */}
+              <ul
+                aria-label="Benefícios da análise de documentos"
+                className="mt-5 space-y-2.5 px-1"
+              >
+                {BENEFITS.map((benefit) => (
+                  <li key={benefit} className="flex items-center gap-2.5">
+                    <span
+                      aria-hidden="true"
+                      className="w-[20px] h-[20px] rounded-full bg-[#E3EDE8] text-[#285A44] flex items-center justify-center shrink-0"
+                    >
+                      <CheckIcon className="w-3 h-3" />
+                    </span>
+                    <span className="text-[14px] text-[#2F3531] leading-snug font-medium">
+                      {benefit}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+
+              {/* 2. Seção "Cofre de Comprovantes" */}
               <div
                 aria-label="Cofre de Comprovantes"
-                className="mt-8"
+                className="mt-7 pt-5 border-t border-[#EAE8E2]"
               >
                 {/* Cabeçalho discreto alinhado à esquerda com contador lateral */}
                 <div className="flex items-center justify-between px-0.5">
@@ -626,11 +762,21 @@ export function HomeScreen() {
                     MEU COFRE
                   </h2>
                   <span className="text-[12px] font-medium text-[#686D68]">
-                    12 arquivos
+                    {totalVaultFilesCount} arquivos
                   </span>
                 </div>
 
-                {/* Barra de busca minimalista */}
+                {/* Mini-banner de Resumo de Impacto no Cofre */}
+                <div className="mt-2.5 rounded-2xl bg-[#EBF3EE] border border-[#D4E5DA] px-3.5 py-2.5 flex items-center justify-between gap-2">
+                  <span className="text-[13px] font-medium text-[#244B39]">
+                    Vazamentos detectados no mês
+                  </span>
+                  <span className="text-[13.5px] font-bold text-[#193829] tabular-nums whitespace-nowrap">
+                    R$ 184,70 / mês
+                  </span>
+                </div>
+
+                {/* Barra de busca minimalista com placeholder curto */}
                 <div className="mt-2.5 relative">
                   <SearchIcon className="w-[17px] h-[17px] text-[#686D68] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
@@ -638,7 +784,7 @@ export function HomeScreen() {
                     value={vaultSearchQuery}
                     onChange={(e) => setVaultSearchQuery(e.target.value)}
                     aria-label="Buscar comprovantes no cofre"
-                    placeholder="Buscar por nome, valor, CNPJ ou tag (ex: carro, saúde)..."
+                    placeholder="Buscar por nome, valor ou #tag..."
                     className="w-full h-[44px] pl-10 pr-3.5 rounded-2xl bg-white border border-[#E5E5E0] text-[13.5px] text-[#141414] placeholder:text-[#787C77] focus:outline-none focus:border-[#141414] transition-colors"
                   />
                 </div>
@@ -670,20 +816,33 @@ export function HomeScreen() {
                   })}
                 </div>
 
-                {/* Lista de Comprovantes (Cards compactos) */}
+                {/* 3. Lista de Comprovantes (Cards compactos com altura uniforme e linha horizontal garantida) */}
                 <div className="mt-3 space-y-2.5">
                   {filteredVaultReceipts.length > 0 ? (
                     filteredVaultReceipts.map((item) => {
-                      const isEditingThisTag = editingTagId === item.id;
                       const isDownloaded = downloadedReceiptId === item.id;
 
                       return (
                         <div
                           key={item.id}
-                          className="rounded-2xl bg-white border border-[#E5E5E0]/80 px-3.5 py-3 flex items-center justify-between gap-3 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
+                          role="button"
+                          tabIndex={0}
+                          aria-label={`Abrir detalhes de ${item.receiver}, ${item.date}, valor R$ ${formatBRL(item.amount)}`}
+                          onClick={() => {
+                            setModalSharedFeedback(false);
+                            setSelectedModalReceiptId(item.id);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              setModalSharedFeedback(false);
+                              setSelectedModalReceiptId(item.id);
+                            }
+                          }}
+                          className="h-[68px] rounded-2xl bg-white border border-[#E5E5E0]/90 hover:border-[#141414]/30 px-3.5 flex items-center justify-between gap-3 shadow-[0_1px_2px_rgba(0,0,0,0.02)] transition-colors cursor-pointer"
                         >
                           {/* Esquerda: Ícone minimalista indicando o tipo */}
-                          <div className="flex items-center gap-3 min-w-0">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
                             <div
                               aria-label={`Tipo: ${item.type}`}
                               title={item.type}
@@ -700,59 +859,32 @@ export function HomeScreen() {
                               )}
                             </div>
 
-                            {/* Centro: Nome do recebedor, data e tag clicável/editável */}
-                            <div className="min-w-0">
+                            {/* Centro: Título com truncate na 1ª linha e data + tag SEMPRE na mesma linha horizontal */}
+                            <div className="min-w-0 flex-1">
                               <p className="text-[14.5px] font-semibold text-[#141414] leading-tight truncate">
                                 {item.receiver}
                               </p>
-                              <div className="mt-1 flex items-center gap-2 flex-wrap">
-                                <span className="text-[12px] text-[#686D68]">
+                              <div className="mt-1 flex items-center gap-2 whitespace-nowrap overflow-hidden">
+                                <span className="text-[12px] text-[#686D68] shrink-0">
                                   {item.date}
                                 </span>
-                                {isEditingThisTag ? (
-                                  <input
-                                    type="text"
-                                    value={editingTagValue}
-                                    autoFocus
-                                    aria-label={`Editar tag de ${item.receiver}`}
-                                    onChange={(e) =>
-                                      setEditingTagValue(e.target.value)
-                                    }
-                                    onBlur={() => handleSaveTag(item.id)}
-                                    onKeyDown={(e) => {
-                                      if (e.key === "Enter") {
-                                        handleSaveTag(item.id);
-                                      } else if (e.key === "Escape") {
-                                        setEditingTagId(null);
-                                      }
-                                    }}
-                                    className="w-[84px] px-2 py-0.5 text-[11.5px] font-medium rounded-md bg-[#F8F7F4] border border-[#141414] text-[#141414] focus:outline-none"
-                                  />
-                                ) : (
-                                  <button
-                                    type="button"
-                                    title="Clique para editar a tag"
-                                    aria-label={`Tag ${item.tag}. Clique para editar`}
-                                    onClick={() => handleStartEditTag(item)}
-                                    className="px-2 py-0.5 rounded-md bg-[#F3F2EE] hover:bg-[#E7E5DF] text-[11.5px] font-medium text-[#3B6B56] transition-colors cursor-pointer"
-                                  >
-                                    {item.tag}
-                                  </button>
-                                )}
+                                <span className="px-2 py-0.5 rounded-md bg-[#F3F2EE] text-[11px] font-medium text-[#3B6B56] shrink-0">
+                                  {item.tag}
+                                </span>
                               </div>
                             </div>
                           </div>
 
                           {/* Direita: Valor formatado em Real em negrito e ação rápida */}
                           <div className="flex items-center gap-2.5 shrink-0">
-                            <span className="text-[14.5px] font-bold text-[#141414] tabular-nums">
+                            <span className="text-[14.5px] font-bold text-[#141414] tabular-nums whitespace-nowrap">
                               R$ {formatBRL(item.amount)}
                             </span>
                             <button
                               type="button"
                               aria-label={`Baixar ou compartilhar comprovante original de ${item.receiver}`}
                               title="Baixar/compartilhar comprovante original"
-                              onClick={() => handleQuickDownload(item)}
+                              onClick={(e) => handleQuickDownload(e, item)}
                               className="w-[34px] h-[34px] rounded-xl bg-[#F8F7F4] hover:bg-[#ECEAE4] border border-[#E5E5E0] text-[#141414] flex items-center justify-center transition-colors cursor-pointer"
                             >
                               {isDownloaded ? (
@@ -774,26 +906,6 @@ export function HomeScreen() {
                   )}
                 </div>
               </div>
-
-              {/* 3 Benefits List */}
-              <ul
-                aria-label="Benefícios da análise de fatura"
-                className="mt-7 space-y-3.5 px-1"
-              >
-                {BENEFITS.map((benefit) => (
-                  <li key={benefit} className="flex items-start gap-3">
-                    <span
-                      aria-hidden="true"
-                      className="mt-0.5 w-[22px] h-[22px] rounded-full bg-[#E3EDE8] text-[#285A44] flex items-center justify-center shrink-0"
-                    >
-                      <CheckIcon className="w-3.5 h-3.5" />
-                    </span>
-                    <span className="text-[15px] text-[#2F3531] leading-snug font-medium">
-                      {benefit}
-                    </span>
-                  </li>
-                ))}
-              </ul>
             </section>
           )}
 
@@ -812,7 +924,6 @@ export function HomeScreen() {
                       <div className="h-1.5 w-full rounded-full bg-[#E5E3DD]" />
                       <div className="h-1.5 w-2/3 rounded-full bg-[#E5E3DD]" />
                     </div>
-                    {/* Animated Scanner Beam (respects prefers-reduced-motion) */}
                     <div
                       aria-hidden="true"
                       className="scanner-line absolute left-0 right-0 h-[3px] bg-[#3B6B56] shadow-[0_0_12px_2px_rgba(59,107,86,0.45)]"
@@ -820,7 +931,7 @@ export function HomeScreen() {
                   </div>
 
                   <div className="text-center mt-5">
-                    <h1 className="text-[22px] font-medium tracking-[-0.02em] text-[#161A18]">
+                    <h1 className="text-[22px] font-medium tracking-[-0.02em] text-[#141414]">
                       Analisando sua fatura
                     </h1>
                     {selectedFileName && (
@@ -847,7 +958,7 @@ export function HomeScreen() {
                       className="h-[5px] w-full rounded-full bg-[#D8D6CF] overflow-hidden"
                     >
                       <div
-                        className="h-full rounded-full bg-[#181B19] transition-all duration-200"
+                        className="h-full rounded-full bg-[#141414] transition-all duration-200"
                         style={{ width: `${analysisProgress}%` }}
                       />
                     </div>
@@ -872,22 +983,22 @@ export function HomeScreen() {
                             aria-hidden="true"
                             className={`w-[22px] h-[22px] rounded-full flex items-center justify-center shrink-0 transition-colors ${
                               isCompleted
-                                ? "bg-[#181B19] text-white"
+                                ? "bg-[#141414] text-white"
                                 : isCurrent
-                                  ? "border-2 border-[#181B19] bg-white text-[#181B19]"
+                                  ? "border-2 border-[#141414] bg-white text-[#141414]"
                                   : "border border-[#C5C3BC] bg-[#FAF9F6] text-transparent"
                             }`}
                           >
                             {isCompleted ? (
                               <CheckIcon className="w-3.5 h-3.5" />
                             ) : isCurrent ? (
-                              <span className="w-2 h-2 rounded-full bg-[#181B19]" />
+                              <span className="w-2 h-2 rounded-full bg-[#141414]" />
                             ) : null}
                           </span>
                           <span
                             className={
                               isCompleted || isCurrent
-                                ? "font-medium text-[#161A18]"
+                                ? "font-medium text-[#141414]"
                                 : "text-[#4E5450]"
                             }
                           >
@@ -908,7 +1019,7 @@ export function HomeScreen() {
                     <AlertCircleIcon className="w-7 h-7" />
                   </div>
 
-                  <h1 className="text-[22px] font-semibold tracking-[-0.02em] text-[#161A18] mt-4">
+                  <h1 className="text-[22px] font-semibold tracking-[-0.02em] text-[#141414] mt-4">
                     Não conseguimos ler esta fatura
                   </h1>
 
@@ -917,7 +1028,7 @@ export function HomeScreen() {
                   </p>
 
                   <div className="mt-4 rounded-[18px] bg-white p-4 text-left border border-[#E2E0D8]">
-                    <p className="text-[13px] font-semibold text-[#181C1A]">
+                    <p className="text-[13px] font-semibold text-[#141414]">
                       Orientação de formato:
                     </p>
                     <ul className="mt-1.5 text-[13px] text-[#4A504C] space-y-1 list-disc list-inside">
@@ -939,7 +1050,7 @@ export function HomeScreen() {
                       setAnalysisError(null);
                       setScreenState("empty");
                     }}
-                    className="mt-5 w-full min-h-[50px] rounded-[16px] bg-[#181B19] hover:bg-[#272B28] text-white font-semibold text-[15px] py-3.5 px-5 flex items-center justify-center gap-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#181B19] cursor-pointer"
+                    className="mt-5 w-full min-h-[50px] rounded-[16px] bg-[#141414] hover:bg-[#262626] text-white font-semibold text-[15px] py-3.5 px-5 flex items-center justify-center gap-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#141414] cursor-pointer"
                   >
                     Tentar de novo
                   </button>
@@ -952,7 +1063,7 @@ export function HomeScreen() {
             <section aria-label="Resultado da análise de cobranças">
               {/* Greeting / Dynamic Title */}
               <h1 className="text-[26px] sm:text-[28px] leading-[1.2] tracking-[-0.03em]">
-                <span className="block font-medium text-[#161A18]">
+                <span className="block font-medium text-[#141414]">
                   Encontramos R$ {formatBRL(metrics.activeTotal)} para você
                   recuperar.
                 </span>
@@ -1006,7 +1117,7 @@ export function HomeScreen() {
                     className="h-[4px] w-full rounded-full bg-[#D5D3CC] overflow-hidden"
                   >
                     <div
-                      className="h-full rounded-full bg-[#181B19] transition-all duration-300"
+                      className="h-full rounded-full bg-[#141414] transition-all duration-300"
                       style={{ width: `${metrics.progressPercent}%` }}
                     />
                   </div>
@@ -1044,7 +1155,7 @@ export function HomeScreen() {
                                 className={`text-[16px] font-semibold leading-snug ${
                                   isResolved
                                     ? "line-through text-[#4E5450]"
-                                    : "text-[#181C1A]"
+                                    : "text-[#141414]"
                                 }`}
                               >
                                 {item.merchant}
@@ -1064,7 +1175,7 @@ export function HomeScreen() {
                               className={`text-[16px] font-semibold leading-snug tabular-nums ${
                                 isResolved
                                   ? "line-through text-[#4E5450]"
-                                  : "text-[#181C1A]"
+                                  : "text-[#141414]"
                               }`}
                             >
                               R$ {formatBRL(item.amount)}
@@ -1083,7 +1194,7 @@ export function HomeScreen() {
                             aria-controls={`cancel-guide-${item.id}`}
                             aria-label={`Como cancelar ${item.merchant}`}
                             onClick={() => handleToggleAccordion(item.id)}
-                            className="min-h-[44px] px-2 -ml-2 inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-[#2E5945] hover:text-[#181B19] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#181B19] transition-colors cursor-pointer"
+                            className="min-h-[44px] px-2 -ml-2 inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-[#2E5945] hover:text-[#141414] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#141414] transition-colors cursor-pointer"
                           >
                             <span>Como cancelar</span>
                             <ChevronDownIcon
@@ -1100,7 +1211,7 @@ export function HomeScreen() {
                           )}
                         </div>
 
-                        {/* Accordion Content (only one open at a time) */}
+                        {/* Accordion Content */}
                         {isExpanded && (
                           <div
                             id={`cancel-guide-${item.id}`}
@@ -1109,7 +1220,7 @@ export function HomeScreen() {
                             <p className="text-[12.5px] font-semibold uppercase tracking-[0.08em] text-[#4A504C]">
                               Passo a passo
                             </p>
-                            <ol className="mt-2 space-y-2 text-[13.5px] text-[#181C1A] list-decimal list-inside leading-relaxed">
+                            <ol className="mt-2 space-y-2 text-[13.5px] text-[#141414] list-decimal list-inside leading-relaxed">
                               {item.cancelGuide.steps.map((step, index) => (
                                 <li key={index}>{step}</li>
                               ))}
@@ -1119,7 +1230,7 @@ export function HomeScreen() {
                               <p className="text-[12px] font-semibold text-[#4A504C] mb-1">
                                 Mensagem pronta para suporte:
                               </p>
-                              <p className="text-[13px] text-[#181C1A] leading-relaxed">
+                              <p className="text-[13px] text-[#141414] leading-relaxed">
                                 &ldquo;{item.cancelGuide.script}&rdquo;
                               </p>
                             </div>
@@ -1134,7 +1245,7 @@ export function HomeScreen() {
                                     item.cancelGuide.script
                                   )
                                 }
-                                className="min-h-[44px] px-3.5 py-2 rounded-[12px] bg-white border border-[#D5D3CC] hover:border-[#181B19] text-[13px] font-semibold text-[#181C1A] inline-flex items-center gap-1.5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#181B19] cursor-pointer"
+                                className="min-h-[44px] px-3.5 py-2 rounded-[12px] bg-white border border-[#D5D3CC] hover:border-[#141414] text-[13px] font-semibold text-[#141414] inline-flex items-center gap-1.5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#141414] cursor-pointer"
                               >
                                 <CopyIcon className="w-4 h-4" />
                                 <span>
@@ -1150,7 +1261,7 @@ export function HomeScreen() {
                                     : `Marcar ${item.merchant} como já resolvida`
                                 }
                                 onClick={() => handleMarkResolved(item.id)}
-                                className="min-h-[44px] px-4 py-2 rounded-[12px] bg-[#181B19] hover:bg-[#272B28] text-white text-[13px] font-semibold inline-flex items-center gap-1.5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#181B19] cursor-pointer"
+                                className="min-h-[44px] px-4 py-2 rounded-[12px] bg-[#141414] hover:bg-[#262626] text-white text-[13px] font-semibold inline-flex items-center gap-1.5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#141414] cursor-pointer"
                               >
                                 <CheckIcon className="w-4 h-4" />
                                 <span>
@@ -1169,7 +1280,7 @@ export function HomeScreen() {
               </div>
 
               {/* Dark Upsell Card: Não deixe voltar. */}
-              <div className="mt-8 rounded-[26px] bg-[#181B19] text-white p-6 shadow-[0_12px_30px_rgba(24,27,25,0.16)]">
+              <div className="mt-8 rounded-[26px] bg-[#141414] text-white p-6 shadow-[0_12px_30px_rgba(20,20,20,0.16)]">
                 <h2 className="text-[21px] font-semibold tracking-[-0.02em] text-white">
                   Não deixe voltar.
                 </h2>
@@ -1182,7 +1293,7 @@ export function HomeScreen() {
                   type="button"
                   aria-label="Ativar monitoramento por R$ 14,90 por mês"
                   onClick={handleActivateMonitoring}
-                  className="mt-5 w-full min-h-[50px] rounded-[16px] bg-white hover:bg-[#F0EFEA] text-[#181B19] font-semibold text-[15px] py-3.5 px-5 flex items-center justify-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white cursor-pointer"
+                  className="mt-5 w-full min-h-[50px] rounded-[16px] bg-white hover:bg-[#F0EFEA] text-[#141414] font-semibold text-[15px] py-3.5 px-5 flex items-center justify-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white cursor-pointer"
                 >
                   Ativar monitoramento · R$ 14,90/mês
                 </button>
@@ -1203,7 +1314,7 @@ export function HomeScreen() {
                   type="button"
                   aria-label="Enviar outra fatura"
                   onClick={handleSendAnotherInvoice}
-                  className="min-h-[44px] px-4 py-2 text-[14px] font-medium text-[#4A504C] hover:text-[#161A18] underline underline-offset-4 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#181B19] cursor-pointer"
+                  className="min-h-[44px] px-4 py-2 text-[14px] font-medium text-[#4A504C] hover:text-[#141414] underline underline-offset-4 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#141414] cursor-pointer"
                 >
                   Enviar outra fatura
                 </button>
@@ -1211,6 +1322,194 @@ export function HomeScreen() {
             </section>
           )}
         </main>
+
+        {/* 4. Modal / Bottom Sheet de Detalhes do Documento */}
+        {selectedModalReceipt && (
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-receipt-title"
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-[2px] p-0 sm:p-4"
+            onClick={() => setSelectedModalReceiptId(null)}
+          >
+            <div
+              className="w-full max-w-[430px] rounded-t-[28px] sm:rounded-[28px] bg-[#F8F7F4] border border-[#E5E5E0] p-5 sm:p-6 shadow-[0_-12px_36px_rgba(0,0,0,0.16)] max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Cabeçalho do Modal */}
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-[44px] h-[44px] rounded-2xl bg-white border border-[#E5E5E0] text-[#141414] flex items-center justify-center shrink-0">
+                    {selectedModalReceipt.type === "PIX" && (
+                      <PixIcon className="w-5 h-5" />
+                    )}
+                    {selectedModalReceipt.type === "Boleto" && (
+                      <BarcodeIcon className="w-5 h-5" />
+                    )}
+                    {selectedModalReceipt.type === "Fatura" && (
+                      <InvoiceDocIcon className="w-5 h-5" />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[11px] uppercase tracking-[0.1em] font-semibold text-[#686D68]">
+                      {selectedModalReceipt.type} • {selectedModalReceipt.date}
+                    </span>
+                    <h3
+                      id="modal-receipt-title"
+                      className="text-[18px] font-semibold text-[#141414] leading-snug truncate"
+                    >
+                      {selectedModalReceipt.receiver}
+                    </h3>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  aria-label="Fechar detalhes do documento"
+                  onClick={() => setSelectedModalReceiptId(null)}
+                  className="w-[38px] h-[38px] rounded-full bg-white border border-[#E5E5E0] text-[#4A504C] hover:text-[#141414] flex items-center justify-center shrink-0 transition-colors cursor-pointer"
+                >
+                  <CloseIcon className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Valor Total em destaque */}
+              <div className="mt-4 rounded-2xl bg-white border border-[#E5E5E0] px-4 py-3.5 flex items-center justify-between">
+                <span className="text-[13px] font-medium text-[#4A504C]">
+                  Valor total do documento
+                </span>
+                <span className="text-[22px] font-bold text-[#141414] tabular-nums">
+                  R$ {formatBRL(selectedModalReceipt.amount)}
+                </span>
+              </div>
+
+              {/* Edição de Tag com pequenas pílulas */}
+              <div className="mt-4">
+                <p className="text-[11.5px] uppercase tracking-[0.1em] font-semibold text-[#4E5450] mb-2">
+                  ETIQUETA / CATEGORIA
+                </p>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {AVAILABLE_MODAL_TAGS.map((tagOption) => {
+                    const isSelectedTag =
+                      selectedModalReceipt.tag.toLowerCase() ===
+                      tagOption.toLowerCase();
+                    return (
+                      <button
+                        key={tagOption}
+                        type="button"
+                        onClick={() =>
+                          handleSelectModalTag(
+                            selectedModalReceipt.id,
+                            tagOption
+                          )
+                        }
+                        className={`px-3 py-1.5 rounded-full text-[12px] font-medium transition-colors cursor-pointer ${
+                          isSelectedTag
+                            ? "bg-[#141414] text-white border border-[#141414]"
+                            : "bg-white text-[#4A504C] border border-[#E5E5E0] hover:border-[#141414]/40"
+                        }`}
+                      >
+                        {tagOption}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Condicional para FATURAS vs PIX/BOLETOS */}
+              {selectedModalReceipt.type === "Fatura" ? (
+                <div className="mt-5">
+                  <p className="text-[11.5px] uppercase tracking-[0.1em] font-semibold text-[#912018] mb-2.5">
+                    ALERTAS E VAZAMENTOS ENCONTRADOS (3)
+                  </p>
+                  <div className="space-y-2">
+                    {INVOICE_LEAK_ALERTS.map((alertText, idx) => (
+                      <div
+                        key={idx}
+                        className="rounded-2xl bg-[#FAF0EE] border border-[#F1D5D0] p-3.5 flex items-start gap-2.5"
+                      >
+                        <AlertCircleIcon className="w-4 h-4 text-[#B42318] shrink-0 mt-0.5" />
+                        <p className="text-[13px] leading-snug text-[#3A1A18] font-medium">
+                          {alertText}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-5">
+                  <p className="text-[11.5px] uppercase tracking-[0.1em] font-semibold text-[#4E5450] mb-2.5">
+                    Dados do Comprovante Validado
+                  </p>
+                  <div className="rounded-2xl bg-white border border-[#E5E5E0] p-4 space-y-2.5 text-[13px]">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[#686D68]">Destinatário</span>
+                      <span className="font-semibold text-[#141414] text-right">
+                        {selectedModalReceipt.receiver}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[#686D68]">CPF/CNPJ mascarado</span>
+                      <span className="font-mono text-[12.5px] text-[#141414]">
+                        {selectedModalReceipt.maskedDocument}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[#686D68]">Instituição</span>
+                      <span className="font-medium text-[#141414] text-right">
+                        {selectedModalReceipt.institution}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 pt-1 border-t border-[#F0EFEA]">
+                      <span className="text-[#686D68]">Status</span>
+                      <span className="font-semibold text-[#245942]">
+                        Autenticado / Sem duplicidade no mês
+                      </span>
+                    </div>
+
+                    {(selectedModalReceipt.tag === "#Saúde" ||
+                      selectedModalReceipt.tag === "#ImpostoDeRenda") && (
+                      <div className="mt-2 pt-2 border-t border-[#F0EFEA] flex items-center justify-between">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#EBF3EE] text-[#1E4635] text-[12px] font-semibold w-full justify-center">
+                          <CheckIcon className="w-3.5 h-3.5" />
+                          <span>Elegível para dedução IRPF</span>
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Rodapé do Modal (Ações) */}
+              <div className="mt-6 space-y-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setModalSharedFeedback(true);
+                    window.setTimeout(() => setModalSharedFeedback(false), 2200);
+                  }}
+                  className="w-full min-h-[48px] rounded-2xl bg-[#141414] hover:bg-[#262626] text-white text-[14.5px] font-semibold py-3 px-4 flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                >
+                  <ShareDownloadIcon className="w-4 h-4" />
+                  <span>
+                    {modalSharedFeedback
+                      ? "Comprovante pronto ✓"
+                      : "Baixar / Compartilhar Comprovante"}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleDeleteFromVault(selectedModalReceipt.id)}
+                  className="w-full min-h-[42px] rounded-2xl bg-transparent hover:bg-[#EFECE6] text-[#8A2921] text-[13.5px] font-medium py-2.5 px-4 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <TrashIcon className="w-4 h-4" />
+                  <span>Excluir do Cofre</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
