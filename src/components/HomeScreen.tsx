@@ -3,11 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 import {
   AlertCircleIcon,
+  BarcodeIcon,
   CheckIcon,
   ChevronDownIcon,
   CopyIcon,
   DocumentScannerIcon,
+  InvoiceDocIcon,
   LogOutIcon,
+  PixIcon,
+  SearchIcon,
+  ShareDownloadIcon,
   ShieldCheckIcon,
   TrashIcon,
   UploadIcon,
@@ -33,6 +38,80 @@ const BENEFITS = [
   "Mostra como cancelar, passo a passo",
 ];
 
+export type VaultReceiptType = "PIX" | "Boleto" | "Fatura";
+export type VaultFilterCategory =
+  | "Todos"
+  | "PIX"
+  | "Boletos"
+  | "Faturas"
+  | "Saúde/IR";
+
+export interface VaultReceiptItem {
+  id: string;
+  receiver: string;
+  date: string;
+  tag: string;
+  amount: number;
+  type: VaultReceiptType;
+  isHealthIR?: boolean;
+  extractedText: string;
+}
+
+const VAULT_FILTER_PILLS: VaultFilterCategory[] = [
+  "Todos",
+  "PIX",
+  "Boletos",
+  "Faturas",
+  "Saúde/IR",
+];
+
+const INITIAL_VAULT_RECEIPTS: VaultReceiptItem[] = [
+  {
+    id: "rec-1",
+    receiver: "Oficina Brasil",
+    date: "09 Nov 2026",
+    tag: "#Carro",
+    amount: 350.0,
+    type: "PIX",
+    isHealthIR: false,
+    extractedText:
+      "CNPJ 12.345.678/0001-90 Comprovante PIX Revisão freios e troca de óleo automotivo veículo carro",
+  },
+  {
+    id: "rec-2",
+    receiver: "Clínica São Lucas",
+    date: "04 Nov 2026",
+    tag: "#Saúde",
+    amount: 420.0,
+    type: "PIX",
+    isHealthIR: true,
+    extractedText:
+      "CNPJ 45.987.123/0001-11 Consulta médica cardiologia exames recibo dedutível Imposto de Renda IRPF saúde",
+  },
+  {
+    id: "rec-3",
+    receiver: "Condomínio Ed. Horizonte",
+    date: "01 Nov 2026",
+    tag: "#Moradia",
+    amount: 890.5,
+    type: "Boleto",
+    isHealthIR: false,
+    extractedText:
+      "CNPJ 33.222.111/0001-55 Boleto bancário taxa condominial mensal novembro",
+  },
+  {
+    id: "rec-4",
+    receiver: "Fatura Nubank Platinum",
+    date: "28 Out 2026",
+    tag: "#Cartão",
+    amount: 2140.8,
+    type: "Fatura",
+    isHealthIR: false,
+    extractedText:
+      "CNPJ 18.236.120/0001-58 Fatura fechada cartão de crédito assinaturas e compras",
+  },
+];
+
 const ANALYSIS_STEPS: { id: AnalysisStageId; label: string }[] = [
   { id: "reading", label: "Lendo documento…" },
   { id: "masking", label: "Mascarando seus dados…" },
@@ -56,6 +135,19 @@ export function HomeScreen() {
   const [isAvatarMenuOpen, setIsAvatarMenuOpen] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [statusBanner, setStatusBanner] = useState<string | null>(null);
+
+  // States do Cofre de Comprovantes
+  const [vaultReceipts, setVaultReceipts] = useState<VaultReceiptItem[]>(
+    INITIAL_VAULT_RECEIPTS
+  );
+  const [vaultSearchQuery, setVaultSearchQuery] = useState("");
+  const [activeVaultCategory, setActiveVaultCategory] =
+    useState<VaultFilterCategory>("Todos");
+  const [editingTagId, setEditingTagId] = useState<string | null>(null);
+  const [editingTagValue, setEditingTagValue] = useState("");
+  const [downloadedReceiptId, setDownloadedReceiptId] = useState<string | null>(
+    null
+  );
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const avatarMenuRef = useRef<HTMLDivElement>(null);
@@ -228,6 +320,66 @@ export function HomeScreen() {
 
   const metrics = calculateChargesMetrics(charges);
 
+  // Filtro instantâneo (busca por nome, valor, data, CNPJ/texto oculto e tag + pílula de categoria)
+  const normalizedQuery = vaultSearchQuery.trim().toLowerCase();
+  const filteredVaultReceipts = vaultReceipts.filter((item) => {
+    const matchesCategory =
+      activeVaultCategory === "Todos" ||
+      (activeVaultCategory === "PIX" && item.type === "PIX") ||
+      (activeVaultCategory === "Boletos" && item.type === "Boleto") ||
+      (activeVaultCategory === "Faturas" && item.type === "Fatura") ||
+      (activeVaultCategory === "Saúde/IR" &&
+        (item.isHealthIR ||
+          item.tag.toLowerCase().includes("saúde") ||
+          item.tag.toLowerCase().includes("saude") ||
+          item.tag.toLowerCase().includes("ir")));
+
+    if (!matchesCategory) return false;
+    if (!normalizedQuery) return true;
+
+    const formattedValue = formatBRL(item.amount).toLowerCase();
+    const rawValue = String(item.amount).toLowerCase();
+    const searchableContent = [
+      item.receiver,
+      item.date,
+      item.tag,
+      formattedValue,
+      `r$ ${formattedValue}`,
+      rawValue,
+      item.type,
+      item.extractedText,
+    ]
+      .join(" ")
+      .toLowerCase();
+
+    return searchableContent.includes(normalizedQuery);
+  });
+
+  const handleStartEditTag = (item: VaultReceiptItem) => {
+    setEditingTagId(item.id);
+    setEditingTagValue(item.tag);
+  };
+
+  const handleSaveTag = (id: string) => {
+    const trimmed = editingTagValue.trim();
+    if (trimmed) {
+      const formattedTag = trimmed.startsWith("#") ? trimmed : `#${trimmed}`;
+      setVaultReceipts((prev) =>
+        prev.map((item) =>
+          item.id === id ? { ...item, tag: formattedTag } : item
+        )
+      );
+    }
+    setEditingTagId(null);
+  };
+
+  const handleQuickDownload = (item: VaultReceiptItem) => {
+    setDownloadedReceiptId(item.id);
+    window.setTimeout(() => {
+      setDownloadedReceiptId((prev) => (prev === item.id ? null : prev));
+    }, 2000);
+  };
+
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -259,10 +411,10 @@ export function HomeScreen() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F7F3] text-[#161A18] flex justify-center">
-      <div className="w-full max-w-[430px] min-h-screen bg-[#F8F7F3] pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] relative">
+    <div className="min-h-screen bg-[#F8F7F4] text-[#161A18] flex justify-center">
+      <div className="w-full max-w-[430px] min-h-screen bg-[#F8F7F4] pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] relative">
         {/* Top Sticky Header */}
-        <header className="sticky top-0 z-30 bg-[#F8F7F3]/95 backdrop-blur-md border-b border-[#EAE8E2] px-5 py-3 flex items-center justify-between">
+        <header className="sticky top-0 z-30 bg-[#F8F7F4]/95 backdrop-blur-md border-b border-[#EAE8E2] px-5 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div
               role="img"
@@ -389,18 +541,19 @@ export function HomeScreen() {
         {/* Main Content */}
         <main className="px-5 pt-6">
           {screenState === "empty" && (
-            <section aria-label="Boas-vindas e envio de fatura">
+            <section aria-label="Boas-vindas e envio de fatura ou comprovante">
               {/* Greeting */}
               <h1 className="text-[28px] sm:text-[30px] leading-[1.18] tracking-[-0.03em]">
                 <span className="block font-medium text-[#161A18]">
                   Bom dia, {userName}.
                 </span>
                 <span className="block font-normal text-[#4B514D] mt-1">
-                  Descubra quanto está escapando das suas assinaturas.
+                  Descubra vazamentos nas faturas e guarde comprovantes PIX sem
+                  bagunça.
                 </span>
               </h1>
 
-              {/* Card NOVA ANÁLISE / Envie uma fatura */}
+              {/* Card NOVA ANÁLISE / Envie fatura ou comprovante */}
               <div className="mt-6 rounded-[28px] invoice-card-gradient p-6">
                 <div className="flex items-start justify-between">
                   <div>
@@ -408,7 +561,7 @@ export function HomeScreen() {
                       NOVA ANÁLISE
                     </p>
                     <h2 className="text-[22px] leading-tight tracking-[-0.02em] font-medium text-[#1F2725] mt-1">
-                      Envie uma fatura
+                      Envie fatura ou comprovante
                     </h2>
                   </div>
                   <ShieldCheckIcon className="w-[21px] h-[21px] text-[#485250] mt-0.5 shrink-0" />
@@ -418,7 +571,7 @@ export function HomeScreen() {
                 <div
                   role="button"
                   tabIndex={0}
-                  aria-label="Área para arrastar ou selecionar fatura em PDF, imagem ou print"
+                  aria-label="Área para arrastar ou selecionar fatura ou comprovante em PDF, imagem ou print"
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
@@ -429,15 +582,15 @@ export function HomeScreen() {
                       fileInputRef.current?.click();
                     }
                   }}
-                  className={`mt-5 w-full rounded-[20px] bg-white py-8 px-5 flex flex-col items-center justify-center text-center border-2 border-dashed transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#181B19] ${
+                  className={`mt-5 w-full rounded-[20px] bg-white py-7 px-5 flex flex-col items-center justify-center text-center border-2 border-dashed transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#141414] ${
                     isDragging
-                      ? "border-[#181B19] bg-[#F8F7F3]"
+                      ? "border-[#141414] bg-[#F8F7F4]"
                       : "border-[#D5D3CC] hover:border-[#485250]"
                   }`}
                 >
                   <UploadIcon className="w-[22px] h-[22px] text-[#485250] mb-2.5" />
                   <span className="text-[15.5px] font-semibold text-[#1F2725]">
-                    Arraste sua fatura ou toque para escolher
+                    Arraste seu arquivo ou toque para escolher
                   </span>
                   <span className="text-[13.5px] text-[#4E5450] mt-1">
                     Aceita PDF, imagem ou print do app do banco
@@ -447,19 +600,179 @@ export function HomeScreen() {
                 {/* Solid dark full-width CTA button */}
                 <button
                   type="button"
-                  aria-label="Enviar fatura para análise"
+                  aria-label="Enviar documento para análise"
                   onClick={() => fileInputRef.current?.click()}
-                  className="mt-4 w-full min-h-[52px] rounded-[16px] bg-[#181B19] hover:bg-[#272B28] text-white py-3.5 px-5 flex items-center justify-center gap-2.5 text-center transition-all active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#181B19] cursor-pointer shadow-[0_4px_14px_rgba(24,27,25,0.18)]"
+                  className="mt-4 w-full min-h-[52px] rounded-[16px] bg-[#141414] hover:bg-[#262626] text-white py-3.5 px-5 flex items-center justify-center gap-2.5 text-center transition-all active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#141414] cursor-pointer shadow-[0_4px_14px_rgba(20,20,20,0.18)]"
                 >
                   <UploadIcon className="w-[20px] h-[20px] text-white shrink-0" />
                   <span className="text-[15.5px] font-semibold tracking-[-0.01em]">
-                    Enviar fatura
+                    Enviar documento
                   </span>
                 </button>
 
                 <p className="text-[12.5px] leading-[1.45] text-[#4A504C] text-center max-w-[310px] mx-auto mt-4">
                   Seus dados são mascarados e não vendemos informações.
                 </p>
+              </div>
+
+              {/* Nova Seção: Cofre de Comprovantes */}
+              <div
+                aria-label="Cofre de Comprovantes"
+                className="mt-8"
+              >
+                {/* Cabeçalho discreto alinhado à esquerda com contador lateral */}
+                <div className="flex items-center justify-between px-0.5">
+                  <h2 className="text-[11px] uppercase tracking-[0.12em] font-semibold text-[#4E5450]">
+                    MEU COFRE
+                  </h2>
+                  <span className="text-[12px] font-medium text-[#686D68]">
+                    12 arquivos
+                  </span>
+                </div>
+
+                {/* Barra de busca minimalista */}
+                <div className="mt-2.5 relative">
+                  <SearchIcon className="w-[17px] h-[17px] text-[#686D68] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="search"
+                    value={vaultSearchQuery}
+                    onChange={(e) => setVaultSearchQuery(e.target.value)}
+                    aria-label="Buscar comprovantes no cofre"
+                    placeholder="Buscar por nome, valor, CNPJ ou tag (ex: carro, saúde)..."
+                    className="w-full h-[44px] pl-10 pr-3.5 rounded-2xl bg-white border border-[#E5E5E0] text-[13.5px] text-[#141414] placeholder:text-[#787C77] focus:outline-none focus:border-[#141414] transition-colors"
+                  />
+                </div>
+
+                {/* Pílulas de filtro rápido (scroll horizontal no mobile) */}
+                <div
+                  role="tablist"
+                  aria-label="Filtrar comprovantes por categoria"
+                  className="mt-3 flex items-center gap-2 overflow-x-auto no-scrollbar pb-1"
+                >
+                  {VAULT_FILTER_PILLS.map((pill) => {
+                    const isActive = activeVaultCategory === pill;
+                    return (
+                      <button
+                        key={pill}
+                        type="button"
+                        role="tab"
+                        aria-selected={isActive}
+                        onClick={() => setActiveVaultCategory(pill)}
+                        className={`px-3.5 py-1.5 rounded-full text-[12.5px] font-medium whitespace-nowrap transition-colors shrink-0 cursor-pointer ${
+                          isActive
+                            ? "bg-[#141414] text-white border border-[#141414]"
+                            : "bg-white text-[#4A504C] border border-[#E5E5E0] hover:border-[#141414]/40"
+                        }`}
+                      >
+                        {pill}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Lista de Comprovantes (Cards compactos) */}
+                <div className="mt-3 space-y-2.5">
+                  {filteredVaultReceipts.length > 0 ? (
+                    filteredVaultReceipts.map((item) => {
+                      const isEditingThisTag = editingTagId === item.id;
+                      const isDownloaded = downloadedReceiptId === item.id;
+
+                      return (
+                        <div
+                          key={item.id}
+                          className="rounded-2xl bg-white border border-[#E5E5E0]/80 px-3.5 py-3 flex items-center justify-between gap-3 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
+                        >
+                          {/* Esquerda: Ícone minimalista indicando o tipo */}
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div
+                              aria-label={`Tipo: ${item.type}`}
+                              title={item.type}
+                              className="w-[38px] h-[38px] rounded-xl bg-[#F8F7F4] border border-[#E5E5E0] text-[#141414] flex items-center justify-center shrink-0"
+                            >
+                              {item.type === "PIX" && (
+                                <PixIcon className="w-[18px] h-[18px]" />
+                              )}
+                              {item.type === "Boleto" && (
+                                <BarcodeIcon className="w-[18px] h-[18px]" />
+                              )}
+                              {item.type === "Fatura" && (
+                                <InvoiceDocIcon className="w-[18px] h-[18px]" />
+                              )}
+                            </div>
+
+                            {/* Centro: Nome do recebedor, data e tag clicável/editável */}
+                            <div className="min-w-0">
+                              <p className="text-[14.5px] font-semibold text-[#141414] leading-tight truncate">
+                                {item.receiver}
+                              </p>
+                              <div className="mt-1 flex items-center gap-2 flex-wrap">
+                                <span className="text-[12px] text-[#686D68]">
+                                  {item.date}
+                                </span>
+                                {isEditingThisTag ? (
+                                  <input
+                                    type="text"
+                                    value={editingTagValue}
+                                    autoFocus
+                                    aria-label={`Editar tag de ${item.receiver}`}
+                                    onChange={(e) =>
+                                      setEditingTagValue(e.target.value)
+                                    }
+                                    onBlur={() => handleSaveTag(item.id)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter") {
+                                        handleSaveTag(item.id);
+                                      } else if (e.key === "Escape") {
+                                        setEditingTagId(null);
+                                      }
+                                    }}
+                                    className="w-[84px] px-2 py-0.5 text-[11.5px] font-medium rounded-md bg-[#F8F7F4] border border-[#141414] text-[#141414] focus:outline-none"
+                                  />
+                                ) : (
+                                  <button
+                                    type="button"
+                                    title="Clique para editar a tag"
+                                    aria-label={`Tag ${item.tag}. Clique para editar`}
+                                    onClick={() => handleStartEditTag(item)}
+                                    className="px-2 py-0.5 rounded-md bg-[#F3F2EE] hover:bg-[#E7E5DF] text-[11.5px] font-medium text-[#3B6B56] transition-colors cursor-pointer"
+                                  >
+                                    {item.tag}
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Direita: Valor formatado em Real em negrito e ação rápida */}
+                          <div className="flex items-center gap-2.5 shrink-0">
+                            <span className="text-[14.5px] font-bold text-[#141414] tabular-nums">
+                              R$ {formatBRL(item.amount)}
+                            </span>
+                            <button
+                              type="button"
+                              aria-label={`Baixar ou compartilhar comprovante original de ${item.receiver}`}
+                              title="Baixar/compartilhar comprovante original"
+                              onClick={() => handleQuickDownload(item)}
+                              className="w-[34px] h-[34px] rounded-xl bg-[#F8F7F4] hover:bg-[#ECEAE4] border border-[#E5E5E0] text-[#141414] flex items-center justify-center transition-colors cursor-pointer"
+                            >
+                              {isDownloaded ? (
+                                <CheckIcon className="w-4 h-4 text-[#285A44]" />
+                              ) : (
+                                <ShareDownloadIcon className="w-4 h-4" />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="rounded-2xl bg-white border border-[#E5E5E0]/80 py-6 px-4 text-center">
+                      <p className="text-[13.5px] text-[#4E5450]">
+                        Nenhum comprovante encontrado para essa busca.
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* 3 Benefits List */}

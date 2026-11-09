@@ -167,3 +167,105 @@ export function LogOutIcon(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+export function SearchIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.85}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <circle cx="11" cy="11" r="7" />
+      <path d="M20 20l-3.8-3.8" />
+    </svg>
+  );
+}
+
+export function PixIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.75}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <path d="M9.2 6.2l2.8-2.8 2.8 2.8" />
+      <path d="M14.8 17.8L12 20.6l-2.8-2.8" />
+      <path d="M6.2 9.2L3.4 12l2.8 2.8" />
+      <path d="M17.8 9.2l2.8 2.8-2.8 2.8" />
+      <path d="M6.2 9.2h3.1a2 2 0 011.4.6l2.6 2.6a2 2 0 001.4.6h3.1" />
+      <path d="M6.2 14.8h3.1a2 2 0 001.4-.6l2.6-2.6a2 2 0 011.4-.6h3.1" />
+    </svg>
+  );
+}
+
+export function BarcodeIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.85}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <path d="M4 6v12" />
+      <path d="M7.5 6v12" />
+      <path d="M11 6v12" />
+      <path d="M14 6v12" />
+      <path d="M17 6v12" />
+      <path d="M20 6v12" />
+    </svg>
+  );
+}
+
+export function InvoiceDocIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <rect x="5" y="3.5" width="14" height="17" rx="2" />
+      <path d="M8.5 8.5h7" />
+      <path d="M8.5 12h7" />
+      <path d="M8.5 15.5h4.5" />
+    </svg>
+  );
+}
+
+export function ShareDownloadIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.85}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <path d="M12 3.5v11" />
+      <path d="M8 10.5l4 4 4-4" />
+      <path d="M4.5 16.5v2a2 2 0 002 2h11a2 2 0 002-2v-2" />
+    </svg>
+  );
+}
+
