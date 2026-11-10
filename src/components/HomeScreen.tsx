@@ -708,7 +708,7 @@ export function HomeScreen() {
                 </label>
               )}
 
-              {/* Checklist + Nota de Privacidade */}
+              {/* Checklist */}
               <ul
                 aria-label="Benefícios da análise de fatura"
                 className="mt-5 space-y-2.5"
@@ -727,14 +727,6 @@ export function HomeScreen() {
                   </li>
                 ))}
               </ul>
-
-              <p className="mt-3.5 text-[12px] leading-normal text-[#9CA3AF] text-left">
-                Seus dados são mascarados e{" "}
-                <strong className="font-semibold text-[#6B7280]">
-                  não vendemos
-                </strong>{" "}
-                informações.
-              </p>
             </section>
           )}
 
