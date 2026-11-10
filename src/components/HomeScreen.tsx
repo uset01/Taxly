@@ -508,7 +508,7 @@ export function HomeScreen() {
         {/* Top Row: Pill "Nova análise" + Menu "..." */}
         <header className="px-6 pt-5 pb-2 flex items-center justify-between">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-[#F5F5F5] px-3.5 py-1.5 select-none">
-            <ShieldCheckIcon className="w-[16px] h-[16px] text-[#22C55E]" />
+            <ShieldCheckIcon className="w-[16px] h-[16px] text-[#2E6F4E]" />
             <span className="text-[13px] font-medium text-[#171717] tracking-[-0.01em]">
               Nova análise
             </span>
@@ -635,29 +635,20 @@ export function HomeScreen() {
                     Zero vazamentos
                     <span
                       aria-hidden="true"
-                      title="Análise instantânea"
-                      className="inline-flex items-center justify-center align-middle -translate-y-[2px] ml-1.5"
+                      title="Dinheiro economizado"
+                      className="inline-flex items-center justify-center align-middle -translate-y-[2px] ml-2"
                     >
-                      <svg
-                        viewBox="0 0 28 28"
-                        className="w-[27px] h-[27px] drop-shadow-[0_2px_6px_rgba(250,204,21,0.35)]"
-                      >
-                        <defs>
-                          <linearGradient
-                            id="hero-bolt-grad"
-                            x1="0%"
-                            y1="0%"
-                            x2="100%"
-                            y2="100%"
-                          >
-                            <stop offset="0%" stopColor="#FEF08A" />
-                            <stop offset="55%" stopColor="#FACC15" />
-                            <stop offset="100%" stopColor="#F59E0B" />
-                          </linearGradient>
-                        </defs>
+                      {/* Moeda fosca com Cifrão ($) - sem neon */}
+                      <svg viewBox="0 0 28 28" className="w-[27px] h-[27px]">
+                        <circle cx="14" cy="14" r="12" fill="#E3B869" />
+                        <circle cx="14" cy="14" r="9.5" fill="#C9963B" />
                         <path
-                          d="M15.8 2.5L6.2 15.2c-.4.5 0 1.3.7 1.3h6.1l-1.6 8.6c-.1.7.8 1.1 1.3.5l9.9-12.8c.4-.5 0-1.3-.7-1.3h-6.2l1.6-8.4c.1-.7-.8-1.1-1.5-.6z"
-                          fill="url(#hero-bolt-grad)"
+                          d="M14 7.5v13M16.5 10.8c0-1.2-1.1-2-2.5-2s-2.5.8-2.5 2c0 2.3 5 1.7 5 4.2 0 1.3-1.1 2.1-2.5 2.1s-2.5-.8-2.5-2.1"
+                          fill="none"
+                          stroke="#FFFDF9"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
                         />
                       </svg>
                     </span>
@@ -666,76 +657,46 @@ export function HomeScreen() {
                   <span className="block text-[#BDBDBD]">
                     <span
                       aria-hidden="true"
-                      title="Faturas e cobranças"
-                      className="inline-flex items-center justify-center align-middle -translate-y-[2px] mr-1.5"
+                      title="Cédula e pagamentos"
+                      className="inline-flex items-center justify-center align-middle -translate-y-[2px] mr-2"
                     >
-                      <svg
-                        viewBox="0 0 28 28"
-                        className="w-[26px] h-[26px] drop-shadow-[0_2px_6px_rgba(251,146,60,0.28)]"
-                      >
-                        <defs>
-                          <linearGradient
-                            id="hero-invoice-grad"
-                            x1="0%"
-                            y1="0%"
-                            x2="100%"
-                            y2="100%"
-                          >
-                            <stop offset="0%" stopColor="#FED7AA" />
-                            <stop offset="50%" stopColor="#FB923C" />
-                            <stop offset="100%" stopColor="#EA580C" />
-                          </linearGradient>
-                        </defs>
+                      {/* Cédula de dinheiro em verde-sálvia fosco - sem neon */}
+                      <svg viewBox="0 0 28 28" className="w-[28px] h-[28px]">
+                        <rect
+                          x="2.5"
+                          y="6"
+                          width="23"
+                          height="16"
+                          rx="3.5"
+                          fill="#4A7C62"
+                        />
                         <rect
                           x="5"
-                          y="3"
+                          y="8.5"
                           width="18"
-                          height="22"
-                          rx="5"
-                          fill="url(#hero-invoice-grad)"
+                          height="11"
+                          rx="2"
+                          fill="none"
+                          stroke="#DCE8E0"
+                          strokeWidth="1.4"
                         />
-                        <path
-                          d="M9.5 9.5h9M9.5 14h9M9.5 18.5h5.5"
-                          stroke="#FFFFFF"
-                          strokeWidth="2.1"
-                          strokeLinecap="round"
-                        />
+                        <circle cx="14" cy="14" r="3.2" fill="#DCE8E0" />
                       </svg>
                     </span>
                     Faturas e PIX
                     <span
                       aria-hidden="true"
-                      title="Economia protegida"
-                      className="inline-flex items-center justify-center align-middle -translate-y-[2px] ml-1.5"
+                      title="Fatura verificada"
+                      className="inline-flex items-center justify-center align-middle -translate-y-[2px] ml-2"
                     >
-                      <svg
-                        viewBox="0 0 28 28"
-                        className="w-[26px] h-[26px] drop-shadow-[0_2px_6px_rgba(34,197,94,0.3)]"
-                      >
-                        <defs>
-                          <linearGradient
-                            id="hero-shield-grad"
-                            x1="0%"
-                            y1="0%"
-                            x2="100%"
-                            y2="100%"
-                          >
-                            <stop offset="0%" stopColor="#86EFAC" />
-                            <stop offset="55%" stopColor="#4ADE80" />
-                            <stop offset="100%" stopColor="#22C55E" />
-                          </linearGradient>
-                        </defs>
-                        <circle
-                          cx="14"
-                          cy="14"
-                          r="11.5"
-                          fill="url(#hero-shield-grad)"
-                        />
+                      {/* Selo circular terracota/âmbar fosco de recibo/economia - sem neon */}
+                      <svg viewBox="0 0 28 28" className="w-[26px] h-[26px]">
+                        <circle cx="14" cy="14" r="11.5" fill="#D4845A" />
                         <path
                           d="M9.8 14.3l2.8 2.8 5.8-6"
                           fill="none"
-                          stroke="#FFFFFF"
-                          strokeWidth="2.3"
+                          stroke="#FFFDF9"
+                          strokeWidth="2.2"
                           strokeLinecap="round"
                           strokeLinejoin="round"
                         />
@@ -751,21 +712,21 @@ export function HomeScreen() {
                 </p>
               </div>
 
-              {/* Card de Upload cinza claro com botão verde + */}
+              {/* Card de Upload cinza claro com botão verde fosco + */}
               {isCardScanning ? (
                 <div
                   role="status"
                   aria-live="polite"
                   className="mt-6 w-full rounded-[28px] bg-[#F5F5F5] py-11 px-6 flex flex-col items-center justify-center text-center"
                 >
-                  <div className="w-[58px] h-[58px] rounded-[18px] bg-[#22C55E] text-[#0A2914] flex items-center justify-center mb-3.5 animate-pulse">
+                  <div className="w-[58px] h-[58px] rounded-[18px] bg-[#2E6F4E] text-white flex items-center justify-center mb-3.5 animate-pulse">
                     <DocumentScannerIcon className="w-6 h-6" />
                   </div>
                   <p className="text-[15px] font-semibold text-[#111111]">
                     Varrendo documento e mascarando dados sensíveis...
                   </p>
                   <div className="mt-3.5 w-44 h-1.5 rounded-full bg-[#E5E5E5] overflow-hidden">
-                    <div className="h-full w-2/3 rounded-full bg-[#22C55E] animate-pulse" />
+                    <div className="h-full w-2/3 rounded-full bg-[#2E6F4E] animate-pulse" />
                   </div>
                 </div>
               ) : (
@@ -777,11 +738,11 @@ export function HomeScreen() {
                   onDrop={handleDrop}
                   className={`mt-6 w-full rounded-[28px] py-9 px-6 flex flex-col items-center justify-center text-center transition-colors cursor-pointer select-none ${
                     isDragging
-                      ? "bg-[#EBEBEB] ring-2 ring-[#22C55E]"
+                      ? "bg-[#EBEBEB] ring-2 ring-[#2E6F4E]"
                       : "bg-[#F5F5F5] hover:bg-[#EFEFEF] active:bg-[#E8E8E8]"
                   }`}
                 >
-                  <div className="w-[58px] h-[58px] rounded-[18px] bg-[#22C55E] text-[#0A2914] flex items-center justify-center mb-3.5">
+                  <div className="w-[58px] h-[58px] rounded-[18px] bg-[#2E6F4E] text-white flex items-center justify-center mb-3.5">
                     <PlusIcon className="w-6 h-6" />
                   </div>
                   <span className="text-[17px] font-semibold tracking-[-0.02em] text-[#111111]">
@@ -802,7 +763,7 @@ export function HomeScreen() {
                   <li key={benefit} className="flex items-center gap-3">
                     <span
                       aria-hidden="true"
-                      className="w-[22px] h-[22px] rounded-full bg-[#DCFCE7] text-[#15803D] flex items-center justify-center shrink-0"
+                      className="w-[22px] h-[22px] rounded-full bg-[#E6EFEA] text-[#2E6F4E] flex items-center justify-center shrink-0"
                     >
                       <CheckIcon className="w-3 h-3" />
                     </span>
@@ -958,7 +919,7 @@ export function HomeScreen() {
                                 <span className="text-[12px] text-[#8E8E93] shrink-0">
                                   {item.date}
                                 </span>
-                                <span className="px-2 py-0.5 rounded-md bg-[#DCFCE7] text-[11px] font-medium text-[#15803D] shrink-0">
+                                <span className="px-2 py-0.5 rounded-md bg-[#E6EFEA] text-[11px] font-medium text-[#2E6F4E] shrink-0">
                                   {item.tag}
                                 </span>
                               </div>
@@ -977,7 +938,7 @@ export function HomeScreen() {
                               className="w-[34px] h-[34px] rounded-xl bg-white hover:bg-[#EAEAEA] active:bg-[#E0E0E0] text-[#111111] flex items-center justify-center transition-colors cursor-pointer"
                             >
                               {isDownloaded ? (
-                                <CheckIcon className="w-4 h-4 text-[#15803D]" />
+                                <CheckIcon className="w-4 h-4 text-[#2E6F4E]" />
                               ) : (
                                 <ShareDownloadIcon className="w-4 h-4" />
                               )}
