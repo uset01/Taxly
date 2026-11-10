@@ -178,6 +178,8 @@ export function HomeScreen() {
     string | null
   >(null);
   const [modalSharedFeedback, setModalSharedFeedback] = useState(false);
+  const [animatedSocialProofValue, setAnimatedSocialProofValue] =
+    useState<number>(0);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const avatarMenuRef = useRef<HTMLDivElement>(null);
@@ -185,6 +187,43 @@ export function HomeScreen() {
 
   const selectedModalReceipt =
     vaultReceipts.find((item) => item.id === selectedModalReceiptId) ?? null;
+
+  // Animação count-up de R$ 0,00 até R$ 184,70 em ~1 segundo ao carregar a Home
+  useEffect(() => {
+    if (screenState !== "empty" || activeTab !== "home") return;
+
+    const targetValue = 184.7;
+    const durationMs = 1000;
+    let startTime: number | null = null;
+    let animationFrameId: number;
+
+    setAnimatedSocialProofValue(0);
+
+    const step = (timestamp: number) => {
+      if (startTime === null) {
+        startTime = timestamp;
+      }
+      const elapsed = timestamp - startTime;
+      const progress = Math.min(elapsed / durationMs, 1);
+      // Ease-out cubic para contagem fluida
+      const easedProgress = 1 - Math.pow(1 - progress, 3);
+      const currentValue = Number((targetValue * easedProgress).toFixed(2));
+
+      setAnimatedSocialProofValue(currentValue);
+
+      if (progress < 1) {
+        animationFrameId = window.requestAnimationFrame(step);
+      } else {
+        setAnimatedSocialProofValue(targetValue);
+      }
+    };
+
+    animationFrameId = window.requestAnimationFrame(step);
+
+    return () => {
+      window.cancelAnimationFrame(animationFrameId);
+    };
+  }, [screenState, activeTab]);
 
   // Rola para o topo sempre que mudar de estado para evitar salto visual
   useEffect(() => {
@@ -655,7 +694,7 @@ export function HomeScreen() {
                 </p>
                 <p className="mt-4 text-left leading-[1.35]">
                   <span className="text-[28px] font-extrabold tracking-[-0.03em] text-[#0F0F0F] tabular-nums">
-                    R$ 184,70/mês
+                    R$ {formatBRL(animatedSocialProofValue)}/mês
                   </span>{" "}
                   <span className="text-[14.5px] font-normal text-[#8E8E93]">
                     em média devolvidos aos usuários este mês
@@ -687,13 +726,13 @@ export function HomeScreen() {
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
-                  className={`mt-5 w-full rounded-[28px] py-7 px-6 flex flex-col items-center justify-center text-center transition-colors cursor-pointer select-none ${
+                  className={`group mt-5 w-full rounded-[28px] py-7 px-6 flex flex-col items-center justify-center text-center transition-colors cursor-pointer select-none ${
                     isDragging
                       ? "bg-[#EBEBEB]"
                       : "bg-[#F5F5F5] hover:bg-[#EFEFEF] active:bg-[#E8E8E8]"
                   }`}
                 >
-                  <div className="w-[58px] h-[58px] rounded-[18px] bg-[#22C55E] text-[#0A2914] flex items-center justify-center mb-3">
+                  <div className="cta-plus-button w-[58px] h-[58px] rounded-[18px] bg-[#22C55E] group-active:bg-[#00A047] active:bg-[#00A047] text-[#0A2914] flex items-center justify-center mb-3">
                     <PlusIcon className="w-6 h-6" />
                   </div>
                   <span className="text-[17px] font-semibold tracking-[-0.02em] text-[#111111]">
@@ -708,7 +747,7 @@ export function HomeScreen() {
                 </label>
               )}
 
-              {/* Checklist */}
+              {/* Checklist + Nota de Privacidade */}
               <ul
                 aria-label="Benefícios da análise de fatura"
                 className="mt-5 space-y-2.5"
@@ -717,7 +756,7 @@ export function HomeScreen() {
                   <li key={benefit} className="flex items-center gap-3">
                     <span
                       aria-hidden="true"
-                      className="w-[22px] h-[22px] rounded-full bg-[#F5F5F5] text-[#111111] flex items-center justify-center shrink-0"
+                      className="w-[22px] h-[22px] rounded-full bg-[#F5F5F5] text-[#00C853] flex items-center justify-center shrink-0"
                     >
                       <CheckIcon className="w-3 h-3" />
                     </span>
@@ -727,6 +766,14 @@ export function HomeScreen() {
                   </li>
                 ))}
               </ul>
+
+              <p className="mt-3.5 text-[12px] leading-normal text-[#9CA3AF] text-left">
+                Seus dados são mascarados e{" "}
+                <strong className="font-semibold text-[#6B7280]">
+                  não vendemos
+                </strong>{" "}
+                informações.
+              </p>
             </section>
           )}
 

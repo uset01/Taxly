@@ -37,22 +37,34 @@ input {
     #f1efe9;
 }
 
-button,
-[role="button"],
-label,
-a,
-input {
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
+@keyframes cta-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
 }
 
-/* Custom gradient matching the "Envie uma fatura" card */
-.invoice-card-gradient {
-  background:
-    radial-gradient(circle at 0% 0%, #d8e8ee 0%, transparent 58%),
-    radial-gradient(circle at 100% 70%, #efe9d4 0%, transparent 58%),
-    radial-gradient(circle at 15% 100%, #e4eee8 0%, transparent 55%),
-    #f1efe9;
+.cta-plus-button {
+  animation: cta-breathe 2s ease-in-out infinite;
+  transition:
+    transform 0.15s ease-in-out,
+    background-color 0.15s ease-in-out;
+}
+
+label:active .cta-plus-button,
+.cta-plus-button:active {
+  animation: none;
+  transform: scale(0.95);
+  background-color: #00a047;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cta-plus-button {
+    animation: none;
+  }
 }
 
 @keyframes scanner-beam {
