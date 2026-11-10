@@ -5,6 +5,7 @@ import "./globals.css";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  weight: ["400", "600", "800"],
   display: "swap",
 });
 
@@ -21,7 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" className={`${inter.variable} h-full antialiased`}>
-      <body className="min-h-full bg-white text-[#111111] selection:bg-[#22C55E]/20 selection:text-[#111111]">
+      <body className="min-h-full bg-[#FAFAFA] text-[#1A1A1A] selection:bg-[#00C853]/20 selection:text-[#1A1A1A]">
         {children}
       </body>
     </html>
