@@ -503,13 +503,13 @@ export function HomeScreen() {
   const totalVaultFilesCount = 8 + vaultReceipts.length;
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] text-[#1A1A1A] flex justify-center">
-      <div className="w-full max-w-[430px] min-h-screen bg-[#FAFAFA] pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))] relative">
+    <div className="min-h-screen w-full bg-white text-[#111111] overflow-x-hidden">
+      <div className="mx-auto w-full max-w-[430px] min-w-0 min-h-screen bg-white pb-40 relative">
         {/* Top Row: Pill "Nova análise" + Menu "..." */}
-        <header className="px-6 pt-6 pb-2 flex items-center justify-between">
-          <div className="inline-flex items-center gap-2 rounded-[12px] bg-white border border-[#EBEBEB] px-3.5 py-1.5 select-none">
-            <ShieldCheckIcon className="w-[16px] h-[16px] text-[#00C853]" />
-            <span className="text-[13px] font-semibold text-[#1A1A1A] tracking-[-0.01em]">
+        <header className="px-6 pt-5 pb-2 flex items-center justify-between">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-[#F5F5F5] px-3.5 py-1.5 select-none">
+            <ShieldCheckIcon className="w-[16px] h-[16px] text-[#171717]" />
+            <span className="text-[13px] font-medium text-[#171717] tracking-[-0.01em]">
               Nova análise
             </span>
           </div>
@@ -524,7 +524,7 @@ export function HomeScreen() {
                 setIsAvatarMenuOpen((prev) => !prev);
                 setIsConfirmingDelete(false);
               }}
-              className="w-9 h-9 rounded-[12px] flex items-center justify-center text-[#1A1A1A]/60 hover:text-[#1A1A1A] hover:bg-white active:bg-[#EFEFEF] transition-colors cursor-pointer"
+              className="w-9 h-9 rounded-full flex items-center justify-center text-[#8E8E93] hover:text-[#111111] hover:bg-[#F5F5F5] active:bg-[#EBEBEB] transition-colors cursor-pointer"
             >
               <MoreHorizontalIcon className="w-5 h-5" />
             </button>
@@ -533,7 +533,7 @@ export function HomeScreen() {
               <div
                 role="menu"
                 aria-label="Opções da conta e privacidade"
-                className="absolute right-0 mt-2 w-[256px] rounded-[16px] bg-white border border-[#EBEBEB] p-2 z-50"
+                className="absolute right-0 mt-2 w-[256px] rounded-[20px] bg-white border border-[#EAEAEA] p-2 z-50"
               >
                 {!isConfirmingDelete ? (
                   <>
@@ -541,9 +541,9 @@ export function HomeScreen() {
                       type="button"
                       role="menuitem"
                       onClick={handleSendAnotherInvoice}
-                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-[12px] text-left text-[14px] font-semibold text-[#1A1A1A] hover:bg-[#FAFAFA] flex items-center gap-2.5 transition-colors cursor-pointer"
+                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-[12px] text-left text-[14px] font-medium text-[#171717] hover:bg-[#F5F5F5] flex items-center gap-2.5 transition-colors cursor-pointer"
                     >
-                      <UploadIcon className="w-4 h-4 text-[#1A1A1A]/60 shrink-0" />
+                      <UploadIcon className="w-4 h-4 text-[#6B7280] shrink-0" />
                       <span>Enviar outra fatura</span>
                     </button>
 
@@ -551,21 +551,21 @@ export function HomeScreen() {
                       type="button"
                       role="menuitem"
                       onClick={() => setIsConfirmingDelete(true)}
-                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-[12px] text-left text-[14px] font-semibold text-[#1A1A1A] hover:bg-[#FAFAFA] flex items-center gap-2.5 transition-colors cursor-pointer"
+                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-[12px] text-left text-[14px] font-medium text-[#B42318] hover:bg-[#FDF2F2] flex items-center gap-2.5 transition-colors cursor-pointer"
                     >
-                      <TrashIcon className="w-4 h-4 text-[#1A1A1A]/60 shrink-0" />
+                      <TrashIcon className="w-4 h-4 text-[#B42318] shrink-0" />
                       <span>Apagar meus dados</span>
                     </button>
 
-                    <hr className="my-1 border-t border-[#EBEBEB]" />
+                    <hr className="my-1 border-t border-[#F0F0F0]" />
 
                     <button
                       type="button"
                       role="menuitem"
                       onClick={handleSignOut}
-                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-[12px] text-left text-[14px] font-normal text-[#1A1A1A]/70 hover:bg-[#FAFAFA] hover:text-[#1A1A1A] flex items-center gap-2.5 transition-colors cursor-pointer"
+                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-[12px] text-left text-[14px] font-medium text-[#6B7280] hover:bg-[#F5F5F5] hover:text-[#171717] flex items-center gap-2.5 transition-colors cursor-pointer"
                     >
-                      <LogOutIcon className="w-4 h-4 text-[#1A1A1A]/60 shrink-0" />
+                      <LogOutIcon className="w-4 h-4 text-[#6B7280] shrink-0" />
                       <span>Sair</span>
                     </button>
                   </>
@@ -575,10 +575,10 @@ export function HomeScreen() {
                     aria-label="Confirmação para apagar dados"
                     className="p-2"
                   >
-                    <p className="text-[13.5px] font-semibold text-[#1A1A1A]">
+                    <p className="text-[13.5px] font-semibold text-[#171717]">
                       Apagar todos os seus dados?
                     </p>
-                    <p className="mt-1 text-[12.5px] leading-relaxed text-[#1A1A1A]/70">
+                    <p className="mt-1 text-[12.5px] leading-relaxed text-[#6B7280]">
                       Isso remove o histórico de cobranças resolvidas e análises
                       salvas neste dispositivo (LGPD).
                     </p>
@@ -586,14 +586,14 @@ export function HomeScreen() {
                       <button
                         type="button"
                         onClick={() => setIsConfirmingDelete(false)}
-                        className="flex-1 min-h-[40px] px-3 py-2 rounded-[12px] bg-[#FAFAFA] hover:bg-[#EFEFEF] text-[13px] font-semibold text-[#1A1A1A] transition-colors cursor-pointer"
+                        className="flex-1 min-h-[40px] px-3 py-2 rounded-[12px] bg-[#F5F5F5] hover:bg-[#EAEAEA] text-[13px] font-semibold text-[#171717] transition-colors cursor-pointer"
                       >
                         Cancelar
                       </button>
                       <button
                         type="button"
                         onClick={handleConfirmDeleteData}
-                        className="flex-1 min-h-[40px] px-3 py-2 rounded-[12px] bg-[#1A1A1A] hover:bg-[#333333] text-[13px] font-semibold text-white transition-colors cursor-pointer"
+                        className="flex-1 min-h-[40px] px-3 py-2 rounded-[12px] bg-[#171717] hover:bg-[#333333] text-[13px] font-semibold text-white transition-colors cursor-pointer"
                       >
                         Apagar
                       </button>
@@ -608,7 +608,7 @@ export function HomeScreen() {
         {statusBanner && (
           <div
             role="status"
-            className="mx-6 mt-2 rounded-[12px] bg-[#E8F9F0] px-4 py-2.5 text-[13px] font-semibold text-[#1A1A1A] text-center"
+            className="mx-6 mt-2 rounded-[14px] bg-[#F5F5F5] px-4 py-2.5 text-[13px] font-medium text-[#171717] text-left"
           >
             {statusBanner}
           </div>
@@ -625,49 +625,44 @@ export function HomeScreen() {
         />
 
         {/* Main Content */}
-        <main className="px-6 pt-6">
+        <main className="px-6 pt-4 pb-36">
           {screenState === "empty" && (
             <section aria-label="Boas-vindas e envio de fatura ou comprovante">
-              {/* 1. HEADLINE & 2. SUBTÍTULO */}
+              {/* Headline & Subtítulo */}
               <div>
-                <h1 className="text-[32px] sm:text-[34px] leading-[1.12] tracking-[-0.03em] font-extrabold text-[#1A1A1A]">
-                  Você pode estar pagando por algo que não usa.
+                <h1 className="text-[34px] sm:text-[38px] leading-[1.06] tracking-[-0.035em] font-bold text-left break-words">
+                  <span className="text-[#0F0F0F]">
+                    Você pode estar pagando por algo que{" "}
+                  </span>
+                  <span className="text-[#C4C4C4]">não usa.</span>
                 </h1>
-                <p className="mt-6 text-[15px] leading-[1.5] text-[#1A1A1A]/70 font-normal">
+                <p className="mt-3.5 text-[14.5px] leading-[1.45] text-[#8E8E93] font-normal text-left">
                   Envie uma fatura ou comprovante e descubra cobranças
                   duplicadas e taxas escondidas em segundos.
                 </p>
-              </div>
-
-              {/* 3. PROVA SOCIAL (card logo abaixo do subtítulo, antes do CTA) */}
-              <div
-                aria-label="Média de cobranças indevidas encontradas este mês"
-                className="mt-6 rounded-[16px] bg-[#E8F9F0] p-5"
-              >
-                <p className="text-[28px] leading-none font-extrabold tracking-[-0.03em] text-[#1A1A1A] tabular-nums">
-                  R$ 184,70
-                </p>
-                <p className="mt-2 text-[14px] leading-[1.45] font-normal text-[#1A1A1A]/80">
-                  foi a média de cobranças indevidas encontradas por usuário
-                  este mês
+                <p className="mt-4 text-[14.5px] leading-[1.45] text-[#8E8E93] font-normal text-left">
+                  <span className="font-bold text-[#0F0F0F]">
+                    R$ 184,70/mês
+                  </span>{" "}
+                  em média devolvidos aos usuários este mês
                 </p>
               </div>
 
-              {/* 4. CTA: botão quadrado verde maior com "+" e microcopy abaixo */}
+              {/* Card de Upload cinza-claro original com botão quadrado verde + */}
               {isCardScanning ? (
                 <div
                   role="status"
                   aria-live="polite"
-                  className="mt-6 w-full rounded-[16px] bg-white border border-[#EBEBEB] p-8 flex flex-col items-center justify-center text-center"
+                  className="mt-6 w-full rounded-[28px] bg-[#F5F5F5] py-11 px-6 flex flex-col items-center justify-center text-center"
                 >
-                  <div className="w-[72px] h-[72px] p-5 rounded-[16px] bg-[#00C853] text-white flex items-center justify-center mb-4 animate-pulse">
-                    <DocumentScannerIcon className="w-8 h-8" />
+                  <div className="w-[58px] h-[58px] rounded-[18px] bg-[#22C55E] text-[#0A2914] flex items-center justify-center mb-3.5 animate-pulse">
+                    <DocumentScannerIcon className="w-6 h-6" />
                   </div>
-                  <p className="text-[15px] font-semibold text-[#1A1A1A]">
+                  <p className="text-[15px] font-semibold text-[#111111]">
                     Varrendo documento e mascarando dados sensíveis...
                   </p>
-                  <div className="mt-4 w-44 h-1.5 rounded-[12px] bg-[#EBEBEB] overflow-hidden">
-                    <div className="h-full w-2/3 rounded-[12px] bg-[#00C853] animate-pulse" />
+                  <div className="mt-3.5 w-44 h-1.5 rounded-full bg-[#E5E5E5] overflow-hidden">
+                    <div className="h-full w-2/3 rounded-full bg-[#22C55E] animate-pulse" />
                   </div>
                 </div>
               ) : (
@@ -677,51 +672,50 @@ export function HomeScreen() {
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
-                  className={`mt-6 w-full rounded-[16px] border p-8 flex flex-col items-center justify-center text-center transition-colors cursor-pointer select-none ${
+                  className={`mt-6 w-full rounded-[28px] py-9 px-6 flex flex-col items-center justify-center text-center transition-colors cursor-pointer select-none ${
                     isDragging
-                      ? "bg-[#E8F9F0] border-[#00C853]"
-                      : "bg-white border-[#EBEBEB] hover:bg-[#F5F5F5] active:bg-[#EFEFEF]"
+                      ? "bg-[#EBEBEB]"
+                      : "bg-[#F5F5F5] hover:bg-[#EFEFEF] active:bg-[#E8E8E8]"
                   }`}
                 >
-                  <div className="w-[72px] h-[72px] p-5 rounded-[16px] bg-[#00C853] text-white flex items-center justify-center mb-4">
-                    <PlusIcon className="w-8 h-8" />
+                  <div className="w-[58px] h-[58px] rounded-[18px] bg-[#22C55E] text-[#0A2914] flex items-center justify-center mb-3.5">
+                    <PlusIcon className="w-6 h-6" />
                   </div>
-                  <span className="text-[18px] font-semibold tracking-[-0.02em] text-[#1A1A1A]">
+                  <span className="text-[17px] font-semibold tracking-[-0.02em] text-[#111111]">
                     Enviar arquivo
                   </span>
-                  <span className="text-[14px] font-normal text-[#1A1A1A]/65 mt-1">
+                  <span className="text-[13.5px] text-[#8E8E93] mt-1">
                     PDF, imagem ou print do banco
                   </span>
-                  <span className="mt-3 text-[12.5px] font-semibold text-[#1A1A1A]/60">
+                  <span className="mt-2.5 text-[12px] text-[#8E8E93] font-normal">
                     Grátis · Sem cadastro no primeiro resultado
                   </span>
                 </label>
               )}
 
-              {/* 5. CHECKLIST: 3 checks verdes */}
+              {/* Checklist + Nota de Privacidade */}
               <ul
                 aria-label="Benefícios da análise de fatura"
-                className="mt-6 space-y-3.5"
+                className="mt-6 space-y-3"
               >
                 {BENEFITS.map((benefit) => (
                   <li key={benefit} className="flex items-center gap-3">
                     <span
                       aria-hidden="true"
-                      className="w-[24px] h-[24px] rounded-[12px] bg-[#E8F9F0] text-[#00C853] flex items-center justify-center shrink-0"
+                      className="w-[22px] h-[22px] rounded-full bg-[#F5F5F5] text-[#111111] flex items-center justify-center shrink-0"
                     >
-                      <CheckIcon className="w-3.5 h-3.5" />
+                      <CheckIcon className="w-3 h-3" />
                     </span>
-                    <span className="text-[14.5px] text-[#1A1A1A] leading-snug font-normal">
+                    <span className="text-[14.5px] text-[#262626] leading-snug font-normal text-left">
                       {benefit}
                     </span>
                   </li>
                 ))}
               </ul>
 
-              {/* 6. LINHA DE PRIVACIDADE: "não vendemos" em negrito */}
-              <p className="mt-6 text-[13px] leading-normal text-[#1A1A1A]/65 font-normal">
+              <p className="mt-4 text-[12px] leading-normal text-[#9CA3AF] text-left">
                 Seus dados são mascarados e{" "}
-                <strong className="font-semibold text-[#1A1A1A]">
+                <strong className="font-semibold text-[#6B7280]">
                   não vendemos
                 </strong>{" "}
                 informações.
@@ -730,20 +724,20 @@ export function HomeScreen() {
               {/* Seção: Cofre de Comprovantes */}
               <div
                 aria-label="Cofre de Comprovantes"
-                className="mt-8 pt-6 border-t border-[#EBEBEB]"
+                className="mt-10 pt-6 border-t border-[#F0F0F0]"
               >
                 <div className="flex items-center justify-between px-0.5">
-                  <h2 className="text-[12px] uppercase tracking-[0.08em] font-semibold text-[#1A1A1A]/60">
+                  <h2 className="text-[11px] uppercase tracking-[0.12em] font-semibold text-[#8E8E93]">
                     MEU COFRE
                   </h2>
-                  <span className="text-[12px] font-semibold text-[#1A1A1A]/60">
+                  <span className="text-[12px] font-medium text-[#8E8E93]">
                     {totalVaultFilesCount} arquivos
                   </span>
                 </div>
 
                 {/* Barra de busca minimalista */}
-                <div className="mt-4 relative">
-                  <SearchIcon className="w-[17px] h-[17px] text-[#1A1A1A]/50 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <div className="mt-3 relative">
+                  <SearchIcon className="w-[17px] h-[17px] text-[#8E8E93] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     ref={searchInputRef}
                     type="search"
@@ -751,7 +745,7 @@ export function HomeScreen() {
                     onChange={(e) => setVaultSearchQuery(e.target.value)}
                     aria-label="Buscar comprovantes no cofre"
                     placeholder="Buscar por nome, valor ou #tag..."
-                    className="w-full h-[46px] pl-10 pr-3.5 rounded-[12px] bg-white border border-[#EBEBEB] text-[14px] text-[#1A1A1A] placeholder:text-[#1A1A1A]/45 focus:outline-none focus:border-[#00C853] transition-colors"
+                    className="w-full h-[44px] pl-10 pr-3.5 rounded-2xl bg-[#F5F5F5] border border-transparent text-[13.5px] text-[#111111] placeholder:text-[#8E8E93] focus:outline-none focus:bg-white focus:border-[#111111] transition-colors"
                   />
                 </div>
 
@@ -770,10 +764,10 @@ export function HomeScreen() {
                         role="tab"
                         aria-selected={isActive}
                         onClick={() => setActiveVaultCategory(pill)}
-                        className={`px-3.5 py-1.5 rounded-[12px] text-[12.5px] font-semibold whitespace-nowrap transition-colors shrink-0 cursor-pointer ${
+                        className={`px-3.5 py-1.5 rounded-full text-[12.5px] font-medium whitespace-nowrap transition-colors shrink-0 cursor-pointer ${
                           isActive
-                            ? "bg-[#1A1A1A] text-white"
-                            : "bg-white border border-[#EBEBEB] text-[#1A1A1A]/75 hover:bg-[#F5F5F5]"
+                            ? "bg-[#141414] text-white"
+                            : "bg-[#F5F5F5] text-[#52525B] hover:bg-[#EAEAEA]"
                         }`}
                       >
                         {pill}
@@ -783,7 +777,7 @@ export function HomeScreen() {
                 </div>
 
                 {/* Lista de Comprovantes */}
-                <div className="mt-4 space-y-2.5">
+                <div className="mt-3 space-y-2.5">
                   {filteredVaultReceipts.length > 0 ? (
                     filteredVaultReceipts.map((item) => {
                       const isDownloaded = downloadedReceiptId === item.id;
@@ -805,13 +799,13 @@ export function HomeScreen() {
                               setSelectedModalReceiptId(item.id);
                             }
                           }}
-                          className="h-[70px] rounded-[16px] bg-white border border-[#EBEBEB] hover:bg-[#F5F5F5] active:bg-[#EFEFEF] px-4 flex items-center justify-between gap-3 transition-colors cursor-pointer select-none"
+                          className="h-[68px] rounded-2xl bg-[#F8F8F8] hover:bg-[#F2F2F2] active:bg-[#EBEBEB] px-3.5 flex items-center justify-between gap-3 transition-colors cursor-pointer select-none"
                         >
                           <div className="flex items-center gap-3 min-w-0 flex-1">
                             <div
                               aria-label={`Tipo: ${item.type}`}
                               title={item.type}
-                              className="w-[40px] h-[40px] rounded-[12px] bg-[#FAFAFA] border border-[#EBEBEB] text-[#1A1A1A] flex items-center justify-center shrink-0"
+                              className="w-[38px] h-[38px] rounded-xl bg-white text-[#111111] flex items-center justify-center shrink-0"
                             >
                               {item.type === "PIX" && (
                                 <PixIcon className="w-[18px] h-[18px]" />
@@ -825,14 +819,14 @@ export function HomeScreen() {
                             </div>
 
                             <div className="min-w-0 flex-1">
-                              <p className="text-[14.5px] font-semibold text-[#1A1A1A] leading-tight truncate">
+                              <p className="text-[14.5px] font-semibold text-[#111111] leading-tight truncate">
                                 {item.receiver}
                               </p>
                               <div className="mt-1 flex items-center gap-2 whitespace-nowrap overflow-hidden">
-                                <span className="text-[12px] text-[#1A1A1A]/60 shrink-0">
+                                <span className="text-[12px] text-[#8E8E93] shrink-0">
                                   {item.date}
                                 </span>
-                                <span className="px-2 py-0.5 rounded-[12px] bg-[#E8F9F0] text-[11px] font-semibold text-[#1A1A1A] shrink-0">
+                                <span className="px-2 py-0.5 rounded-md bg-white text-[11px] font-medium text-[#52525B] shrink-0">
                                   {item.tag}
                                 </span>
                               </div>
@@ -840,7 +834,7 @@ export function HomeScreen() {
                           </div>
 
                           <div className="flex items-center gap-2.5 shrink-0">
-                            <span className="text-[14.5px] font-extrabold text-[#1A1A1A] tabular-nums whitespace-nowrap">
+                            <span className="text-[14.5px] font-bold text-[#111111] tabular-nums whitespace-nowrap">
                               R$ {formatBRL(item.amount)}
                             </span>
                             <button
@@ -848,10 +842,10 @@ export function HomeScreen() {
                               aria-label={`Baixar ou compartilhar comprovante original de ${item.receiver}`}
                               title="Baixar/compartilhar comprovante original"
                               onClick={(e) => handleQuickDownload(e, item)}
-                              className="w-[36px] h-[36px] rounded-[12px] bg-[#FAFAFA] border border-[#EBEBEB] hover:bg-[#EFEFEF] text-[#1A1A1A] flex items-center justify-center transition-colors cursor-pointer"
+                              className="w-[34px] h-[34px] rounded-xl bg-white hover:bg-[#EAEAEA] active:bg-[#E0E0E0] text-[#111111] flex items-center justify-center transition-colors cursor-pointer"
                             >
                               {isDownloaded ? (
-                                <CheckIcon className="w-4 h-4 text-[#00C853]" />
+                                <CheckIcon className="w-4 h-4 text-[#111111]" />
                               ) : (
                                 <ShareDownloadIcon className="w-4 h-4" />
                               )}
@@ -861,8 +855,8 @@ export function HomeScreen() {
                       );
                     })
                   ) : (
-                    <div className="rounded-[16px] bg-white border border-[#EBEBEB] py-6 px-4 text-center">
-                      <p className="text-[13.5px] text-[#1A1A1A]/60">
+                    <div className="rounded-2xl bg-[#F5F5F5] py-6 px-4 text-center">
+                      <p className="text-[13.5px] text-[#8E8E93]">
                         Nenhum comprovante encontrado para essa busca.
                       </p>
                     </div>
@@ -1290,7 +1284,7 @@ export function HomeScreen() {
         {/* Barra Flutuante Inferior (Busca, +, Check) */}
         <nav
           aria-label="Ações rápidas"
-          className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 rounded-[16px] bg-white px-2.5 py-2 border border-[#EBEBEB] flex items-center gap-2"
+          className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 rounded-full bg-white/95 backdrop-blur-md px-2.5 py-2 border border-[#F0F0F0] flex items-center gap-2"
         >
           <button
             type="button"
@@ -1307,7 +1301,7 @@ export function HomeScreen() {
                 searchInputRef.current?.focus();
               }, 80);
             }}
-            className="w-[44px] h-[44px] rounded-[12px] bg-transparent hover:bg-[#FAFAFA] active:bg-[#EFEFEF] text-[#1A1A1A] flex items-center justify-center transition-colors cursor-pointer"
+            className="w-[44px] h-[44px] rounded-full bg-transparent hover:bg-[#F5F5F5] active:bg-[#EAEAEA] text-[#141414] flex items-center justify-center transition-colors cursor-pointer"
           >
             <SearchIcon className="w-5 h-5" />
           </button>
@@ -1315,7 +1309,7 @@ export function HomeScreen() {
           <label
             htmlFor="vault-file-input"
             aria-label="Adicionar novo arquivo"
-            className="w-[44px] h-[44px] rounded-[12px] bg-[#00C853] hover:bg-[#00B24A] text-white flex items-center justify-center transition-colors cursor-pointer"
+            className="w-[44px] h-[44px] rounded-full bg-[#F5F5F5] hover:bg-[#EAEAEA] active:bg-[#E0E0E0] text-[#141414] flex items-center justify-center transition-colors cursor-pointer"
           >
             <PlusIcon className="w-5 h-5" />
           </label>
@@ -1324,7 +1318,7 @@ export function HomeScreen() {
             type="button"
             aria-label="Voltar ao topo da análise"
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            className="w-[44px] h-[44px] rounded-[12px] bg-[#1A1A1A] hover:bg-[#333333] text-white flex items-center justify-center transition-colors cursor-pointer"
+            className="w-[44px] h-[44px] rounded-full bg-[#141414] hover:bg-[#262626] text-white flex items-center justify-center transition-colors cursor-pointer"
           >
             <CheckIcon className="w-5 h-5" />
           </button>
