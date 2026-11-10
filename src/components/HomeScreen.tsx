@@ -148,6 +148,7 @@ const ANALYSIS_STEPS: { id: AnalysisStageId; label: string }[] = [
 
 export function HomeScreen() {
   const [screenState, setScreenState] = useState<ScreenState>("empty");
+  const [activeTab, setActiveTab] = useState<"home" | "vault">("home");
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
   const [charges, setCharges] = useState<Charge[]>([]);
@@ -504,13 +505,15 @@ export function HomeScreen() {
 
   return (
     <div className="min-h-screen w-full bg-white text-[#111111] overflow-x-hidden">
-      <div className="mx-auto w-full max-w-[430px] min-w-0 min-h-screen bg-white pb-40 relative">
-        {/* Top Row: Pill "Nova análise" + Menu "..." */}
+      <div className="mx-auto w-full max-w-[430px] min-w-0 min-h-screen bg-white pb-[110px] relative">
+        {/* Top Row: Pill + Menu "..." */}
         <header className="px-6 pt-5 pb-2 flex items-center justify-between">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-[#F5F5F5] px-3.5 py-1.5 select-none">
             <ShieldCheckIcon className="w-[16px] h-[16px] text-[#171717]" />
             <span className="text-[13px] font-medium text-[#171717] tracking-[-0.01em]">
-              Nova análise
+              {screenState === "empty" && activeTab === "vault"
+                ? "Meu Cofre"
+                : "Nova análise"}
             </span>
           </div>
 
@@ -624,11 +627,14 @@ export function HomeScreen() {
           className="sr-only"
         />
 
-        {/* Main Content */}
-        <main className="px-6 pt-4 pb-36">
-          {screenState === "empty" && (
-            <section aria-label="Boas-vindas e envio de fatura ou comprovante">
-              {/* Headline & Subtítulo */}
+        {/* Main Content com padding-bottom de 110px em todas as telas */}
+        <main className="px-6 pt-4 pb-[110px]">
+          {screenState === "empty" && activeTab === "home" && (
+            <section
+              aria-label="Boas-vindas e envio de fatura ou comprovante"
+              className="pb-[110px]"
+            >
+              {/* Headline, Subtítulo & Prova Social */}
               <div>
                 <h1 className="text-[34px] sm:text-[38px] leading-[1.06] tracking-[-0.035em] font-bold text-left break-words">
                   <span className="text-[#0F0F0F]">
@@ -640,11 +646,13 @@ export function HomeScreen() {
                   Envie uma fatura ou comprovante e descubra cobranças
                   duplicadas e taxas escondidas em segundos.
                 </p>
-                <p className="mt-4 text-[14.5px] leading-[1.45] text-[#8E8E93] font-normal text-left">
-                  <span className="font-bold text-[#0F0F0F]">
+                <p className="mt-5 text-left leading-[1.35]">
+                  <span className="text-[28px] font-extrabold tracking-[-0.03em] text-[#0F0F0F] tabular-nums">
                     R$ 184,70/mês
                   </span>{" "}
-                  em média devolvidos aos usuários este mês
+                  <span className="text-[14.5px] font-normal text-[#8E8E93]">
+                    em média devolvidos aos usuários este mês
+                  </span>
                 </p>
               </div>
 
@@ -720,154 +728,172 @@ export function HomeScreen() {
                 </strong>{" "}
                 informações.
               </p>
+            </section>
+          )}
 
-              {/* Seção: Cofre de Comprovantes */}
-              <div
-                aria-label="Cofre de Comprovantes"
-                className="mt-10 pt-6 border-t border-[#F0F0F0]"
-              >
-                <div className="flex items-center justify-between px-0.5">
-                  <h2 className="text-[11px] uppercase tracking-[0.12em] font-semibold text-[#8E8E93]">
-                    MEU COFRE
-                  </h2>
-                  <span className="text-[12px] font-medium text-[#8E8E93]">
-                    {totalVaultFilesCount} arquivos
+          {/* Tela secundária: Meu Cofre (sem card de upload nem checklist) */}
+          {screenState === "empty" && activeTab === "vault" && (
+            <section
+              aria-label="Meu Cofre"
+              className="pb-[110px]"
+            >
+              {/* Header "Meu Cofre" */}
+              <div className="flex items-center justify-between">
+                <h1 className="text-[28px] leading-[1.12] tracking-[-0.03em] font-bold text-[#0F0F0F]">
+                  Meu Cofre
+                </h1>
+                <span className="text-[13px] font-medium text-[#8E8E93]">
+                  {totalVaultFilesCount} arquivos
+                </span>
+              </div>
+
+              {/* Valor total encontrado no topo */}
+              <div className="mt-5">
+                <p className="text-[13.5px] text-[#8E8E93] leading-snug">
+                  Valor total encontrado
+                </p>
+                <div className="mt-1 flex items-baseline gap-1">
+                  <span className="text-[28px] font-extrabold tracking-[-0.03em] text-[#0F0F0F] tabular-nums leading-none">
+                    R$ 184,70/mês
                   </span>
                 </div>
+              </div>
 
-                {/* Barra de busca minimalista */}
-                <div className="mt-3 relative">
-                  <SearchIcon className="w-[17px] h-[17px] text-[#8E8E93] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <input
-                    ref={searchInputRef}
-                    type="search"
-                    value={vaultSearchQuery}
-                    onChange={(e) => setVaultSearchQuery(e.target.value)}
-                    aria-label="Buscar comprovantes no cofre"
-                    placeholder="Buscar por nome, valor ou #tag..."
-                    className="w-full h-[44px] pl-10 pr-3.5 rounded-2xl bg-[#F5F5F5] border border-transparent text-[13.5px] text-[#111111] placeholder:text-[#8E8E93] focus:outline-none focus:bg-white focus:border-[#111111] transition-colors"
-                  />
-                </div>
+              {/* Barra de busca minimalista */}
+              <div className="mt-5 relative">
+                <SearchIcon className="w-[17px] h-[17px] text-[#8E8E93] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  ref={searchInputRef}
+                  type="search"
+                  value={vaultSearchQuery}
+                  onChange={(e) => setVaultSearchQuery(e.target.value)}
+                  aria-label="Buscar comprovantes no cofre"
+                  placeholder="Buscar por nome, valor ou #tag..."
+                  className="w-full h-[44px] pl-10 pr-3.5 rounded-2xl bg-[#F5F5F5] border border-transparent text-[13.5px] text-[#111111] placeholder:text-[#8E8E93] focus:outline-none focus:bg-white focus:border-[#111111] transition-colors"
+                />
+              </div>
 
-                {/* Pílulas de filtro rápido */}
-                <div
-                  role="tablist"
-                  aria-label="Filtrar comprovantes por categoria"
-                  className="mt-3 flex items-center gap-2 overflow-x-auto no-scrollbar pb-1"
-                >
-                  {VAULT_FILTER_PILLS.map((pill) => {
-                    const isActive = activeVaultCategory === pill;
+              {/* Pílulas de filtro rápido */}
+              <div
+                role="tablist"
+                aria-label="Filtrar comprovantes por categoria"
+                className="mt-3 flex items-center gap-2 overflow-x-auto no-scrollbar pb-1"
+              >
+                {VAULT_FILTER_PILLS.map((pill) => {
+                  const isActive = activeVaultCategory === pill;
+                  return (
+                    <button
+                      key={pill}
+                      type="button"
+                      role="tab"
+                      aria-selected={isActive}
+                      onClick={() => setActiveVaultCategory(pill)}
+                      className={`px-3.5 py-1.5 rounded-full text-[12.5px] font-medium whitespace-nowrap transition-colors shrink-0 cursor-pointer ${
+                        isActive
+                          ? "bg-[#141414] text-white"
+                          : "bg-[#F5F5F5] text-[#52525B] hover:bg-[#EAEAEA]"
+                      }`}
+                    >
+                      {pill}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Lista de Arquivos */}
+              <div className="mt-4 space-y-2.5">
+                {filteredVaultReceipts.length > 0 ? (
+                  filteredVaultReceipts.map((item) => {
+                    const isDownloaded = downloadedReceiptId === item.id;
+
                     return (
-                      <button
-                        key={pill}
-                        type="button"
-                        role="tab"
-                        aria-selected={isActive}
-                        onClick={() => setActiveVaultCategory(pill)}
-                        className={`px-3.5 py-1.5 rounded-full text-[12.5px] font-medium whitespace-nowrap transition-colors shrink-0 cursor-pointer ${
-                          isActive
-                            ? "bg-[#141414] text-white"
-                            : "bg-[#F5F5F5] text-[#52525B] hover:bg-[#EAEAEA]"
-                        }`}
-                      >
-                        {pill}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Lista de Comprovantes */}
-                <div className="mt-3 space-y-2.5">
-                  {filteredVaultReceipts.length > 0 ? (
-                    filteredVaultReceipts.map((item) => {
-                      const isDownloaded = downloadedReceiptId === item.id;
-
-                      return (
-                        <div
-                          key={item.id}
-                          role="button"
-                          tabIndex={0}
-                          aria-label={`Abrir detalhes de ${item.receiver}, ${item.date}, valor R$ ${formatBRL(item.amount)}`}
-                          onClick={() => {
+                      <div
+                        key={item.id}
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`Abrir detalhes de ${item.receiver}, ${item.date}, valor R$ ${formatBRL(item.amount)}`}
+                        onClick={() => {
+                          setModalSharedFeedback(false);
+                          setSelectedModalReceiptId(item.id);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
                             setModalSharedFeedback(false);
                             setSelectedModalReceiptId(item.id);
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.preventDefault();
-                              setModalSharedFeedback(false);
-                              setSelectedModalReceiptId(item.id);
-                            }
-                          }}
-                          className="h-[68px] rounded-2xl bg-[#F8F8F8] hover:bg-[#F2F2F2] active:bg-[#EBEBEB] px-3.5 flex items-center justify-between gap-3 transition-colors cursor-pointer select-none"
-                        >
-                          <div className="flex items-center gap-3 min-w-0 flex-1">
-                            <div
-                              aria-label={`Tipo: ${item.type}`}
-                              title={item.type}
-                              className="w-[38px] h-[38px] rounded-xl bg-white text-[#111111] flex items-center justify-center shrink-0"
-                            >
-                              {item.type === "PIX" && (
-                                <PixIcon className="w-[18px] h-[18px]" />
-                              )}
-                              {item.type === "Boleto" && (
-                                <BarcodeIcon className="w-[18px] h-[18px]" />
-                              )}
-                              {item.type === "Fatura" && (
-                                <InvoiceDocIcon className="w-[18px] h-[18px]" />
-                              )}
-                            </div>
-
-                            <div className="min-w-0 flex-1">
-                              <p className="text-[14.5px] font-semibold text-[#111111] leading-tight truncate">
-                                {item.receiver}
-                              </p>
-                              <div className="mt-1 flex items-center gap-2 whitespace-nowrap overflow-hidden">
-                                <span className="text-[12px] text-[#8E8E93] shrink-0">
-                                  {item.date}
-                                </span>
-                                <span className="px-2 py-0.5 rounded-md bg-white text-[11px] font-medium text-[#52525B] shrink-0">
-                                  {item.tag}
-                                </span>
-                              </div>
-                            </div>
+                          }
+                        }}
+                        className="h-[68px] rounded-2xl bg-[#F8F8F8] hover:bg-[#F2F2F2] active:bg-[#EBEBEB] px-3.5 flex items-center justify-between gap-3 transition-colors cursor-pointer select-none"
+                      >
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div
+                            aria-label={`Tipo: ${item.type}`}
+                            title={item.type}
+                            className="w-[38px] h-[38px] rounded-xl bg-white text-[#111111] flex items-center justify-center shrink-0"
+                          >
+                            {item.type === "PIX" && (
+                              <PixIcon className="w-[18px] h-[18px]" />
+                            )}
+                            {item.type === "Boleto" && (
+                              <BarcodeIcon className="w-[18px] h-[18px]" />
+                            )}
+                            {item.type === "Fatura" && (
+                              <InvoiceDocIcon className="w-[18px] h-[18px]" />
+                            )}
                           </div>
 
-                          <div className="flex items-center gap-2.5 shrink-0">
-                            <span className="text-[14.5px] font-bold text-[#111111] tabular-nums whitespace-nowrap">
-                              R$ {formatBRL(item.amount)}
-                            </span>
-                            <button
-                              type="button"
-                              aria-label={`Baixar ou compartilhar comprovante original de ${item.receiver}`}
-                              title="Baixar/compartilhar comprovante original"
-                              onClick={(e) => handleQuickDownload(e, item)}
-                              className="w-[34px] h-[34px] rounded-xl bg-white hover:bg-[#EAEAEA] active:bg-[#E0E0E0] text-[#111111] flex items-center justify-center transition-colors cursor-pointer"
-                            >
-                              {isDownloaded ? (
-                                <CheckIcon className="w-4 h-4 text-[#111111]" />
-                              ) : (
-                                <ShareDownloadIcon className="w-4 h-4" />
-                              )}
-                            </button>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[14.5px] font-semibold text-[#111111] leading-tight truncate">
+                              {item.receiver}
+                            </p>
+                            <div className="mt-1 flex items-center gap-2 whitespace-nowrap overflow-hidden">
+                              <span className="text-[12px] text-[#8E8E93] shrink-0">
+                                {item.date}
+                              </span>
+                              <span className="px-2 py-0.5 rounded-md bg-white text-[11px] font-medium text-[#52525B] shrink-0">
+                                {item.tag}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      );
-                    })
-                  ) : (
-                    <div className="rounded-2xl bg-[#F5F5F5] py-6 px-4 text-center">
-                      <p className="text-[13.5px] text-[#8E8E93]">
-                        Nenhum comprovante encontrado para essa busca.
-                      </p>
-                    </div>
-                  )}
-                </div>
+
+                        <div className="flex items-center gap-2.5 shrink-0">
+                          <span className="text-[14.5px] font-bold text-[#111111] tabular-nums whitespace-nowrap">
+                            R$ {formatBRL(item.amount)}
+                          </span>
+                          <button
+                            type="button"
+                            aria-label={`Baixar ou compartilhar comprovante original de ${item.receiver}`}
+                            title="Baixar/compartilhar comprovante original"
+                            onClick={(e) => handleQuickDownload(e, item)}
+                            className="w-[34px] h-[34px] rounded-xl bg-white hover:bg-[#EAEAEA] active:bg-[#E0E0E0] text-[#111111] flex items-center justify-center transition-colors cursor-pointer"
+                          >
+                            {isDownloaded ? (
+                              <CheckIcon className="w-4 h-4 text-[#111111]" />
+                            ) : (
+                              <ShareDownloadIcon className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="rounded-2xl bg-[#F5F5F5] py-6 px-4 text-center">
+                    <p className="text-[13.5px] text-[#8E8E93]">
+                      Nenhum comprovante encontrado para essa busca.
+                    </p>
+                  </div>
+                )}
               </div>
             </section>
           )}
 
           {screenState === "analyzing" && (
-            <section aria-label="Análise da fatura em andamento" className="pt-2">
+            <section
+              aria-label="Análise da fatura em andamento"
+              className="pt-2 pb-[110px]"
+            >
               {!analysisError ? (
                 <div className="rounded-[28px] bg-[#F0EFEA] p-6">
                   {/* Scanner Document Illustration */}
@@ -1018,12 +1044,16 @@ export function HomeScreen() {
           )}
 
           {screenState === "result" && (
-            <section aria-label="Resultado da análise de cobranças">
+            <section
+              aria-label="Resultado da análise de cobranças"
+              className="pb-[110px]"
+            >
               {/* Greeting / Dynamic Title */}
               <h1 className="text-[26px] sm:text-[28px] leading-[1.2] tracking-[-0.03em]">
                 <span className="block font-medium text-[#161A18]">
-                  Encontramos R$ {formatBRL(metrics.activeTotal)} para você
-                  recuperar.
+                  {metrics.activeTotal > 0
+                    ? `Encontramos R$ ${formatBRL(metrics.activeTotal)} para você recuperar.`
+                    : "Nenhuma cobrança indevida."}
                 </span>
               </h1>
 
@@ -1281,27 +1311,24 @@ export function HomeScreen() {
           )}
         </main>
 
-        {/* Barra Flutuante Inferior (Busca, +, Check) */}
+        {/* Barra Flutuante Inferior (Busca/Cofre, +, Check/Home) */}
         <nav
           aria-label="Ações rápidas"
           className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 rounded-full bg-white/95 backdrop-blur-md px-2.5 py-2 border border-[#F0F0F0] flex items-center gap-2"
         >
           <button
             type="button"
-            aria-label="Buscar comprovantes no cofre"
+            aria-label="Abrir Meu Cofre"
             onClick={() => {
-              if (screenState !== "empty") {
-                setScreenState("empty");
-              }
-              window.setTimeout(() => {
-                searchInputRef.current?.scrollIntoView({
-                  behavior: "smooth",
-                  block: "center",
-                });
-                searchInputRef.current?.focus();
-              }, 80);
+              setScreenState("empty");
+              setActiveTab("vault");
+              window.scrollTo({ top: 0, behavior: "smooth" });
             }}
-            className="w-[44px] h-[44px] rounded-full bg-transparent hover:bg-[#F5F5F5] active:bg-[#EAEAEA] text-[#141414] flex items-center justify-center transition-colors cursor-pointer"
+            className={`w-[44px] h-[44px] rounded-full flex items-center justify-center transition-colors cursor-pointer ${
+              screenState === "empty" && activeTab === "vault"
+                ? "bg-[#141414] text-white"
+                : "bg-transparent hover:bg-[#F5F5F5] active:bg-[#EAEAEA] text-[#141414]"
+            }`}
           >
             <SearchIcon className="w-5 h-5" />
           </button>
@@ -1316,9 +1343,17 @@ export function HomeScreen() {
 
           <button
             type="button"
-            aria-label="Voltar ao topo da análise"
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            className="w-[44px] h-[44px] rounded-full bg-[#141414] hover:bg-[#262626] text-white flex items-center justify-center transition-colors cursor-pointer"
+            aria-label="Nova análise"
+            onClick={() => {
+              setScreenState("empty");
+              setActiveTab("home");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className={`w-[44px] h-[44px] rounded-full flex items-center justify-center transition-colors cursor-pointer ${
+              screenState !== "empty" || activeTab === "home"
+                ? "bg-[#141414] text-white"
+                : "bg-transparent hover:bg-[#F5F5F5] active:bg-[#EAEAEA] text-[#141414]"
+            }`}
           >
             <CheckIcon className="w-5 h-5" />
           </button>
@@ -1463,8 +1498,8 @@ export function HomeScreen() {
                     </div>
                     <div className="flex items-center justify-between gap-2 pt-1 border-t border-[#F0EFEA]">
                       <span className="text-[#686D68]">Status</span>
-                      <span className="font-semibold text-[#245942]">
-                        Autenticado / Sem duplicidade no mês
+                      <span className="font-semibold text-[#141414]">
+                        Nenhuma cobrança indevida.
                       </span>
                     </div>
 
