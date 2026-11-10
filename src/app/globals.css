@@ -8,13 +8,19 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sans: "New York", "Recoleta", "Noto Serif", "Source Serif 4", var(--font-noto-serif), var(--font-source-serif-4), Georgia, serif;
+  --font-serif: "New York", "Recoleta", "Noto Serif", "Source Serif 4", var(--font-noto-serif), var(--font-source-serif-4), Georgia, serif;
+  --font-mono: "New York", "Recoleta", "Noto Serif", "Source Serif 4", var(--font-noto-serif), var(--font-source-serif-4), Georgia, serif;
 }
 
-body {
+body,
+button,
+input,
+textarea,
+select {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans);
+  font-family: "New York", "Recoleta", "Noto Serif", "Source Serif 4", var(--font-noto-serif), var(--font-source-serif-4), Georgia, serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

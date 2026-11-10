@@ -552,7 +552,7 @@ export function HomeScreen() {
         <header className="px-6 pt-5 pb-2 flex items-center justify-between">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-[#F5F5F5] px-3.5 py-1.5 select-none">
             <ShieldCheckIcon className="w-[16px] h-[16px] text-[#171717]" />
-            <span className="text-[13px] font-medium text-[#171717] tracking-[-0.01em]">
+            <span className="text-[13px] font-semibold text-[#171717] tracking-[-0.01em]">
               {screenState === "empty" && activeTab === "vault"
                 ? "Meu Cofre"
                 : "Nova análise"}
@@ -682,7 +682,7 @@ export function HomeScreen() {
             >
               {/* Headline, Subtítulo & Prova Social */}
               <div>
-                <h1 className="text-[34px] sm:text-[38px] leading-[1.06] tracking-[-0.035em] font-bold text-left break-words">
+                <h1 className="text-[34px] sm:text-[38px] leading-[1.06] tracking-[-0.035em] font-extrabold text-left break-words">
                   <span className="text-[#0F0F0F]">
                     Você pode estar pagando por algo que{" "}
                   </span>
@@ -786,7 +786,7 @@ export function HomeScreen() {
             >
               {/* Header "Meu Cofre" */}
               <div className="flex items-center justify-between">
-                <h1 className="text-[28px] leading-[1.12] tracking-[-0.03em] font-bold text-[#0F0F0F]">
+                <h1 className="text-[28px] leading-[1.12] tracking-[-0.03em] font-extrabold text-[#0F0F0F]">
                   Meu Cofre
                 </h1>
                 <span className="text-[13px] font-medium text-[#8E8E93]">
@@ -905,7 +905,7 @@ export function HomeScreen() {
                         </div>
 
                         <div className="flex items-center gap-2.5 shrink-0">
-                          <span className="text-[14.5px] font-bold text-[#111111] tabular-nums whitespace-nowrap">
+                          <span className="text-[14.5px] font-extrabold text-[#111111] tabular-nums whitespace-nowrap">
                             R$ {formatBRL(item.amount)}
                           </span>
                           <button
