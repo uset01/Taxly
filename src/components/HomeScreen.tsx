@@ -631,10 +631,10 @@ export function HomeScreen() {
               {/* Hero Title & Subtitle */}
               <div>
                 <h1 className="text-[36px] sm:text-[38px] leading-[1.06] tracking-[-0.035em] font-bold">
-                  <span className="block text-[#0F0F0F]">Zero vazamentos.</span>
-                  <span className="block text-[#BDBDBD]">
-                    Faturas, extratos e PIX sem bagunça.
+                  <span className="text-[#0F0F0F]">
+                    Faturas, extratos e PIX{" "}
                   </span>
+                  <span className="text-[#BDBDBD]">sem bagunça.</span>
                 </h1>
                 <p className="mt-3.5 text-[14.5px] leading-[1.45] text-[#8E8E93] font-normal">
                   Envie uma fatura ou comprovante e descubra cobranças
