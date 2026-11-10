@@ -630,11 +630,120 @@ export function HomeScreen() {
             <section aria-label="Boas-vindas e envio de fatura ou comprovante">
               {/* Hero Title & Subtitle */}
               <div>
-                <h1 className="text-[36px] sm:text-[38px] leading-[1.06] tracking-[-0.035em] font-bold">
-                  <span className="block text-[#0F0F0F]">Zero vazamentos.</span>
-                  <span className="block text-[#BDBDBD]">
-                    Faturas e PIX sem bagunça.
+                <h1 className="text-[36px] sm:text-[38px] leading-[1.08] tracking-[-0.035em] font-bold">
+                  <span className="block text-[#0F0F0F]">
+                    Zero vazamentos
+                    <span
+                      aria-hidden="true"
+                      title="Análise instantânea"
+                      className="inline-flex items-center justify-center align-middle -translate-y-[2px] ml-1.5"
+                    >
+                      <svg
+                        viewBox="0 0 28 28"
+                        className="w-[27px] h-[27px] drop-shadow-[0_2px_6px_rgba(250,204,21,0.35)]"
+                      >
+                        <defs>
+                          <linearGradient
+                            id="hero-bolt-grad"
+                            x1="0%"
+                            y1="0%"
+                            x2="100%"
+                            y2="100%"
+                          >
+                            <stop offset="0%" stopColor="#FEF08A" />
+                            <stop offset="55%" stopColor="#FACC15" />
+                            <stop offset="100%" stopColor="#F59E0B" />
+                          </linearGradient>
+                        </defs>
+                        <path
+                          d="M15.8 2.5L6.2 15.2c-.4.5 0 1.3.7 1.3h6.1l-1.6 8.6c-.1.7.8 1.1 1.3.5l9.9-12.8c.4-.5 0-1.3-.7-1.3h-6.2l1.6-8.4c.1-.7-.8-1.1-1.5-.6z"
+                          fill="url(#hero-bolt-grad)"
+                        />
+                      </svg>
+                    </span>
                   </span>
+
+                  <span className="block text-[#BDBDBD]">
+                    <span
+                      aria-hidden="true"
+                      title="Faturas e cobranças"
+                      className="inline-flex items-center justify-center align-middle -translate-y-[2px] mr-1.5"
+                    >
+                      <svg
+                        viewBox="0 0 28 28"
+                        className="w-[26px] h-[26px] drop-shadow-[0_2px_6px_rgba(251,146,60,0.28)]"
+                      >
+                        <defs>
+                          <linearGradient
+                            id="hero-invoice-grad"
+                            x1="0%"
+                            y1="0%"
+                            x2="100%"
+                            y2="100%"
+                          >
+                            <stop offset="0%" stopColor="#FED7AA" />
+                            <stop offset="50%" stopColor="#FB923C" />
+                            <stop offset="100%" stopColor="#EA580C" />
+                          </linearGradient>
+                        </defs>
+                        <rect
+                          x="5"
+                          y="3"
+                          width="18"
+                          height="22"
+                          rx="5"
+                          fill="url(#hero-invoice-grad)"
+                        />
+                        <path
+                          d="M9.5 9.5h9M9.5 14h9M9.5 18.5h5.5"
+                          stroke="#FFFFFF"
+                          strokeWidth="2.1"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    </span>
+                    Faturas e PIX
+                    <span
+                      aria-hidden="true"
+                      title="Economia protegida"
+                      className="inline-flex items-center justify-center align-middle -translate-y-[2px] ml-1.5"
+                    >
+                      <svg
+                        viewBox="0 0 28 28"
+                        className="w-[26px] h-[26px] drop-shadow-[0_2px_6px_rgba(34,197,94,0.3)]"
+                      >
+                        <defs>
+                          <linearGradient
+                            id="hero-shield-grad"
+                            x1="0%"
+                            y1="0%"
+                            x2="100%"
+                            y2="100%"
+                          >
+                            <stop offset="0%" stopColor="#86EFAC" />
+                            <stop offset="55%" stopColor="#4ADE80" />
+                            <stop offset="100%" stopColor="#22C55E" />
+                          </linearGradient>
+                        </defs>
+                        <circle
+                          cx="14"
+                          cy="14"
+                          r="11.5"
+                          fill="url(#hero-shield-grad)"
+                        />
+                        <path
+                          d="M9.8 14.3l2.8 2.8 5.8-6"
+                          fill="none"
+                          stroke="#FFFFFF"
+                          strokeWidth="2.3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </span>
+                  </span>
+
+                  <span className="block text-[#BDBDBD]">sem bagunça.</span>
                 </h1>
                 <p className="mt-3.5 text-[14.5px] leading-[1.45] text-[#8E8E93] font-normal">
                   Envie uma fatura ou comprovante e descubra cobranças
