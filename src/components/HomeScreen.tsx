@@ -505,7 +505,10 @@ export function HomeScreen() {
 
   return (
     <div className="min-h-screen w-full bg-white text-[#111111] overflow-x-hidden">
-      <div className="mx-auto w-full max-w-[430px] min-w-0 min-h-screen bg-white pb-[110px] relative">
+      <div
+        style={{ paddingBottom: "120px" }}
+        className="mx-auto w-full max-w-[430px] min-w-0 min-h-screen bg-white pb-[120px] relative"
+      >
         {/* Top Row: Pill + Menu "..." */}
         <header className="px-6 pt-5 pb-2 flex items-center justify-between">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-[#F5F5F5] px-3.5 py-1.5 select-none">
@@ -627,12 +630,16 @@ export function HomeScreen() {
           className="sr-only"
         />
 
-        {/* Main Content com padding-bottom de 110px em todas as telas */}
-        <main className="px-6 pt-4 pb-[110px]">
+        {/* Main Content com padding-bottom de 120px em todas as telas */}
+        <main
+          style={{ paddingBottom: "120px" }}
+          className="px-6 pt-3 pb-[120px]"
+        >
           {screenState === "empty" && activeTab === "home" && (
             <section
               aria-label="Boas-vindas e envio de fatura ou comprovante"
-              className="pb-[110px]"
+              style={{ paddingBottom: "120px" }}
+              className="pb-[120px]"
             >
               {/* Headline, Subtítulo & Prova Social */}
               <div>
@@ -642,11 +649,11 @@ export function HomeScreen() {
                   </span>
                   <span className="text-[#C4C4C4]">não usa.</span>
                 </h1>
-                <p className="mt-3.5 text-[14.5px] leading-[1.45] text-[#8E8E93] font-normal text-left">
+                <p className="mt-3 text-[14.5px] leading-[1.45] text-[#8E8E93] font-normal text-left">
                   Envie uma fatura ou comprovante e descubra cobranças
                   duplicadas e taxas escondidas em segundos.
                 </p>
-                <p className="mt-5 text-left leading-[1.35]">
+                <p className="mt-4 text-left leading-[1.35]">
                   <span className="text-[28px] font-extrabold tracking-[-0.03em] text-[#0F0F0F] tabular-nums">
                     R$ 184,70/mês
                   </span>{" "}
@@ -661,9 +668,9 @@ export function HomeScreen() {
                 <div
                   role="status"
                   aria-live="polite"
-                  className="mt-6 w-full rounded-[28px] bg-[#F5F5F5] py-11 px-6 flex flex-col items-center justify-center text-center"
+                  className="mt-5 w-full rounded-[28px] bg-[#F5F5F5] py-8 px-6 flex flex-col items-center justify-center text-center"
                 >
-                  <div className="w-[58px] h-[58px] rounded-[18px] bg-[#22C55E] text-[#0A2914] flex items-center justify-center mb-3.5 animate-pulse">
+                  <div className="w-[58px] h-[58px] rounded-[18px] bg-[#22C55E] text-[#0A2914] flex items-center justify-center mb-3 animate-pulse">
                     <DocumentScannerIcon className="w-6 h-6" />
                   </div>
                   <p className="text-[15px] font-semibold text-[#111111]">
@@ -680,13 +687,13 @@ export function HomeScreen() {
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
-                  className={`mt-6 w-full rounded-[28px] py-9 px-6 flex flex-col items-center justify-center text-center transition-colors cursor-pointer select-none ${
+                  className={`mt-5 w-full rounded-[28px] py-7 px-6 flex flex-col items-center justify-center text-center transition-colors cursor-pointer select-none ${
                     isDragging
                       ? "bg-[#EBEBEB]"
                       : "bg-[#F5F5F5] hover:bg-[#EFEFEF] active:bg-[#E8E8E8]"
                   }`}
                 >
-                  <div className="w-[58px] h-[58px] rounded-[18px] bg-[#22C55E] text-[#0A2914] flex items-center justify-center mb-3.5">
+                  <div className="w-[58px] h-[58px] rounded-[18px] bg-[#22C55E] text-[#0A2914] flex items-center justify-center mb-3">
                     <PlusIcon className="w-6 h-6" />
                   </div>
                   <span className="text-[17px] font-semibold tracking-[-0.02em] text-[#111111]">
@@ -695,7 +702,7 @@ export function HomeScreen() {
                   <span className="text-[13.5px] text-[#8E8E93] mt-1">
                     PDF, imagem ou print do banco
                   </span>
-                  <span className="mt-2.5 text-[12px] text-[#8E8E93] font-normal">
+                  <span className="mt-2 text-[12px] text-[#8E8E93] font-normal">
                     Grátis · Sem cadastro no primeiro resultado
                   </span>
                 </label>
@@ -704,7 +711,7 @@ export function HomeScreen() {
               {/* Checklist + Nota de Privacidade */}
               <ul
                 aria-label="Benefícios da análise de fatura"
-                className="mt-6 space-y-3"
+                className="mt-5 space-y-2.5"
               >
                 {BENEFITS.map((benefit) => (
                   <li key={benefit} className="flex items-center gap-3">
@@ -721,7 +728,7 @@ export function HomeScreen() {
                 ))}
               </ul>
 
-              <p className="mt-4 text-[12px] leading-normal text-[#9CA3AF] text-left">
+              <p className="mt-3.5 text-[12px] leading-normal text-[#9CA3AF] text-left">
                 Seus dados são mascarados e{" "}
                 <strong className="font-semibold text-[#6B7280]">
                   não vendemos
@@ -735,7 +742,8 @@ export function HomeScreen() {
           {screenState === "empty" && activeTab === "vault" && (
             <section
               aria-label="Meu Cofre"
-              className="pb-[110px]"
+              style={{ paddingBottom: "120px" }}
+              className="pb-[120px]"
             >
               {/* Header "Meu Cofre" */}
               <div className="flex items-center justify-between">
@@ -892,7 +900,8 @@ export function HomeScreen() {
           {screenState === "analyzing" && (
             <section
               aria-label="Análise da fatura em andamento"
-              className="pt-2 pb-[110px]"
+              style={{ paddingBottom: "120px" }}
+              className="pt-2 pb-[120px]"
             >
               {!analysisError ? (
                 <div className="rounded-[28px] bg-[#F0EFEA] p-6">
@@ -1046,7 +1055,8 @@ export function HomeScreen() {
           {screenState === "result" && (
             <section
               aria-label="Resultado da análise de cobranças"
-              className="pb-[110px]"
+              style={{ paddingBottom: "120px" }}
+              className="pb-[120px]"
             >
               {/* Greeting / Dynamic Title */}
               <h1 className="text-[26px] sm:text-[28px] leading-[1.2] tracking-[-0.03em]">
@@ -1314,6 +1324,7 @@ export function HomeScreen() {
         {/* Barra Flutuante Inferior (Busca/Cofre, +, Check/Home) */}
         <nav
           aria-label="Ações rápidas"
+          style={{ position: "fixed" }}
           className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 rounded-full bg-white/95 backdrop-blur-md px-2.5 py-2 border border-[#F0F0F0] flex items-center gap-2"
         >
           <button
