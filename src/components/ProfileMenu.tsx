@@ -1,6 +1,13 @@
 "use client";
 
-import { type ComponentType, type SVGProps, useEffect, useRef, useState } from "react";
+import {
+  type ComponentType,
+  type FormEvent,
+  type SVGProps,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   AppearanceIcon,
   BellIcon,
@@ -9,18 +16,22 @@ import {
   CreditCardIcon,
   HelpCircleIcon,
   HistoryIcon,
+  LogInIcon,
   LogOutIcon,
   ShareDownloadIcon,
   ShieldCheckIcon,
   TrashIcon,
   UploadIcon,
   UserIcon,
+  UserPlusIcon,
 } from "@/components/icons";
 import type { BillingPlanId } from "@/components/PaywallScreen";
 
 export type AppearanceMode = "light" | "dark" | "system";
+export type AuthMode = "login" | "signup";
 
 type ProfileSheetId =
+  | "auth"
   | "notifications"
   | "privacy"
   | "subscription"
@@ -29,9 +40,15 @@ type ProfileSheetId =
   | null;
 
 interface ProfileMenuProps {
+  isLoggedIn: boolean;
   isSubscribed: boolean;
   activePlan: BillingPlanId;
   appearanceMode: AppearanceMode;
+  onAuthenticate: (payload: {
+    name: string;
+    email: string;
+    mode: AuthMode;
+  }) => void;
   onChangeAppearance: (mode: AppearanceMode) => void;
   onSendAnotherInvoice: () => void;
   onOpenHistory: () => void;
@@ -50,9 +67,11 @@ interface MenuItemConfig {
 }
 
 export function ProfileMenu({
+  isLoggedIn,
   isSubscribed,
   activePlan,
   appearanceMode,
+  onAuthenticate,
   onChangeAppearance,
   onSendAnotherInvoice,
   onOpenHistory,
@@ -64,6 +83,11 @@ export function ProfileMenu({
 }: ProfileMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeSheet, setActiveSheet] = useState<ProfileSheetId>(null);
+  const [authMode, setAuthMode] = useState<AuthMode>("login");
+  const [authName, setAuthName] = useState("");
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authError, setAuthError] = useState<string | null>(null);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [notifyNewCharges, setNotifyNewCharges] = useState(true);
   const [notifyPriceChanges, setNotifyPriceChanges] = useState(true);
@@ -104,7 +128,74 @@ export function ProfileMenu({
     callback();
   };
 
-  const mainMenuItems: MenuItemConfig[] = [
+  const openAuthSheet = (mode: AuthMode) => {
+    closeMenuAndRun(() => {
+      setAuthMode(mode);
+      setAuthError(null);
+      setActiveSheet("auth");
+    });
+  };
+
+  const handleAuthSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const trimmedEmail = authEmail.trim();
+    const trimmedName = authName.trim();
+
+    if (!trimmedEmail || !trimmedEmail.includes("@")) {
+      setAuthError("Informe um e-mail válido para continuar.");
+      return;
+    }
+
+    if (authPassword.trim().length < 4) {
+      setAuthError("Informe uma senha com pelo menos 4 caracteres.");
+      return;
+    }
+
+    onAuthenticate({
+      name: trimmedName || trimmedEmail.split("@")[0],
+      email: trimmedEmail,
+      mode: authMode,
+    });
+    setActiveSheet(null);
+    setAuthPassword("");
+    setAuthError(null);
+  };
+
+  const sharedSecondaryItems: Record<
+    "privacy" | "help" | "appearance",
+    MenuItemConfig
+  > = {
+    privacy: {
+      id: "privacy",
+      label: "Política de privacidade",
+      icon: ShieldCheckIcon,
+      action: () =>
+        closeMenuAndRun(() => {
+          setIsConfirmingDelete(false);
+          setActiveSheet("privacy");
+        }),
+    },
+    help: {
+      id: "help",
+      label: "Central de ajuda",
+      icon: HelpCircleIcon,
+      action: () => closeMenuAndRun(() => setActiveSheet("help")),
+    },
+    appearance: {
+      id: "appearance",
+      label: "Aparência",
+      icon: AppearanceIcon,
+      action: () => closeMenuAndRun(() => setActiveSheet("appearance")),
+    },
+  };
+
+  const loggedOutSecondaryItems: MenuItemConfig[] = [
+    sharedSecondaryItems.privacy,
+    sharedSecondaryItems.help,
+    sharedSecondaryItems.appearance,
+  ];
+
+  const loggedInMenuItems: MenuItemConfig[] = [
     {
       id: "notifications",
       label: "Notificações",
@@ -117,16 +208,7 @@ export function ProfileMenu({
       icon: UploadIcon,
       action: () => closeMenuAndRun(onSendAnotherInvoice),
     },
-    {
-      id: "privacy",
-      label: "Política de privacidade",
-      icon: ShieldCheckIcon,
-      action: () =>
-        closeMenuAndRun(() => {
-          setIsConfirmingDelete(false);
-          setActiveSheet("privacy");
-        }),
-    },
+    sharedSecondaryItems.privacy,
     {
       id: "history",
       label: "Histórico de faturas",
@@ -152,21 +234,28 @@ export function ProfileMenu({
       icon: ShareDownloadIcon,
       action: () => closeMenuAndRun(onExportAnalyses),
     },
-    {
-      id: "help",
-      label: "Central de ajuda",
-      icon: HelpCircleIcon,
-      action: () => closeMenuAndRun(() => setActiveSheet("help")),
-    },
-    {
-      id: "appearance",
-      label: "Aparência",
-      icon: AppearanceIcon,
-      action: () => closeMenuAndRun(() => setActiveSheet("appearance")),
-    },
+    sharedSecondaryItems.help,
+    sharedSecondaryItems.appearance,
   ];
 
+  const renderMenuItemRow = (item: MenuItemConfig) => {
+    const Icon = item.icon;
+    return (
+      <button
+        key={item.id}
+        type="button"
+        role="menuitem"
+        onClick={item.action}
+        className="w-full min-h-[42px] px-3.5 py-2 rounded-[12px] text-left text-[14px] font-medium text-[#171717] hover:bg-[#F5F5F5] flex items-center gap-2.5 transition-colors cursor-pointer"
+      >
+        <Icon className="w-4 h-4 text-[#6B7280] shrink-0" />
+        <span>{item.label}</span>
+      </button>
+    );
+  };
+
   const sheetTitleMap: Record<Exclude<ProfileSheetId, null>, string> = {
+    auth: authMode === "login" ? "Entrar na minha conta" : "Criar conta grátis",
     notifications: "Notificações",
     privacy: "Política de privacidade",
     subscription: "Gerenciar subscrição",
@@ -183,44 +272,88 @@ export function ProfileMenu({
           aria-haspopup="menu"
           aria-expanded={isOpen}
           onClick={() => setIsOpen((prev) => !prev)}
-          className="w-8 h-8 rounded-full bg-[#F5F5F5] border border-[#EAEAEA] flex items-center justify-center text-[#52525B] hover:text-[#111111] hover:bg-[#EBEBEB] active:bg-[#E2E2E2] transition-colors cursor-pointer"
+          className="relative w-8 h-8 rounded-full bg-[#F5F5F5] border border-[#EAEAEA] flex items-center justify-center text-[#52525B] hover:text-[#111111] hover:bg-[#EBEBEB] active:bg-[#E2E2E2] transition-colors cursor-pointer"
         >
           <UserIcon className="w-[17px] h-[17px]" />
+          {isLoggedIn && (
+            <span
+              aria-hidden="true"
+              className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#00C853] ring-2 ring-white"
+            />
+          )}
         </button>
 
         {isOpen && (
           <div
             role="menu"
             aria-label="Menu do perfil"
-            className="absolute right-0 mt-2 w-[264px] max-h-[calc(100vh-92px)] overflow-y-auto rounded-[20px] bg-white border border-[#EAEAEA] p-1.5 z-50"
+            className="absolute right-0 mt-2 w-[272px] max-h-[calc(100vh-92px)] overflow-y-auto rounded-[20px] bg-white border border-[#EAEAEA] p-2 z-50"
           >
-            {mainMenuItems.map((item) => {
-              const Icon = item.icon;
-              return (
+            {!isLoggedIn ? (
+              <>
+                {/* Cabeçalho do menu para usuário não logado */}
+                <div className="px-2.5 pt-1.5 pb-3 flex items-start gap-3 text-left">
+                  <span
+                    aria-hidden="true"
+                    className="w-9 h-9 rounded-full bg-[#F5F5F5] border border-[#EAEAEA] flex items-center justify-center text-[#52525B] shrink-0 mt-0.5"
+                  >
+                    <UserIcon className="w-[18px] h-[18px]" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[14.5px] font-bold text-[#1A1A1A] leading-snug">
+                      Bem-vindo ao Taxly
+                    </p>
+                    <p className="mt-0.5 text-[12.5px] text-[#6B7280] leading-snug">
+                      Acesse sua conta para salvar suas análises.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Ações principais */}
+                <div className="px-1.5 pb-1.5 space-y-2">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => openAuthSheet("login")}
+                    className="w-full min-h-[40px] px-3.5 py-2 rounded-[12px] bg-[#00C853] hover:bg-[#00B54B] active:bg-[#00A047] text-white text-[13.5px] font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                  >
+                    <LogInIcon className="w-4 h-4 shrink-0" />
+                    <span>Entrar na minha conta</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => openAuthSheet("signup")}
+                    className="w-full min-h-[40px] px-3.5 py-2 rounded-[12px] bg-[#FAFAFA] hover:bg-[#F0F0F0] border border-[#EAEAEA] text-[#1A1A1A] text-[13.5px] font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                  >
+                    <UserPlusIcon className="w-4 h-4 text-[#52525B] shrink-0" />
+                    <span>Criar conta grátis</span>
+                  </button>
+                </div>
+
+                <hr className="my-1.5 border-t border-[#F0F0F0]" />
+
+                {/* Opções secundárias */}
+                {loggedOutSecondaryItems.map(renderMenuItemRow)}
+              </>
+            ) : (
+              <>
+                {loggedInMenuItems.map(renderMenuItemRow)}
+
+                <hr className="my-1 border-t border-[#F0F0F0]" />
+
                 <button
-                  key={item.id}
                   type="button"
                   role="menuitem"
-                  onClick={item.action}
-                  className="w-full min-h-[42px] px-3.5 py-2 rounded-[12px] text-left text-[14px] font-medium text-[#171717] hover:bg-[#F5F5F5] flex items-center gap-2.5 transition-colors cursor-pointer"
+                  onClick={() => closeMenuAndRun(onSignOut)}
+                  className="w-full min-h-[42px] px-3.5 py-2 rounded-[12px] text-left text-[14px] font-medium text-[#6B7280] hover:bg-[#F5F5F5] hover:text-[#171717] flex items-center gap-2.5 transition-colors cursor-pointer"
                 >
-                  <Icon className="w-4 h-4 text-[#6B7280] shrink-0" />
-                  <span>{item.label}</span>
+                  <LogOutIcon className="w-4 h-4 text-[#6B7280] shrink-0" />
+                  <span>Sair</span>
                 </button>
-              );
-            })}
-
-            <hr className="my-1 border-t border-[#F0F0F0]" />
-
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => closeMenuAndRun(onSignOut)}
-              className="w-full min-h-[42px] px-3.5 py-2 rounded-[12px] text-left text-[14px] font-medium text-[#6B7280] hover:bg-[#F5F5F5] hover:text-[#171717] flex items-center gap-2.5 transition-colors cursor-pointer"
-            >
-              <LogOutIcon className="w-4 h-4 text-[#6B7280] shrink-0" />
-              <span>Sair</span>
-            </button>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -260,6 +393,123 @@ export function ProfileMenu({
                 <CloseIcon className="w-4 h-4" />
               </button>
             </div>
+
+            {activeSheet === "auth" && (
+              <form onSubmit={handleAuthSubmit} className="mt-4 space-y-3.5" noValidate>
+                <p className="text-[13.5px] text-[#6B7280] leading-snug">
+                  {authMode === "login"
+                    ? "Acesse sua conta para ver seu histórico e gerenciar suas análises."
+                    : "Crie sua conta gratuita para salvar faturas e acompanhar novas cobranças."}
+                </p>
+
+                {authMode === "signup" && (
+                  <div>
+                    <label
+                      htmlFor="taxly-auth-name"
+                      className="block text-[13px] font-medium text-[#1A1A1A] mb-1"
+                    >
+                      Nome
+                    </label>
+                    <input
+                      id="taxly-auth-name"
+                      type="text"
+                      value={authName}
+                      onChange={(e) => setAuthName(e.target.value)}
+                      placeholder="Seu nome"
+                      className="w-full h-[44px] px-3.5 rounded-[12px] bg-[#FAFAFA] border border-[#EAEAEA] text-[14px] text-[#1A1A1A] placeholder:text-[#8E8E93] focus:outline-none focus:border-[#00C853]"
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <label
+                    htmlFor="taxly-auth-email"
+                    className="block text-[13px] font-medium text-[#1A1A1A] mb-1"
+                  >
+                    E-mail
+                  </label>
+                  <input
+                    id="taxly-auth-email"
+                    type="email"
+                    value={authEmail}
+                    onChange={(e) => {
+                      setAuthEmail(e.target.value);
+                      if (authError) setAuthError(null);
+                    }}
+                    placeholder="voce@email.com"
+                    className="w-full h-[44px] px-3.5 rounded-[12px] bg-[#FAFAFA] border border-[#EAEAEA] text-[14px] text-[#1A1A1A] placeholder:text-[#8E8E93] focus:outline-none focus:border-[#00C853]"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="taxly-auth-password"
+                    className="block text-[13px] font-medium text-[#1A1A1A] mb-1"
+                  >
+                    Senha
+                  </label>
+                  <input
+                    id="taxly-auth-password"
+                    type="password"
+                    value={authPassword}
+                    onChange={(e) => {
+                      setAuthPassword(e.target.value);
+                      if (authError) setAuthError(null);
+                    }}
+                    placeholder="••••••••"
+                    className="w-full h-[44px] px-3.5 rounded-[12px] bg-[#FAFAFA] border border-[#EAEAEA] text-[14px] text-[#1A1A1A] placeholder:text-[#8E8E93] focus:outline-none focus:border-[#00C853]"
+                  />
+                </div>
+
+                {authError && (
+                  <p role="alert" className="text-[12.5px] font-medium text-[#B42318]">
+                    {authError}
+                  </p>
+                )}
+
+                <button
+                  type="submit"
+                  className="w-full min-h-[46px] rounded-[14px] bg-[#00C853] hover:bg-[#00B54B] active:bg-[#00A047] text-white text-[14.5px] font-semibold transition-colors cursor-pointer"
+                >
+                  {authMode === "login"
+                    ? "Entrar na minha conta"
+                    : "Criar conta grátis"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    onAuthenticate({
+                      name: "Visitante Taxly",
+                      email: "demo@taxly.app",
+                      mode: authMode,
+                    });
+                    setActiveSheet(null);
+                    setAuthError(null);
+                  }}
+                  className="w-full py-1.5 text-center text-[13px] font-medium text-[#52525B] hover:text-[#1A1A1A] underline underline-offset-4 cursor-pointer"
+                >
+                  Entrar com conta de demonstração
+                </button>
+
+                <div className="pt-1 border-t border-[#F0F0F0] text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthMode((prev) =>
+                        prev === "login" ? "signup" : "login"
+                      );
+                      setAuthError(null);
+                    }}
+                    className="text-[13px] font-medium text-[#6B7280] hover:text-[#1A1A1A] cursor-pointer"
+                  >
+                    {authMode === "login"
+                      ? "Não tem conta? Criar conta grátis"
+                      : "Já tem conta? Entrar na minha conta"}
+                  </button>
+                </div>
+              </form>
+            )}
 
             {activeSheet === "notifications" && (
               <div className="mt-4 space-y-3">

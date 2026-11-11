@@ -20,7 +20,11 @@ import {
 } from "@/components/icons";
 import { PartialResultScreen } from "@/components/PartialResultScreen";
 import { BillingPlanId, PaywallScreen } from "@/components/PaywallScreen";
-import { AppearanceMode, ProfileMenu } from "@/components/ProfileMenu";
+import {
+  AppearanceMode,
+  AuthMode,
+  ProfileMenu,
+} from "@/components/ProfileMenu";
 import {
   Charge,
   UNLOCKED_PARTIAL_CHARGES,
@@ -184,6 +188,7 @@ export function HomeScreen() {
     string | null
   >(null);
   const [modalSharedFeedback, setModalSharedFeedback] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [activePlan, setActivePlan] = useState<BillingPlanId>("annual");
   const [appearanceMode, setAppearanceMode] = useState<AppearanceMode>("light");
@@ -334,8 +339,26 @@ export function HomeScreen() {
     window.setTimeout(() => setStatusBanner(null), 4000);
   };
 
+  const handleAuthenticate = ({
+    name,
+    mode,
+  }: {
+    name: string;
+    email: string;
+    mode: AuthMode;
+  }) => {
+    setIsLoggedIn(true);
+    setStatusBanner(
+      mode === "signup"
+        ? `Conta criada com sucesso! Bem-vindo(a), ${name}.`
+        : `Bem-vindo(a) de volta, ${name}!`
+    );
+    window.setTimeout(() => setStatusBanner(null), 4000);
+  };
+
   const handleSignOut = () => {
     // TODO: Integrar ao provedor de autenticação real quando disponível
+    setIsLoggedIn(false);
     setIsSubscribed(false);
     setExpandedChargeId(null);
     setActiveTab("home");
@@ -599,9 +622,11 @@ export function HomeScreen() {
           </div>
 
           <ProfileMenu
+            isLoggedIn={isLoggedIn}
             isSubscribed={isSubscribed}
             activePlan={activePlan}
             appearanceMode={appearanceMode}
+            onAuthenticate={handleAuthenticate}
             onChangeAppearance={handleChangeAppearance}
             onSendAnotherInvoice={handleSendAnotherInvoice}
             onOpenHistory={() => {
