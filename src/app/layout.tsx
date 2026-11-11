@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "VazamentoZero — Possível economia e cobranças para revisar",
+  title: "taxly — Possível economia e cobranças para revisar",
   description:
     "Analise faturas com dados mascarados, identifique cobranças para revisar e descubra sua possível economia mensal.",
 };

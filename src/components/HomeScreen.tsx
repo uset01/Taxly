@@ -548,14 +548,18 @@ export function HomeScreen() {
         style={{ paddingBottom: "120px" }}
         className="mx-auto w-full max-w-[430px] min-w-0 min-h-screen bg-white pb-[120px] relative"
       >
-        {/* Top Row: Pill + Menu "..." */}
+        {/* Top Row: Logo taxly + Menu "..." */}
         <header className="px-6 pt-5 pb-2 flex items-center justify-between">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-[#F5F5F5] px-3.5 py-1.5 select-none">
-            <ShieldCheckIcon className="w-[16px] h-[16px] text-[#171717]" />
-            <span className="text-[13px] font-medium text-[#171717] tracking-[-0.01em]">
-              {screenState === "empty" && activeTab === "vault"
-                ? "Meu Cofre"
-                : "Nova análise"}
+          <div className="inline-flex items-center gap-2.5 select-none">
+            <img
+              src="/taxly-logo.png"
+              alt="Logo taxly"
+              width={34}
+              height={34}
+              className="w-[34px] h-[34px] object-contain shrink-0"
+            />
+            <span className="text-[22px] font-bold text-[#111111] tracking-[-0.035em] leading-none">
+              taxly
             </span>
           </div>
 
