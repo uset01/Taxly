@@ -305,6 +305,24 @@ export function PlusIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function UserIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.9}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <circle cx="12" cy="8.5" r="3.5" />
+      <path d="M5.5 19.5a6.5 6.5 0 0113 0" />
+    </svg>
+  );
+}
+
 export function MoreHorizontalIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg

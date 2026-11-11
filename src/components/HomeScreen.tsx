@@ -11,7 +11,6 @@ import {
   DocumentScannerIcon,
   InvoiceDocIcon,
   LogOutIcon,
-  MoreHorizontalIcon,
   PixIcon,
   PlusIcon,
   SearchIcon,
@@ -19,6 +18,7 @@ import {
   ShieldCheckIcon,
   TrashIcon,
   UploadIcon,
+  UserIcon,
 } from "@/components/icons";
 import {
   Charge,
@@ -548,7 +548,7 @@ export function HomeScreen() {
         style={{ paddingBottom: "120px" }}
         className="mx-auto w-full max-w-[430px] min-w-0 min-h-screen bg-white pb-[120px] relative"
       >
-        {/* Top Row: Logo taxly + Menu "..." */}
+        {/* Top Row: Logo taxly + Ícone de perfil */}
         <header className="px-6 pt-5 pb-2 flex items-center justify-between">
           <div className="inline-flex items-center gap-2.5 select-none">
             <img
@@ -566,16 +566,16 @@ export function HomeScreen() {
           <div ref={avatarMenuRef} className="relative">
             <button
               type="button"
-              aria-label="Abrir opções da conta e privacidade"
+              aria-label="Abrir perfil e opções da conta"
               aria-haspopup="menu"
               aria-expanded={isAvatarMenuOpen}
               onClick={() => {
                 setIsAvatarMenuOpen((prev) => !prev);
                 setIsConfirmingDelete(false);
               }}
-              className="w-9 h-9 rounded-full flex items-center justify-center text-[#8E8E93] hover:text-[#111111] hover:bg-[#F5F5F5] active:bg-[#EBEBEB] transition-colors cursor-pointer"
+              className="w-8 h-8 rounded-full bg-[#F5F5F5] border border-[#EAEAEA] flex items-center justify-center text-[#52525B] hover:text-[#111111] hover:bg-[#EBEBEB] active:bg-[#E2E2E2] transition-colors cursor-pointer"
             >
-              <MoreHorizontalIcon className="w-5 h-5" />
+              <UserIcon className="w-[17px] h-[17px]" />
             </button>
 
             {isAvatarMenuOpen && (
