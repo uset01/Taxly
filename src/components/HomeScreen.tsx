@@ -22,8 +22,11 @@ import {
   UploadIcon,
   UserIcon,
 } from "@/components/icons";
+import { PartialResultScreen } from "@/components/PartialResultScreen";
+import { BillingPlanId, PaywallScreen } from "@/components/PaywallScreen";
 import {
   Charge,
+  UNLOCKED_PARTIAL_CHARGES,
   calculateChargesMetrics,
   formatBRL,
 } from "@/data/charges";
@@ -32,8 +35,14 @@ import {
   InvoiceAnalysisError,
   analyzeInvoice,
 } from "@/lib/analyze-invoice";
+import { useCountUp } from "@/lib/use-count-up";
 
-export type ScreenState = "empty" | "analyzing" | "result";
+export type ScreenState =
+  | "empty"
+  | "analyzing"
+  | "partialResult"
+  | "paywall"
+  | "result";
 
 const RESOLVED_STORAGE_KEY = "vazamentozero:resolved_charge_ids";
 
@@ -180,8 +189,13 @@ export function HomeScreen() {
     string | null
   >(null);
   const [modalSharedFeedback, setModalSharedFeedback] = useState(false);
-  const [animatedSocialProofValue, setAnimatedSocialProofValue] =
-    useState<number>(0);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+
+  const animatedSocialProofValue = useCountUp(
+    184.7,
+    screenState === "empty" && activeTab === "home",
+    1000
+  );
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const avatarMenuRef = useRef<HTMLDivElement>(null);
@@ -189,43 +203,6 @@ export function HomeScreen() {
 
   const selectedModalReceipt =
     vaultReceipts.find((item) => item.id === selectedModalReceiptId) ?? null;
-
-  // Animação count-up de R$ 0,00 até R$ 184,70 em ~1 segundo ao carregar a Home
-  useEffect(() => {
-    if (screenState !== "empty" || activeTab !== "home") return;
-
-    const targetValue = 184.7;
-    const durationMs = 1000;
-    let startTime: number | null = null;
-    let animationFrameId: number;
-
-    setAnimatedSocialProofValue(0);
-
-    const step = (timestamp: number) => {
-      if (startTime === null) {
-        startTime = timestamp;
-      }
-      const elapsed = timestamp - startTime;
-      const progress = Math.min(elapsed / durationMs, 1);
-      // Ease-out cubic para contagem fluida
-      const easedProgress = 1 - Math.pow(1 - progress, 3);
-      const currentValue = Number((targetValue * easedProgress).toFixed(2));
-
-      setAnimatedSocialProofValue(currentValue);
-
-      if (progress < 1) {
-        animationFrameId = window.requestAnimationFrame(step);
-      } else {
-        setAnimatedSocialProofValue(targetValue);
-      }
-    };
-
-    animationFrameId = window.requestAnimationFrame(step);
-
-    return () => {
-      window.cancelAnimationFrame(animationFrameId);
-    };
-  }, [screenState, activeTab]);
 
   // Rola para o topo sempre que mudar de estado para evitar salto visual
   useEffect(() => {
@@ -373,6 +350,7 @@ export function HomeScreen() {
       }
     }
     setCharges([]);
+    setIsSubscribed(false);
     setSelectedFileName(null);
     setExpandedChargeId(null);
     setAnalysisError(null);
@@ -387,10 +365,37 @@ export function HomeScreen() {
     // TODO: Integrar ao provedor de autenticação real quando disponível
     setIsAvatarMenuOpen(false);
     setIsConfirmingDelete(false);
+    setIsSubscribed(false);
     setExpandedChargeId(null);
     setScreenState("empty");
     setStatusBanner("Sessão encerrada.");
     window.setTimeout(() => setStatusBanner(null), 3500);
+  };
+
+  const handleContinueFree = () => {
+    setActiveTab("home");
+    setScreenState("empty");
+    setStatusBanner(
+      "Modo grátis ativo (1 análise por mês). Cobrança duplicada de R$ 14,90 registrada."
+    );
+    window.setTimeout(() => setStatusBanner(null), 4500);
+  };
+
+  const handleSubscribePlan = (plan: BillingPlanId) => {
+    const resolvedIds = readResolvedIdsFromStorage();
+    const unlocked: Charge[] = UNLOCKED_PARTIAL_CHARGES.map((charge) => ({
+      ...charge,
+      status: resolvedIds.includes(charge.id) ? "resolved" : charge.status,
+    }));
+    setIsSubscribed(true);
+    setCharges(unlocked);
+    setExpandedChargeId(null);
+    setActiveTab("home");
+    setScreenState("result");
+    setStatusBanner(
+      `Plano ${plan === "annual" ? "Anual" : "Mensal"} ativado! Análise completa desbloqueada.`
+    );
+    window.setTimeout(() => setStatusBanner(null), 4500);
   };
 
   const metrics = calculateChargesMetrics(charges);
@@ -477,8 +482,15 @@ export function HomeScreen() {
       setActiveVaultCategory("Todos");
       setVaultSearchQuery("");
       setIsCardScanning(false);
-      setSelectedModalReceiptId(newReceipt.id);
-    }, 2000);
+
+      if (isSubscribed && file) {
+        void handleStartAnalysis(file);
+        return;
+      }
+
+      setSelectedFileName(file?.name ?? null);
+      setScreenState("partialResult");
+    }, 1400);
   };
 
   const handleSelectModalTag = (id: string, newTag: string) => {
@@ -543,12 +555,16 @@ export function HomeScreen() {
   };
 
   const totalVaultFilesCount = 8 + vaultReceipts.length;
+  const isPaywallFlowScreen =
+    screenState === "partialResult" || screenState === "paywall";
 
   return (
     <div className="min-h-screen w-full bg-white text-[#111111] overflow-x-hidden">
       <div
-        style={{ paddingBottom: "120px" }}
-        className="mx-auto w-full max-w-[430px] min-w-0 min-h-screen bg-white pb-[120px] relative"
+        style={{ paddingBottom: isPaywallFlowScreen ? "0px" : "120px" }}
+        className={`mx-auto w-full max-w-[430px] min-w-0 min-h-screen bg-white relative ${
+          isPaywallFlowScreen ? "" : "pb-[120px]"
+        }`}
       >
         {/* Top Row: Logo taxly + Ícone de perfil */}
         <header className="px-6 pt-5 pb-2 flex items-center justify-between">
@@ -675,10 +691,10 @@ export function HomeScreen() {
           className="sr-only"
         />
 
-        {/* Main Content com padding-bottom de 120px em todas as telas */}
+        {/* Main Content */}
         <main
-          style={{ paddingBottom: "120px" }}
-          className="px-6 pt-3 pb-[120px]"
+          style={{ paddingBottom: isPaywallFlowScreen ? "0px" : "120px" }}
+          className={`px-6 pt-3 ${isPaywallFlowScreen ? "" : "pb-[120px]"}`}
         >
           {screenState === "empty" && activeTab === "home" && (
             <section
@@ -1095,6 +1111,20 @@ export function HomeScreen() {
                 </div>
               )}
             </section>
+          )}
+
+          {screenState === "partialResult" && (
+            <PartialResultScreen
+              onUnlock={() => setScreenState("paywall")}
+              onContinueFree={handleContinueFree}
+            />
+          )}
+
+          {screenState === "paywall" && (
+            <PaywallScreen
+              onBack={() => setScreenState("partialResult")}
+              onSubscribe={handleSubscribePlan}
+            />
           )}
 
           {screenState === "result" && (

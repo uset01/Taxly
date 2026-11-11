@@ -96,6 +96,50 @@ export const MOCK_CHARGES: Charge[] = [
   },
 ];
 
+/**
+ * Conjunto completo correspondente aos R$ 37,90 da análise gratuita após desbloqueio no paywall:
+ * 14,90 + 13,00 + 10,00 = 37,90
+ */
+export const UNLOCKED_PARTIAL_CHARGES: Charge[] = [
+  {
+    id: "partial-duplicada",
+    merchant: "Cobrança duplicada",
+    color: "#225EA8",
+    reason: "Lançada 2x nesta fatura",
+    amount: 14.9,
+    status: "active",
+    cancelGuide: {
+      steps: CANCEL_GUIDES["amazon-prime"].steps,
+      script: CANCEL_GUIDES["amazon-prime"].script,
+    },
+  },
+  {
+    id: "partial-assinatura",
+    merchant: "Clube de Benefícios",
+    color: "#158A3E",
+    reason: "Assinatura renovada sem aviso",
+    amount: 13.0,
+    status: "active",
+    cancelGuide: {
+      steps: CANCEL_GUIDES["spotify"].steps,
+      script: CANCEL_GUIDES["spotify"].script,
+    },
+  },
+  {
+    id: "partial-taxa",
+    merchant: "Tarifa de Proteção",
+    color: "#D93F32",
+    reason: "Taxa mensal embutida na fatura",
+    amount: 10.0,
+    status: "active",
+    cancelGuide: {
+      steps: CANCEL_GUIDES["netflix"].steps,
+      script:
+        "Olá! Identifiquei uma tarifa de proteção mensal de R$ 10,00 cobrada na minha fatura sem minha solicitação. Solicito o cancelamento imediato e o estorno do valor.",
+    },
+  },
+];
+
 export function formatBRL(value: number): string {
   return value.toLocaleString("pt-BR", {
     minimumFractionDigits: 2,
