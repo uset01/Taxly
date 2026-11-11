@@ -9,6 +9,8 @@ import {
   CloseIcon,
   CopyIcon,
   DocumentScannerIcon,
+  HistoryIcon,
+  HomeIcon,
   InvoiceDocIcon,
   LogOutIcon,
   PixIcon,
@@ -1364,40 +1366,15 @@ export function HomeScreen() {
           )}
         </main>
 
-        {/* Barra Flutuante Inferior (Busca/Cofre, +, Check/Home) */}
+        {/* Barra Flutuante Inferior (Home e Histórico) */}
         <nav
-          aria-label="Ações rápidas"
+          aria-label="Navegação principal"
           style={{ position: "fixed" }}
           className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 rounded-full bg-white/95 backdrop-blur-md px-2.5 py-2 border border-[#F0F0F0] flex items-center gap-2"
         >
           <button
             type="button"
-            aria-label="Abrir Meu Cofre"
-            onClick={() => {
-              setScreenState("empty");
-              setActiveTab("vault");
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-            className={`w-[44px] h-[44px] rounded-full flex items-center justify-center transition-colors cursor-pointer ${
-              screenState === "empty" && activeTab === "vault"
-                ? "bg-[#141414] text-white"
-                : "bg-transparent hover:bg-[#F5F5F5] active:bg-[#EAEAEA] text-[#141414]"
-            }`}
-          >
-            <SearchIcon className="w-5 h-5" />
-          </button>
-
-          <label
-            htmlFor="vault-file-input"
-            aria-label="Adicionar novo arquivo"
-            className="w-[44px] h-[44px] rounded-full bg-[#F5F5F5] hover:bg-[#EAEAEA] active:bg-[#E0E0E0] text-[#141414] flex items-center justify-center transition-colors cursor-pointer"
-          >
-            <PlusIcon className="w-5 h-5" />
-          </label>
-
-          <button
-            type="button"
-            aria-label="Nova análise"
+            aria-label="Início"
             onClick={() => {
               setScreenState("empty");
               setActiveTab("home");
@@ -1409,7 +1386,24 @@ export function HomeScreen() {
                 : "bg-transparent hover:bg-[#F5F5F5] active:bg-[#EAEAEA] text-[#141414]"
             }`}
           >
-            <CheckIcon className="w-5 h-5" />
+            <HomeIcon className="w-5 h-5" />
+          </button>
+
+          <button
+            type="button"
+            aria-label="Histórico"
+            onClick={() => {
+              setScreenState("empty");
+              setActiveTab("vault");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className={`w-[44px] h-[44px] rounded-full flex items-center justify-center transition-colors cursor-pointer ${
+              screenState === "empty" && activeTab === "vault"
+                ? "bg-[#141414] text-white"
+                : "bg-transparent hover:bg-[#F5F5F5] active:bg-[#EAEAEA] text-[#141414]"
+            }`}
+          >
+            <HistoryIcon className="w-5 h-5" />
           </button>
         </nav>
 
