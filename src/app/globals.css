@@ -102,5 +102,40 @@ label:active .cta-plus-button,
   scrollbar-width: none;
 }
 
+.taxly-app[data-theme="dark"],
+.taxly-app[data-theme="dark"] .bg-white,
+.taxly-app[data-theme="dark"] .bg-white\/95,
+.taxly-app[data-theme="dark"] .bg-white\/80,
+.taxly-app[data-theme="dark"] .bg-white\/75 {
+  background-color: #121214;
+  color: #f4f4f5;
+}
+
+.taxly-app[data-theme="dark"] .bg-\[\#FAFAFA\],
+.taxly-app[data-theme="dark"] .bg-\[\#F5F5F5\],
+.taxly-app[data-theme="dark"] .bg-\[\#F4F4F5\],
+.taxly-app[data-theme="dark"] .bg-\[\#F8F7F4\] {
+  background-color: #1c1c1f;
+}
+
+.taxly-app[data-theme="dark"] .border-\[\#EAEAEA\],
+.taxly-app[data-theme="dark"] .border-\[\#E5E7EB\],
+.taxly-app[data-theme="dark"] .border-\[\#F0F0F0\] {
+  border-color: #2c2c31;
+}
+
+.taxly-app[data-theme="dark"] .text-\[\#111111\],
+.taxly-app[data-theme="dark"] .text-\[\#1A1A1A\],
+.taxly-app[data-theme="dark"] .text-\[\#0F0F0F\],
+.taxly-app[data-theme="dark"] .text-\[\#171717\],
+.taxly-app[data-theme="dark"] .text-\[\#262626\],
+.taxly-app[data-theme="dark"] .text-\[\#3F3F46\] {
+  color: #f4f4f5;
+}
+
+.taxly-app[data-theme="dark"] .hover\:bg-\[\#F5F5F5\]:hover {
+  background-color: #27272a;
+}
+
 
 

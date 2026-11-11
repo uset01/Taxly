@@ -12,18 +12,15 @@ import {
   HistoryIcon,
   HomeIcon,
   InvoiceDocIcon,
-  LogOutIcon,
   PixIcon,
   PlusIcon,
   SearchIcon,
   ShareDownloadIcon,
-  ShieldCheckIcon,
   TrashIcon,
-  UploadIcon,
-  UserIcon,
 } from "@/components/icons";
 import { PartialResultScreen } from "@/components/PartialResultScreen";
 import { BillingPlanId, PaywallScreen } from "@/components/PaywallScreen";
+import { AppearanceMode, ProfileMenu } from "@/components/ProfileMenu";
 import {
   Charge,
   UNLOCKED_PARTIAL_CHARGES,
@@ -170,8 +167,6 @@ export function HomeScreen() {
   const [expandedChargeId, setExpandedChargeId] = useState<string | null>(null);
   const [copiedChargeId, setCopiedChargeId] = useState<string | null>(null);
   const [monitoringFeedback, setMonitoringFeedback] = useState(false);
-  const [isAvatarMenuOpen, setIsAvatarMenuOpen] = useState(false);
-  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [statusBanner, setStatusBanner] = useState<string | null>(null);
 
   // States do Cofre de Comprovantes
@@ -190,6 +185,9 @@ export function HomeScreen() {
   >(null);
   const [modalSharedFeedback, setModalSharedFeedback] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [activePlan, setActivePlan] = useState<BillingPlanId>("annual");
+  const [appearanceMode, setAppearanceMode] = useState<AppearanceMode>("light");
+  const [systemDark, setSystemDark] = useState(false);
 
   const animatedSocialProofValue = useCountUp(
     184.7,
@@ -198,7 +196,6 @@ export function HomeScreen() {
   );
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const avatarMenuRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const selectedModalReceipt =
@@ -209,34 +206,13 @@ export function HomeScreen() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [screenState]);
 
-  // Fecha o menu do avatar ao clicar fora ou pressionar Escape
   useEffect(() => {
-    if (!isAvatarMenuOpen) return;
-
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        avatarMenuRef.current &&
-        !avatarMenuRef.current.contains(event.target as Node)
-      ) {
-        setIsAvatarMenuOpen(false);
-        setIsConfirmingDelete(false);
-      }
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setIsAvatarMenuOpen(false);
-        setIsConfirmingDelete(false);
-      }
-    };
-
-    document.addEventListener("pointerdown", handleClickOutside);
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("pointerdown", handleClickOutside);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isAvatarMenuOpen]);
+    if (appearanceMode !== "system" || typeof window === "undefined") return;
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleChange = (e: MediaQueryListEvent) => setSystemDark(e.matches);
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, [appearanceMode]);
 
   const readResolvedIdsFromStorage = (): string[] => {
     if (typeof window === "undefined") return [];
@@ -334,10 +310,9 @@ export function HomeScreen() {
   };
 
   const handleSendAnotherInvoice = () => {
-    setIsAvatarMenuOpen(false);
-    setIsConfirmingDelete(false);
     setAnalysisError(null);
     setExpandedChargeId(null);
+    setActiveTab("home");
     setScreenState("empty");
   };
 
@@ -354,8 +329,6 @@ export function HomeScreen() {
     setSelectedFileName(null);
     setExpandedChargeId(null);
     setAnalysisError(null);
-    setIsConfirmingDelete(false);
-    setIsAvatarMenuOpen(false);
     setScreenState("empty");
     setStatusBanner("Seus dados locais foram apagados com sucesso (LGPD).");
     window.setTimeout(() => setStatusBanner(null), 4000);
@@ -363,10 +336,9 @@ export function HomeScreen() {
 
   const handleSignOut = () => {
     // TODO: Integrar ao provedor de autenticação real quando disponível
-    setIsAvatarMenuOpen(false);
-    setIsConfirmingDelete(false);
     setIsSubscribed(false);
     setExpandedChargeId(null);
+    setActiveTab("home");
     setScreenState("empty");
     setStatusBanner("Sessão encerrada.");
     window.setTimeout(() => setStatusBanner(null), 3500);
@@ -388,6 +360,7 @@ export function HomeScreen() {
       status: resolvedIds.includes(charge.id) ? "resolved" : charge.status,
     }));
     setIsSubscribed(true);
+    setActivePlan(plan);
     setCharges(unlocked);
     setExpandedChargeId(null);
     setActiveTab("home");
@@ -396,6 +369,43 @@ export function HomeScreen() {
       `Plano ${plan === "annual" ? "Anual" : "Mensal"} ativado! Análise completa desbloqueada.`
     );
     window.setTimeout(() => setStatusBanner(null), 4500);
+  };
+
+  const handleCancelSubscription = () => {
+    setIsSubscribed(false);
+    setStatusBanner("Subscrição cancelada. Plano grátis ativo.");
+    window.setTimeout(() => setStatusBanner(null), 4000);
+  };
+
+  const handleExportAnalyses = () => {
+    if (typeof window !== "undefined") {
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        app: "taxly",
+        charges,
+        vaultReceipts,
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {
+        type: "application/json;charset=utf-8",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "taxly-analises.json";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+    setStatusBanner("Análises exportadas (taxly-analises.json).");
+    window.setTimeout(() => setStatusBanner(null), 4000);
+  };
+
+  const handleChangeAppearance = (mode: AppearanceMode) => {
+    setAppearanceMode(mode);
+    if (mode === "system" && typeof window !== "undefined") {
+      setSystemDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
+    }
   };
 
   const metrics = calculateChargesMetrics(charges);
@@ -557,9 +567,16 @@ export function HomeScreen() {
   const totalVaultFilesCount = 8 + vaultReceipts.length;
   const isPaywallFlowScreen =
     screenState === "partialResult" || screenState === "paywall";
+  const resolvedTheme =
+    appearanceMode === "dark" || (appearanceMode === "system" && systemDark)
+      ? "dark"
+      : "light";
 
   return (
-    <div className="min-h-screen w-full bg-white text-[#111111] overflow-x-hidden">
+    <div
+      data-theme={resolvedTheme}
+      className="taxly-app min-h-screen w-full bg-white text-[#111111] overflow-x-hidden"
+    >
       <div
         style={{ paddingBottom: isPaywallFlowScreen ? "0px" : "120px" }}
         className={`mx-auto w-full max-w-[430px] min-w-0 min-h-screen bg-white relative ${
@@ -581,95 +598,22 @@ export function HomeScreen() {
             </span>
           </div>
 
-          <div ref={avatarMenuRef} className="relative">
-            <button
-              type="button"
-              aria-label="Abrir perfil e opções da conta"
-              aria-haspopup="menu"
-              aria-expanded={isAvatarMenuOpen}
-              onClick={() => {
-                setIsAvatarMenuOpen((prev) => !prev);
-                setIsConfirmingDelete(false);
-              }}
-              className="w-8 h-8 rounded-full bg-[#F5F5F5] border border-[#EAEAEA] flex items-center justify-center text-[#52525B] hover:text-[#111111] hover:bg-[#EBEBEB] active:bg-[#E2E2E2] transition-colors cursor-pointer"
-            >
-              <UserIcon className="w-[17px] h-[17px]" />
-            </button>
-
-            {isAvatarMenuOpen && (
-              <div
-                role="menu"
-                aria-label="Opções da conta e privacidade"
-                className="absolute right-0 mt-2 w-[256px] rounded-[20px] bg-white border border-[#EAEAEA] p-2 z-50"
-              >
-                {!isConfirmingDelete ? (
-                  <>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={handleSendAnotherInvoice}
-                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-[12px] text-left text-[14px] font-medium text-[#171717] hover:bg-[#F5F5F5] flex items-center gap-2.5 transition-colors cursor-pointer"
-                    >
-                      <UploadIcon className="w-4 h-4 text-[#6B7280] shrink-0" />
-                      <span>Enviar outra fatura</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => setIsConfirmingDelete(true)}
-                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-[12px] text-left text-[14px] font-medium text-[#B42318] hover:bg-[#FDF2F2] flex items-center gap-2.5 transition-colors cursor-pointer"
-                    >
-                      <TrashIcon className="w-4 h-4 text-[#B42318] shrink-0" />
-                      <span>Apagar meus dados</span>
-                    </button>
-
-                    <hr className="my-1 border-t border-[#F0F0F0]" />
-
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={handleSignOut}
-                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-[12px] text-left text-[14px] font-medium text-[#6B7280] hover:bg-[#F5F5F5] hover:text-[#171717] flex items-center gap-2.5 transition-colors cursor-pointer"
-                    >
-                      <LogOutIcon className="w-4 h-4 text-[#6B7280] shrink-0" />
-                      <span>Sair</span>
-                    </button>
-                  </>
-                ) : (
-                  <div
-                    role="alertdialog"
-                    aria-label="Confirmação para apagar dados"
-                    className="p-2"
-                  >
-                    <p className="text-[13.5px] font-semibold text-[#171717]">
-                      Apagar todos os seus dados?
-                    </p>
-                    <p className="mt-1 text-[12.5px] leading-relaxed text-[#6B7280]">
-                      Isso remove o histórico de cobranças resolvidas e análises
-                      salvas neste dispositivo (LGPD).
-                    </p>
-                    <div className="mt-3 flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setIsConfirmingDelete(false)}
-                        className="flex-1 min-h-[40px] px-3 py-2 rounded-[12px] bg-[#F5F5F5] hover:bg-[#EAEAEA] text-[13px] font-semibold text-[#171717] transition-colors cursor-pointer"
-                      >
-                        Cancelar
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleConfirmDeleteData}
-                        className="flex-1 min-h-[40px] px-3 py-2 rounded-[12px] bg-[#171717] hover:bg-[#333333] text-[13px] font-semibold text-white transition-colors cursor-pointer"
-                      >
-                        Apagar
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          <ProfileMenu
+            isSubscribed={isSubscribed}
+            activePlan={activePlan}
+            appearanceMode={appearanceMode}
+            onChangeAppearance={handleChangeAppearance}
+            onSendAnotherInvoice={handleSendAnotherInvoice}
+            onOpenHistory={() => {
+              setScreenState("empty");
+              setActiveTab("vault");
+            }}
+            onOpenPaywall={() => setScreenState("paywall")}
+            onCancelSubscription={handleCancelSubscription}
+            onExportAnalyses={handleExportAnalyses}
+            onDeleteData={handleConfirmDeleteData}
+            onSignOut={handleSignOut}
+          />
         </header>
 
         {statusBanner && (

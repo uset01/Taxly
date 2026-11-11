@@ -396,6 +396,87 @@ export function ArrowLeftIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function BellIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.85}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 01-3.46 0" />
+    </svg>
+  );
+}
+
+export function CreditCardIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.85}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <rect x="2.5" y="5.5" width="19" height="13" rx="2.5" />
+      <path d="M2.5 10h19" />
+      <path d="M6.5 14.5h4" />
+    </svg>
+  );
+}
+
+export function HelpCircleIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.85}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9.5 9.25a2.75 2.75 0 015.2.9c0 1.85-2.7 2.2-2.7 3.6" />
+      <path d="M12 17h.01" />
+    </svg>
+  );
+}
+
+export function AppearanceIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.85}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2.5v2" />
+      <path d="M12 19.5v2" />
+      <path d="M5.3 5.3l1.4 1.4" />
+      <path d="M17.3 17.3l1.4 1.4" />
+      <path d="M2.5 12h2" />
+      <path d="M19.5 12h2" />
+      <path d="M5.3 18.7l1.4-1.4" />
+      <path d="M17.3 6.7l1.4-1.4" />
+    </svg>
+  );
+}
+
 export function MoreHorizontalIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
