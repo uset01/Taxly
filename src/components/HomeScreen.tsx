@@ -985,7 +985,7 @@ export function HomeScreen() {
                   </div>
 
                   <h1 className="text-[22px] font-semibold tracking-[-0.02em] text-[#161A18] mt-4">
-                    Não conseguimos ler esta fatura
+                    Documento não reconhecido
                   </h1>
 
                   <p className="text-[14.5px] text-[#4A504C] mt-2 leading-relaxed">
@@ -994,30 +994,28 @@ export function HomeScreen() {
 
                   <div className="mt-4 rounded-[18px] bg-white p-4 text-left border border-[#E2E0D8]">
                     <p className="text-[13px] font-semibold text-[#181C1A]">
-                      Orientação de formato:
+                      O Taxly analisa exclusivamente:
                     </p>
                     <ul className="mt-1.5 text-[13px] text-[#4A504C] space-y-1 list-disc list-inside">
-                      <li>Envie o PDF original baixado no app do banco</li>
-                      <li>
-                        Ou envie print/foto nítida (PNG, JPG ou WebP) da lista
-                        de lançamentos
-                      </li>
-                      <li>
-                        Evite arquivos protegidos por senha ou corrompidos
-                      </li>
+                      <li>Extrato de conta bancária (PDF ou foto/print oficial)</li>
+                      <li>Fatura fechada de cartão de crédito</li>
+                      <li>Comprovante oficial de transferência bancária ou PIX</li>
                     </ul>
                   </div>
 
                   <button
                     type="button"
-                    aria-label="Tentar de novo com outro arquivo de fatura"
+                    aria-label="Anexar documento verdadeiro do banco"
                     onClick={() => {
                       setAnalysisError(null);
                       setScreenState("empty");
+                      if (fileInputRef.current) {
+                        fileInputRef.current.click();
+                      }
                     }}
-                    className="mt-5 w-full min-h-[50px] rounded-[16px] bg-[#181B19] hover:bg-[#272B28] text-white font-semibold text-[15px] py-3.5 px-5 flex items-center justify-center gap-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#181B19] cursor-pointer"
+                    className="mt-5 w-full min-h-[50px] rounded-[16px] bg-[#00C853] hover:bg-[#00B54B] active:bg-[#00A047] text-white font-semibold text-[15px] py-3.5 px-5 flex items-center justify-center gap-2 transition-colors cursor-pointer"
                   >
-                    Tentar de novo
+                    Anexar documento verdadeiro
                   </button>
                 </div>
               )}

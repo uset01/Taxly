@@ -30,6 +30,7 @@ export interface EconomyItem {
 export interface AnalysisSummaryData {
   documentType: "fatura" | "extrato";
   fileName: string;
+  detectedBank?: string;
   tariffs: DetectedTariff[];
   duplicates: DetectedDuplicate[];
   categories: CategorySummary;

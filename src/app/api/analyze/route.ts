@@ -424,57 +424,64 @@ async function callGeminiAnalysis(
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
 
-  const prompt = `Você é o auditor financeiro oficial do app Taxly.
-Sua missão é auditar com rigor e precisão o arquivo recebido ("${fileName}").
+  const prompt = `Você é o auditor oficial do app Taxly (especialista em faturas e extratos bancários).
+Sua missão é auditar o arquivo recebido ("${fileName}").
 
-DIRETRIZES CRÍTICAS:
-1. "isFinancialDocument" (Validação Obrigatória):
-   - Verifique com máxima atenção se o arquivo é um extrato bancário, fatura de cartão de crédito ou comprovante de pagamento/transferência com lançamentos e valores financeiros legíveis.
-   - Se o arquivo for uma imagem NÃO financeira (ex: logotipo, marca, foto pessoal/selfie, meme, paisagem, produto, ilustração ou tela aleatória sem transações financeiras):
-     Você DEVE retornar:
-     {
-       "isFinancialDocument": false,
-       "rejectionReason": "O arquivo enviado não parece ser uma fatura, extrato ou comprovante bancário legível. Por favor, envie um documento financeiro."
-     }
-   - Se for um documento financeiro válido, defina "isFinancialDocument": true.
+REGRA FUNDAMENTAL E ABSOLUTA DO TAXLY — VALIDAÇÃO DE AUTENTICIDADE:
+O Taxly aceita EXCLUSIVAMENTE:
+1. Fatura de cartão de crédito (PDF ou foto/print oficial de fatura emitida por banco ou emissor de cartão).
+2. Extrato bancário de conta corrente ou poupança (PDF ou foto/print oficial de extrato emitido por banco).
+3. Comprovante oficial de transferência bancária (PIX, TED) ou pagamento emitido por banco.
 
-2. "isSingleTransaction" e "singleTransactionAmount":
-   - isSingleTransaction: true se o documento contiver apenas 1 transação isolada (ex: comprovante PIX avulso de R$ 50,00, 1 transferência única), false se for fatura ou extrato com múltiplos lançamentos.
-   - singleTransactionAmount: valor numérico da transação única (ou 0 se não for única).
+QUALQUER OUTRO TIPO DE ARQUIVO DEVE SER RECUSADO COM "isFinancialDocument": false!
+Você DEVE recusar e retornar "isFinancialDocument": false nos seguintes casos:
+- Capturas de tela (screenshots) de navegadores de internet (Brave, Chrome, Safari, Edge, Firefox), sites comuns, e-commerces, carrinhos de compras;
+- Fotos aleatórias (pessoas, selfies, animais, objetos, fotos de ambientes/paisagens, memes, produtos, ilustrações);
+- Cupons fiscais de supermercado, farmácia, restaurantes ou notas não bancárias;
+- Prints de redes sociais, mensagens do WhatsApp, e-mails genéricos, notas ou planilhas;
+- Fotos ou telas onde NÃO seja possível identificar o nome de um banco ou instituição financeira reconhecida (ex: Nubank, Itaú, Bradesco, Santander, Inter, Caixa, Banco do Brasil, C6 Bank, PicPay, Mercado Pago, BTG, etc.);
+- Documentos onde não haja uma lista clara de transações bancárias oficiais.
 
-3. "tariffs" (Tarifas bancárias pagas):
-   - Inclua APENAS cobranças bancárias reais identificadas no documento por termos como: tarifa, taxa, juros, IOF, anuidade, manutenção, pacote de serviços, encargos.
-   - Cada tarifa: { "id": "tarifa-1", "name": "Nome da tarifa", "amount": 42.90 }
-   - Se não houver tarifas, deixe []: [].
+ATENÇÃO CRÍTICA:
+A simples presença de números soltos, valores em R$, tabelas ou textos em uma imagem comum NÃO torna o arquivo um extrato ou fatura bancária! Se o arquivo não for inequivocamente um extrato ou fatura de banco, REJEITE IMEDIATAMENTE!
 
-4. "duplicates" (Possíveis cobranças duplicadas):
-   - Inclua APENAS transações do mesmo estabelecimento/favorecido com o mesmo valor no mesmo dia cobradas 2 ou mais vezes.
-   - Cada duplicidade: { "id": "dup-1", "merchant": "Nome", "date": "Data", "amount": 24.90, "occurrences": 2 }
-   - Se não houver duplicidade, deixe []: [].
+Quando rejeitar:
+{
+  "isFinancialDocument": false,
+  "rejectionReason": "Este arquivo não parece ser um extrato ou fatura bancária. Por favor, anexe uma fatura de cartão de crédito ou extrato oficial emitido pelo seu banco.",
+  "detectedBank": null,
+  "documentType": null,
+  "fileName": "${fileName}",
+  "tariffs": [],
+  "duplicates": [],
+  "categories": { "pix": 0, "boletos": 0, "debitos": 0 },
+  "totalAttention": 0,
+  "isClean": false,
+  "isSingleTransaction": false,
+  "singleTransactionAmount": 0,
+  "economyItems": [],
+  "totalRecurringSavings": 0
+}
 
-5. "economyItems" e "totalRecurringSavings" (Assinaturas e Gastos Otimizáveis):
-   - Analise se existem assinaturas de streaming (Netflix, Spotify, Youtube, Disney, etc.), serviços de software/cloud (Google One, iCloud, etc.), academias, clubes de benefícios ou tarifas no documento.
-   - Cada item identificado:
-     { "id": "eco-1", "name": "Nome da assinatura ou serviço", "monthlyAmount": 39.90, "yearlyImpact": 478.80, "actionTip": "Cancelar assinatura no app" ou "Pedir estorno de tarifa ao banco", "category": "Assinaturas" }
-   - Se o documento NÃO contiver nenhuma assinatura ou tarifa, retorne "economyItems": []. NUNCA invente itens que não estão no documento!
-   - totalRecurringSavings: soma dos monthlyAmount dos itens de economyItems (ou o valor de singleTransactionAmount se for comprovante de transação única, ou 0 se não houver nenhum).
-
-6. "categories" (Gastos reais identificados):
-   - "pix": soma total em R$ de transações via PIX (0 se não houver).
-   - "boletos": soma total em R$ de boletos (0 se não houver).
-   - "debitos": soma total em R$ de outros débitos e compras no cartão (0 se não houver).
-
-7. "totalAttention":
-   - Soma total em R$ de (tariffs + duplicates). Se não houver tarifas nem duplicidades, DEVE ser 0.
-
-8. "isClean":
-   - true se totalAttention for 0 (nenhuma tarifa e nenhuma duplicidade indevida).
-   - false se houver pelo menos uma tarifa ou duplicidade real.
+Se e somente se for um documento bancário verdadeiro e válido:
+- "isFinancialDocument": true
+- "detectedBank": "Nome do Banco ou Fintech identificado (ex: Nubank, Itaú, Bradesco, Santander, etc.)"
+- "documentType": "fatura" ou "extrato"
+- "tariffs": lista de tarifas bancárias reais (tarifa, taxa, juros rotativo, IOF, anuidade, manutenção) ou []
+- "duplicates": transações duplicadas (mesmo valor, mesmo dia cobrado 2x ou mais) ou []
+- "economyItems": assinaturas (Netflix, Spotify, academias, etc.) e tarifas que o usuário pode cortar ou negociar estorno, ou []
+- "categories": { "pix": soma total, "boletos": soma total, "debitos": soma total }
+- "totalAttention": soma de tarifas + duplicidades
+- "isClean": true se totalAttention for 0
+- "isSingleTransaction": true se for apenas 1 transação isolada (ex: comprovante PIX de R$ 50), false se for fatura/extrato com múltiplos lançamentos
+- "singleTransactionAmount": valor numérico se for transação única
+- "totalRecurringSavings": soma de monthlyAmount dos economyItems (ou valor da transação única se for single, ou 0 se limpo)
 
 Responda SOMENTE em formato JSON estrito:
 {
   "isFinancialDocument": true,
   "rejectionReason": null,
+  "detectedBank": "Nome do Banco",
   "documentType": "fatura" ou "extrato",
   "fileName": "${fileName}",
   "tariffs": [],
@@ -602,12 +609,22 @@ Responda SOMENTE em formato JSON estrito:
 
       const parsed = JSON.parse(cleaned) as Record<string, unknown>;
 
-      if (parsed.isFinancialDocument === false) {
+      const isFinancial = parsed.isFinancialDocument === true;
+      const rawBank =
+        typeof parsed.detectedBank === "string" ? parsed.detectedBank.trim() : "";
+      const isBankRecognized =
+        rawBank.length > 1 &&
+        rawBank.toLowerCase() !== "null" &&
+        rawBank.toLowerCase() !== "desconhecido" &&
+        rawBank.toLowerCase() !== "nenhum";
+
+      // Se não for documento financeiro OU não tiver banco/instituição financeira identificada:
+      if (!isFinancial || !isBankRecognized) {
         const rejectionReason =
           typeof parsed.rejectionReason === "string" &&
           parsed.rejectionReason.trim()
             ? parsed.rejectionReason.trim()
-            : "O arquivo enviado não parece ser uma fatura, extrato ou comprovante bancário legível. Por favor, envie um documento financeiro.";
+            : "Este arquivo não parece ser um extrato ou fatura bancária do seu banco. Por favor, anexe uma fatura de cartão de crédito ou extrato bancário oficial.";
         return {
           isFinancialDocument: false,
           rejectionReason,
@@ -733,6 +750,7 @@ Responda SOMENTE em formato JSON estrito:
         documentType:
           parsed.documentType === "extrato" ? "extrato" : "fatura",
         fileName,
+        detectedBank: rawBank || undefined,
         tariffs: isClean ? [] : tariffs,
         duplicates: isClean ? [] : duplicates,
         categories: {
