@@ -63,6 +63,7 @@ interface MenuItemConfig {
   id: string;
   label: string;
   icon: ComponentType<SVGProps<SVGSVGElement>>;
+  danger?: boolean;
   action: () => void;
 }
 
@@ -195,60 +196,112 @@ export function ProfileMenu({
     sharedSecondaryItems.appearance,
   ];
 
-  const loggedInMenuItems: MenuItemConfig[] = [
-    {
-      id: "notifications",
-      label: "Notificações",
-      icon: BellIcon,
-      action: () => closeMenuAndRun(() => setActiveSheet("notifications")),
-    },
-    {
-      id: "send-invoice",
-      label: "Enviar outra fatura",
-      icon: UploadIcon,
-      action: () => closeMenuAndRun(onSendAnotherInvoice),
-    },
-    sharedSecondaryItems.privacy,
-    {
-      id: "history",
-      label: "Histórico de faturas",
-      icon: HistoryIcon,
-      action: () => closeMenuAndRun(onOpenHistory),
-    },
-    {
-      id: "subscription",
-      label: "Gerenciar subscrição",
-      icon: CreditCardIcon,
-      action: () =>
-        closeMenuAndRun(() => {
-          if (isSubscribed) {
-            setActiveSheet("subscription");
-          } else {
-            onOpenPaywall();
-          }
-        }),
-    },
-    {
-      id: "export",
-      label: "Exportar minhas análises",
-      icon: ShareDownloadIcon,
-      action: () => closeMenuAndRun(onExportAnalyses),
-    },
-    sharedSecondaryItems.help,
-    sharedSecondaryItems.appearance,
+  const loggedInGroups: MenuItemConfig[][] = [
+    // Grupo 1: [Meu plano, Enviar outra fatura]
+    [
+      {
+        id: "my-plan",
+        label: "Meu plano",
+        icon: CreditCardIcon,
+        action: () =>
+          closeMenuAndRun(() => {
+            if (isSubscribed) {
+              setActiveSheet("subscription");
+            } else {
+              onOpenPaywall();
+            }
+          }),
+      },
+      {
+        id: "send-invoice",
+        label: "Enviar outra fatura",
+        icon: UploadIcon,
+        action: () => closeMenuAndRun(onSendAnotherInvoice),
+      },
+    ],
+    // Grupo 2: [Histórico de faturas, Exportar análises]
+    [
+      {
+        id: "history",
+        label: "Histórico de faturas",
+        icon: HistoryIcon,
+        action: () => closeMenuAndRun(onOpenHistory),
+      },
+      {
+        id: "export",
+        label: "Exportar análises",
+        icon: ShareDownloadIcon,
+        action: () => closeMenuAndRun(onExportAnalyses),
+      },
+    ],
+    // Grupo 3: [Notificações, Aparência, Central de ajuda, Política de privacidade]
+    [
+      {
+        id: "notifications",
+        label: "Notificações",
+        icon: BellIcon,
+        action: () => closeMenuAndRun(() => setActiveSheet("notifications")),
+      },
+      sharedSecondaryItems.appearance,
+      sharedSecondaryItems.help,
+      sharedSecondaryItems.privacy,
+    ],
+    // Grupo 4: [Gerenciar assinatura, Apagar meus dados (vermelho), Sair]
+    [
+      {
+        id: "subscription",
+        label: "Gerenciar assinatura",
+        icon: CreditCardIcon,
+        action: () =>
+          closeMenuAndRun(() => {
+            if (isSubscribed) {
+              setActiveSheet("subscription");
+            } else {
+              onOpenPaywall();
+            }
+          }),
+      },
+      {
+        id: "delete-data",
+        label: "Apagar meus dados",
+        icon: TrashIcon,
+        danger: true,
+        action: () =>
+          closeMenuAndRun(() => {
+            setIsConfirmingDelete(true);
+            setActiveSheet("privacy");
+          }),
+      },
+      {
+        id: "sign-out",
+        label: "Sair",
+        icon: LogOutIcon,
+        action: () => closeMenuAndRun(onSignOut),
+      },
+    ],
   ];
 
   const renderMenuItemRow = (item: MenuItemConfig) => {
     const Icon = item.icon;
+    const isDanger = Boolean(item.danger);
+
     return (
       <button
         key={item.id}
         type="button"
         role="menuitem"
         onClick={item.action}
-        className="w-full min-h-[42px] px-3.5 py-2 rounded-[12px] text-left text-[14px] font-medium text-[#171717] hover:bg-[#F5F5F5] flex items-center gap-2.5 transition-colors cursor-pointer"
+        className={`w-full min-h-[42px] px-3.5 py-2 rounded-[12px] text-left text-[14px] font-medium flex items-center gap-2.5 transition-colors cursor-pointer ${
+          isDanger
+            ? "text-[#E5484D] hover:bg-[#FDF2F2] hover:text-[#B42318]"
+            : "text-[#171717] hover:bg-[#F5F5F5]"
+        }`}
       >
-        <Icon className="w-4 h-4 text-[#6B7280] shrink-0" />
+        <Icon
+          className={`w-4 h-4 shrink-0 ${
+            isDanger ? "text-[#E5484D]" : "text-[#6B7280]"
+          }`}
+        />
         <span>{item.label}</span>
       </button>
     );
@@ -258,7 +311,7 @@ export function ProfileMenu({
     auth: authMode === "login" ? "Entrar na minha conta" : "Criar conta grátis",
     notifications: "Notificações",
     privacy: "Política de privacidade",
-    subscription: "Gerenciar subscrição",
+    subscription: "Gerenciar assinatura",
     help: "Central de ajuda",
     appearance: "Aparência",
   };
@@ -332,27 +385,22 @@ export function ProfileMenu({
                   </button>
                 </div>
 
-                <hr className="my-1.5 border-t border-[#F0F0F0]" />
+                <hr className="my-1.5 border-t border-[#E5E5E5]" />
 
                 {/* Opções secundárias */}
                 {loggedOutSecondaryItems.map(renderMenuItemRow)}
               </>
             ) : (
-              <>
-                {loggedInMenuItems.map(renderMenuItemRow)}
-
-                <hr className="my-1 border-t border-[#F0F0F0]" />
-
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => closeMenuAndRun(onSignOut)}
-                  className="w-full min-h-[42px] px-3.5 py-2 rounded-[12px] text-left text-[14px] font-medium text-[#6B7280] hover:bg-[#F5F5F5] hover:text-[#171717] flex items-center gap-2.5 transition-colors cursor-pointer"
-                >
-                  <LogOutIcon className="w-4 h-4 text-[#6B7280] shrink-0" />
-                  <span>Sair</span>
-                </button>
-              </>
+              <div className="space-y-1">
+                {loggedInGroups.map((group, groupIdx) => (
+                  <div key={groupIdx}>
+                    {groupIdx > 0 && (
+                      <hr className="my-1 border-t border-[#E5E5E5]" />
+                    )}
+                    {group.map(renderMenuItemRow)}
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         )}
@@ -661,7 +709,7 @@ export function ProfileMenu({
                     }}
                     className="w-full min-h-[42px] rounded-[14px] text-[13.5px] font-medium text-[#6B7280] hover:text-[#1A1A1A] underline underline-offset-4 cursor-pointer"
                   >
-                    Cancelar subscrição
+                    Cancelar assinatura
                   </button>
                 </div>
               </div>

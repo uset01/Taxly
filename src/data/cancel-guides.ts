@@ -81,3 +81,4 @@ export const CANCEL_GUIDES: Record<string, CancelGuideMetadata> = {
       "Olá! Desejo realizar o downgrade imediato da minha assinatura iCloud+ 200GB para o plano gratuito e encerrar a cobrança mensal no cartão.",
   },
 };
+
