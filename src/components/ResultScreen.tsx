@@ -43,7 +43,7 @@ export function ResultScreen({
   const displayEconomyItems: EconomyItem[] =
     data.economyItems && data.economyItems.length > 0
       ? data.economyItems
-      : DEFAULT_SAMPLE_ECONOMY_ITEMS;
+      : [];
 
   const itemsSum = displayEconomyItems.reduce(
     (acc, it) => acc + it.monthlyAmount,
@@ -51,13 +51,11 @@ export function ResultScreen({
   );
 
   const savingsAmount =
-    data.totalRecurringSavings !== undefined && data.totalRecurringSavings > 0
+    data.totalRecurringSavings !== undefined
       ? data.totalRecurringSavings
       : data.isSingleTransaction && data.singleTransactionAmount
         ? data.singleTransactionAmount
-        : itemsSum > 0
-          ? itemsSum
-          : 184.7;
+        : itemsSum;
 
   const previewItems = displayEconomyItems.slice(0, 2);
 
@@ -70,7 +68,9 @@ export function ResultScreen({
   const formattedSavings = formatBRL(savingsAmount);
   const shareHeadline = hasFindings
     ? `Meu extrato escondia R$ ${formattedValue} em tarifas. Quanto o seu esconde?`
-    : `Diagnóstico Parcial concluído no taxly: 0 duplicidades ou taxas ilegais encontradas hoje. Alerta: R$ ${formattedSavings}/mês em gastos recorrentes identificados.`;
+    : savingsAmount > 0
+      ? `Diagnóstico Parcial concluído no taxly: 0 duplicidades ou taxas ilegais encontradas hoje. Alerta: R$ ${formattedSavings}/mês em gastos recorrentes identificados.`
+      : "Auditoria concluída no taxly: 0 duplicidades ou taxas ilegais encontradas hoje. Meu extrato está 100% limpo!";
   const shareFullText = `${shareHeadline} Descubra no taxly.app`;
 
   const drawCardOnCanvas = (): HTMLCanvasElement => {
@@ -361,8 +361,21 @@ export function ResultScreen({
             Escaneados 100% dos dados enviados.
           </p>
 
-          {/* Seção condicional: Grátis (Bloqueado) vs Assinante (Desbloqueado) */}
-          {!isSubscribed ? (
+          {/* Seção condicional: Limpo vs Grátis (Bloqueado) vs Assinante (Desbloqueado) */}
+          {savingsAmount === 0 ? (
+            /* ESTADO 100% LIMPO (SEM TARIFAS NEM ASSINATURAS IDENTIFICADAS) */
+            <div className="mt-4 pt-3.5 border-t border-[#EAEAEA] text-left">
+              <div className="rounded-[14px] bg-[#E8F8EE] border border-[#B9E9C8] p-3.5">
+                <p className="text-[14px] font-semibold text-[#008A39] flex items-center gap-2">
+                  <CheckIcon className="w-4 h-4 shrink-0 text-[#00C853]" />
+                  <span>Suas contas estão limpas e protegidas</span>
+                </p>
+                <p className="mt-1 text-[13px] text-[#006A2B] leading-relaxed">
+                  A auditoria de IA analisou seu arquivo e não encontrou tarifas abusivas, duplicidades ou cobranças desnecessárias.
+                </p>
+              </div>
+            </div>
+          ) : !isSubscribed ? (
             /* ESTADO BLOQUEADO (GRÁTIS) */
             <div className="mt-4 pt-3.5 border-t border-[#EAEAEA] text-left">
               {/* Alerta de Oportunidades Dinâmico */}
@@ -574,7 +587,19 @@ export function ResultScreen({
       {/* Rodapé de Ações */}
       <div className="mt-6 space-y-2.5">
         {/* Botão Verde Principal */}
-        {!isSubscribed ? (
+        {savingsAmount === 0 || isSubscribed ? (
+          <button
+            type="button"
+            onClick={onSaveToVault}
+            disabled={isSavingToVault}
+            className="w-full min-h-[52px] rounded-[16px] bg-[#00C853] hover:bg-[#00B54B] active:bg-[#00A047] text-white font-semibold text-[15px] px-5 flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-60"
+          >
+            <CheckIcon className="w-4 h-4 text-white shrink-0" />
+            <span>
+              {isSavingToVault ? "Salvando..." : "Salvar Diagnóstico no Cofre"}
+            </span>
+          </button>
+        ) : (
           <button
             type="button"
             onClick={onUnlockEconomyReport || onSaveToVault}
@@ -585,18 +610,6 @@ export function ResultScreen({
             <span>
               Destravar Relatório de Economia (R$ {formattedSavings}
               {data.isSingleTransaction ? "" : "/mês"})
-            </span>
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={onSaveToVault}
-            disabled={isSavingToVault}
-            className="w-full min-h-[52px] rounded-[16px] bg-[#00C853] hover:bg-[#00B54B] active:bg-[#00A047] text-white font-semibold text-[15px] px-5 flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-60"
-          >
-            <CheckIcon className="w-4 h-4 text-white shrink-0" />
-            <span>
-              {isSavingToVault ? "Salvando..." : "Salvar Diagnóstico no Cofre"}
             </span>
           </button>
         )}

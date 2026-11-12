@@ -122,16 +122,30 @@ export async function POST(req: NextRequest) {
           extractedText
         );
         if (geminiResult) {
-          return NextResponse.json<AnalysisApiResponse>({
-            success: true,
-            data: geminiResult,
-            meta: {
-              engine: "gemini",
-              fileName,
-              fileSizeBytes,
-              processedAt: new Date().toISOString(),
-            },
-          });
+          if (!geminiResult.isFinancialDocument) {
+            return NextResponse.json(
+              {
+                success: false,
+                error:
+                  geminiResult.rejectionReason ||
+                  "O arquivo enviado não parece ser uma fatura, extrato ou comprovante bancário legível. Por favor, envie um documento financeiro.",
+              },
+              { status: 422 }
+            );
+          }
+
+          if (geminiResult.data) {
+            return NextResponse.json<AnalysisApiResponse>({
+              success: true,
+              data: geminiResult.data,
+              meta: {
+                engine: "gemini",
+                fileName,
+                fileSizeBytes,
+                processedAt: new Date().toISOString(),
+              },
+            });
+          }
         }
       } catch (geminiErr) {
         console.warn("Gemini erro:", geminiErr);
@@ -393,6 +407,12 @@ function extractItemOccurrences(item: Record<string, unknown>): number {
   return isNaN(num) || num < 2 ? 2 : num;
 }
 
+interface GeminiCallOutput {
+  isFinancialDocument: boolean;
+  rejectionReason?: string;
+  data?: AnalysisSummaryData;
+}
+
 /**
  * Chamada à API Google Gemini com suporte multimodal (PDF, Imagens e Texto)
  */
@@ -400,59 +420,61 @@ async function callGeminiAnalysis(
   fileName: string,
   buffer: ArrayBuffer | null,
   text: string
-): Promise<AnalysisSummaryData | null> {
+): Promise<GeminiCallOutput | null> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
 
   const prompt = `Você é o auditor financeiro oficial do app Taxly.
 Sua missão é auditar com rigor e precisão o arquivo recebido ("${fileName}").
 
-DIRETRIZES CRÍTICAS (NÃO INVENTE COISAS):
-1. Verifique se o arquivo enviado é de fato um extrato bancário, fatura de cartão de crédito ou comprovante financeiro legível.
-   - Se for uma imagem não financeira (ex: foto de pessoa, selfie, paisagem, meme, foto aleatória) OU se for uma fatura/extrato sem cobranças indevidas e sem compras duplicadas:
+DIRETRIZES CRÍTICAS:
+1. "isFinancialDocument" (Validação Obrigatória):
+   - Verifique com máxima atenção se o arquivo é um extrato bancário, fatura de cartão de crédito ou comprovante de pagamento/transferência com lançamentos e valores financeiros legíveis.
+   - Se o arquivo for uma imagem NÃO financeira (ex: logotipo, marca, foto pessoal/selfie, meme, paisagem, produto, ilustração ou tela aleatória sem transações financeiras):
      Você DEVE retornar:
-     "tariffs": [],
-     "duplicates": [],
-     "categories": { "pix": 0, "boletos": 0, "debitos": 0 },
-     "totalAttention": 0,
-     "isClean": true
-   - NUNCA invente tarifas ou duplicidades que não estejam explicitamente no documento.
+     {
+       "isFinancialDocument": false,
+       "rejectionReason": "O arquivo enviado não parece ser uma fatura, extrato ou comprovante bancário legível. Por favor, envie um documento financeiro."
+     }
+   - Se for um documento financeiro válido, defina "isFinancialDocument": true.
 
-2. "tariffs" (Tarifas bancárias pagas):
-   - Inclua APENAS cobranças bancárias reais identificadas por termos como: tarifa, taxa, juros, iof, anuidade, manutenção, pacote de serviços, encargos.
-   - Cada tarifa deve ter:
-     { "id": "tarifa-1", "name": "Nome da tarifa", "amount": 42.90 }
-   - Se não houver tarifas, deixe a lista vazia: [].
+2. "isSingleTransaction" e "singleTransactionAmount":
+   - isSingleTransaction: true se o documento contiver apenas 1 transação isolada (ex: comprovante PIX avulso de R$ 50,00, 1 transferência única), false se for fatura ou extrato com múltiplos lançamentos.
+   - singleTransactionAmount: valor numérico da transação única (ou 0 se não for única).
 
-3. "duplicates" (Possíveis cobranças duplicadas):
-   - Inclua APENAS transações do mesmo estabelecimento/favorecido, com o mesmo valor no mesmo dia que apareçam 2 ou mais vezes.
-   - Cada duplicidade deve ter:
-     { "id": "dup-1", "merchant": "Nome do favorecido", "date": "Data", "amount": 24.90, "occurrences": 2 }
-   - Se não houver duplicidade, deixe a lista vazia: [].
+3. "tariffs" (Tarifas bancárias pagas):
+   - Inclua APENAS cobranças bancárias reais identificadas no documento por termos como: tarifa, taxa, juros, IOF, anuidade, manutenção, pacote de serviços, encargos.
+   - Cada tarifa: { "id": "tarifa-1", "name": "Nome da tarifa", "amount": 42.90 }
+   - Se não houver tarifas, deixe []: [].
 
-4. "categories" (Gastos reais identificados):
+4. "duplicates" (Possíveis cobranças duplicadas):
+   - Inclua APENAS transações do mesmo estabelecimento/favorecido com o mesmo valor no mesmo dia cobradas 2 ou mais vezes.
+   - Cada duplicidade: { "id": "dup-1", "merchant": "Nome", "date": "Data", "amount": 24.90, "occurrences": 2 }
+   - Se não houver duplicidade, deixe []: [].
+
+5. "economyItems" e "totalRecurringSavings" (Assinaturas e Gastos Otimizáveis):
+   - Analise se existem assinaturas de streaming (Netflix, Spotify, Youtube, Disney, etc.), serviços de software/cloud (Google One, iCloud, etc.), academias, clubes de benefícios ou tarifas no documento.
+   - Cada item identificado:
+     { "id": "eco-1", "name": "Nome da assinatura ou serviço", "monthlyAmount": 39.90, "yearlyImpact": 478.80, "actionTip": "Cancelar assinatura no app" ou "Pedir estorno de tarifa ao banco", "category": "Assinaturas" }
+   - Se o documento NÃO contiver nenhuma assinatura ou tarifa, retorne "economyItems": []. NUNCA invente itens que não estão no documento!
+   - totalRecurringSavings: soma dos monthlyAmount dos itens de economyItems (ou o valor de singleTransactionAmount se for comprovante de transação única, ou 0 se não houver nenhum).
+
+6. "categories" (Gastos reais identificados):
    - "pix": soma total em R$ de transações via PIX (0 se não houver).
    - "boletos": soma total em R$ de boletos (0 se não houver).
    - "debitos": soma total em R$ de outros débitos e compras no cartão (0 se não houver).
 
-5. "totalAttention":
-   - Soma total em R$ de (tarifas + duplicidades). Se não houver tarifas nem duplicidades, DEVE ser 0.
+7. "totalAttention":
+   - Soma total em R$ de (tariffs + duplicates). Se não houver tarifas nem duplicidades, DEVE ser 0.
 
-6. "isClean":
-   - true se totalAttention for 0 (nenhuma tarifa e nenhuma duplicidade).
+8. "isClean":
+   - true se totalAttention for 0 (nenhuma tarifa e nenhuma duplicidade indevida).
    - false se houver pelo menos uma tarifa ou duplicidade real.
-
-7. "isSingleTransaction" e "singleTransactionAmount":
-   - isSingleTransaction: true se o documento contiver apenas 1 transação isolada (ex: 1 comprovante PIX avulso, 1 transferência única), false se for fatura de cartão ou extrato com múltiplas transações.
-   - singleTransactionAmount: valor numérico em R$ dessa única transação (ou 0 se não for única).
-
-8. "economyItems" e "totalRecurringSavings":
-   - economyItems: lista de cobranças recorrentes, assinaturas ou tarifas que o usuário pode cortar ou negociar estorno. Cada item:
-     { "id": "eco-1", "name": "Nome da cobrança", "monthlyAmount": 55.90, "yearlyImpact": 670.80, "actionTip": "Cancelar assinatura no app" ou "Pedir estorno de tarifa ao banco", "category": "Assinaturas" }
-   - totalRecurringSavings: soma em R$ dos gastos mensais que podem ser otimizados (ou o valor de singleTransactionAmount se for comprovante de transação única).
 
 Responda SOMENTE em formato JSON estrito:
 {
+  "isFinancialDocument": true,
+  "rejectionReason": null,
   "documentType": "fatura" ou "extrato",
   "fileName": "${fileName}",
   "tariffs": [],
@@ -579,6 +601,19 @@ Responda SOMENTE em formato JSON estrito:
         .trim();
 
       const parsed = JSON.parse(cleaned) as Record<string, unknown>;
+
+      if (parsed.isFinancialDocument === false) {
+        const rejectionReason =
+          typeof parsed.rejectionReason === "string" &&
+          parsed.rejectionReason.trim()
+            ? parsed.rejectionReason.trim()
+            : "O arquivo enviado não parece ser uma fatura, extrato ou comprovante bancário legível. Por favor, envie um documento financeiro.";
+        return {
+          isFinancialDocument: false,
+          rejectionReason,
+        };
+      }
+
       const rawTariffs = Array.isArray(parsed.tariffs) ? parsed.tariffs : [];
       const tariffs = rawTariffs
         .map((t: Record<string, unknown>, idx: number) => ({
@@ -683,21 +718,16 @@ Responda SOMENTE em formato JSON estrito:
         }
       }
 
-      if (economyItems.length === 0 && !isSingleTransaction) {
-        economyItems = DEFAULT_SAMPLE_ECONOMY_ITEMS;
-      }
-
+      // Se for um arquivo legítimo mas limpo (sem tarifas nem assinaturas), não injeta itens fictícios!
       const calculatedSavings = economyItems.reduce(
         (acc, item) => acc + item.monthlyAmount,
         0
       );
-      const totalRecurringSavings =
-        parseAmount(parsed.totalRecurringSavings) ||
-        (isSingleTransaction
-          ? singleTransactionAmount
-          : calculatedSavings > 0
-            ? Number(calculatedSavings.toFixed(2))
-            : 184.7);
+      const totalRecurringSavings = isSingleTransaction
+        ? singleTransactionAmount
+        : calculatedSavings > 0
+          ? Number(calculatedSavings.toFixed(2))
+          : parseAmount(parsed.totalRecurringSavings) || 0;
 
       const finalResult: AnalysisSummaryData = {
         documentType:
@@ -718,7 +748,10 @@ Responda SOMENTE em formato JSON estrito:
         singleTransactionAmount,
       };
       console.log(`[Gemini] Resultado formatado:`, JSON.stringify(finalResult));
-      return finalResult;
+      return {
+        isFinancialDocument: true,
+        data: finalResult,
+      };
     } catch (err) {
       console.warn(`Erro chamando modelo Gemini ${model}:`, err);
     }
