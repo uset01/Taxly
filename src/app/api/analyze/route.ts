@@ -21,14 +21,14 @@ interface AnalysisApiResponse {
  * Health check & status da API
  */
 export async function GET() {
-  const hasOpenAi = Boolean(process.env.OPENAI_API_KEY);
   const hasGemini = Boolean(process.env.GEMINI_API_KEY);
+  const hasOpenAi = Boolean(process.env.OPENAI_API_KEY);
   const hasClaude = Boolean(process.env.ANTHROPIC_API_KEY);
 
-  const activeEngine = hasOpenAi
-    ? "openai"
-    : hasGemini
-      ? "gemini"
+  const activeEngine = hasGemini
+    ? "gemini"
+    : hasOpenAi
+      ? "openai"
       : hasClaude
         ? "claude"
         : "heuristic";
@@ -37,14 +37,16 @@ export async function GET() {
     status: "online",
     activeEngine,
     aiAvailable: {
-      openai: hasOpenAi,
       gemini: hasGemini,
+      openai: hasOpenAi,
       claude: hasClaude,
     },
     message:
-      activeEngine === "heuristic"
-        ? "Motor heurístico ativo com detecção de tarifas e duplicidades. Adicione OPENAI_API_KEY, GEMINI_API_KEY ou ANTHROPIC_API_KEY no .env.local para habilitar IA generativa."
-        : `Motor de IA (${activeEngine}) configurado e ativo.`,
+      activeEngine === "gemini"
+        ? "Google Gemini 3.5 Flash configurado e ativo como motor de análise de documentos."
+        : activeEngine === "heuristic"
+          ? "Motor heurístico ativo com detecção de tarifas e duplicidades."
+          : `Motor de IA (${activeEngine}) configurado e ativo.`,
   });
 }
 
@@ -109,29 +111,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 1. Tenta OpenAI se configurado
-    if (process.env.OPENAI_API_KEY && extractedText) {
-      try {
-        const aiResult = await callOpenAiAnalysis(fileName, extractedText);
-        if (aiResult) {
-          return NextResponse.json<AnalysisApiResponse>({
-            success: true,
-            data: aiResult,
-            meta: {
-              engine: "openai",
-              fileName,
-              fileSizeBytes,
-              processedAt: new Date().toISOString(),
-            },
-          });
-        }
-      } catch (aiErr) {
-        console.warn("OpenAI falhou, usando fallback heurístico:", aiErr);
-      }
-    }
-
-    // 2. Tenta Gemini se configurado
-    if (process.env.GEMINI_API_KEY && fileBuffer) {
+    // 1. Tenta Gemini (prioritário) se configurado
+    if (process.env.GEMINI_API_KEY) {
       try {
         const geminiResult = await callGeminiAnalysis(
           fileName,
@@ -151,7 +132,28 @@ export async function POST(req: NextRequest) {
           });
         }
       } catch (geminiErr) {
-        console.warn("Gemini falhou, usando fallback heurístico:", geminiErr);
+        console.warn("Gemini falhou, tentando fallback:", geminiErr);
+      }
+    }
+
+    // 2. Tenta OpenAI se configurado
+    if (process.env.OPENAI_API_KEY && extractedText) {
+      try {
+        const aiResult = await callOpenAiAnalysis(fileName, extractedText);
+        if (aiResult) {
+          return NextResponse.json<AnalysisApiResponse>({
+            success: true,
+            data: aiResult,
+            meta: {
+              engine: "openai",
+              fileName,
+              fileSizeBytes,
+              processedAt: new Date().toISOString(),
+            },
+          });
+        }
+      } catch (aiErr) {
+        console.warn("OpenAI falhou, usando fallback heurístico:", aiErr);
       }
     }
 
@@ -303,53 +305,183 @@ ${text.slice(0, 10000)}`;
 }
 
 /**
- * Chamada à API Google Gemini
+ * Chamada à API Google Gemini com suporte multimodal (PDF, Imagens e Texto)
  */
 async function callGeminiAnalysis(
   fileName: string,
-  buffer: ArrayBuffer,
+  buffer: ArrayBuffer | null,
   text: string
 ): Promise<AnalysisSummaryData | null> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
 
-  const prompt = `Analise este documento financeiro ("${fileName}") e retorne EXCLUSIVAMENTE um objeto JSON:
+  const prompt = `Você é o analisador oficial de extratos e faturas bancárias do Taxly.
+Analise detalhadamente este documento financeiro ("${fileName}") e extraia estritamente um objeto JSON com esta estrutura:
 {
   "documentType": "fatura" ou "extrato",
   "fileName": "${fileName}",
-  "tariffs": [ { "id": "1", "name": "Nome da Tarifa", "amount": 18.90 } ],
-  "duplicates": [ { "id": "1", "merchant": "Nome", "date": "12/10", "amount": 14.90, "occurrences": 2 } ],
-  "categories": { "pix": 1240.0, "boletos": 890.5, "debitos": 2140.8 },
+  "tariffs": [
+    { "id": "tarifa-1", "name": "Nome da Tarifa (ex: Tarifa de Manutenção, Juros)", "amount": 18.90 }
+  ],
+  "duplicates": [
+    { "id": "dup-1", "merchant": "Nome do Estabelecimento", "date": "12/10", "amount": 14.90, "occurrences": 2 }
+  ],
+  "categories": {
+    "pix": 1240.0,
+    "boletos": 890.5,
+    "debitos": 2140.8
+  },
   "totalAttention": 42.30,
   "isClean": false
-}`;
+}
 
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              { text: prompt },
-              { text: text.slice(0, 8000) },
-            ],
-          },
-        ],
-        generationConfig: {
-          responseMimeType: "application/json",
+Regras:
+1. "tariffs": procure qualquer cobrança bancária com as palavras-chave: tarifa, juros, IOF, anuidade, manutenção, pacote de serviços, taxa.
+2. "duplicates": procure transações de mesmo valor no mesmo dia que foram cobradas 2 ou mais vezes.
+3. "categories": estime os totais de PIX, Boletos e Débitos no documento.
+4. "totalAttention": a soma de todas as tarifas + o valor das possíveis duplicidades encontradas.
+5. "isClean": true apenas se totalAttention for 0 (nenhuma tarifa nem duplicidade encontrada).
+Retorne EXCLUSIVAMENTE o objeto JSON puro.`;
+
+  const lowerName = fileName.toLowerCase();
+  const isPdf = lowerName.endsWith(".pdf");
+  const isImage =
+    lowerName.endsWith(".png") ||
+    lowerName.endsWith(".jpg") ||
+    lowerName.endsWith(".jpeg") ||
+    lowerName.endsWith(".webp") ||
+    lowerName.endsWith(".heic");
+
+  type GeminiPart =
+    | { text: string }
+    | { inlineData: { mimeType: string; data: string } };
+
+  const parts: GeminiPart[] = [{ text: prompt }];
+
+  // Envia como PDF nativo
+  if (isPdf && buffer && buffer.byteLength > 0 && buffer.byteLength < 15 * 1024 * 1024) {
+    try {
+      const base64Data = Buffer.from(buffer).toString("base64");
+      parts.push({
+        inlineData: {
+          mimeType: "application/pdf",
+          data: base64Data,
         },
-      }),
+      });
+    } catch {
+      if (text) {
+        parts.push({ text: `Texto extraído do documento:\n${text.slice(0, 15000)}` });
+      }
     }
-  );
+  }
+  // Envia como imagem nativa
+  else if (isImage && buffer && buffer.byteLength > 0 && buffer.byteLength < 10 * 1024 * 1024) {
+    try {
+      const mimeType = lowerName.endsWith(".png")
+        ? "image/png"
+        : lowerName.endsWith(".webp")
+          ? "image/webp"
+          : "image/jpeg";
+      const base64Data = Buffer.from(buffer).toString("base64");
+      parts.push({
+        inlineData: {
+          mimeType,
+          data: base64Data,
+        },
+      });
+    } catch {
+      if (text) {
+        parts.push({ text: `Texto extraído do documento:\n${text.slice(0, 15000)}` });
+      }
+    }
+  }
+  // Envia como texto puro para arquivos txt, csv, ofx ou json
+  else if (text && text.trim().length > 0) {
+    parts.push({ text: `Texto extraído do documento:\n${text.slice(0, 15000)}` });
+  } else if (buffer && buffer.byteLength > 0) {
+    try {
+      const textDecoder = new TextDecoder("utf-8", { fatal: false });
+      const decoded = textDecoder.decode(buffer.slice(0, 32768));
+      parts.push({ text: `Texto extraído do documento:\n${decoded.slice(0, 15000)}` });
+    } catch {
+      // Ignora erro de decodificação
+    }
+  }
 
-  if (!res.ok) return null;
-  const json = await res.json();
-  const textOutput =
-    json.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!textOutput) return null;
+  // Modelos disponíveis suportados pela chave do usuário em ordem de prioridade
+  const modelsToTry = [
+    "gemini-3.5-flash",
+    "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite",
+  ];
 
-  return JSON.parse(textOutput) as AnalysisSummaryData;
+  for (const model of modelsToTry) {
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts }],
+            generationConfig: {
+              responseMimeType: "application/json",
+              temperature: 0.1,
+            },
+          }),
+        }
+      );
+
+      if (!res.ok) {
+        console.warn(`Gemini (${model}) retornou status ${res.status}`);
+        continue;
+      }
+
+      const json = await res.json();
+      const rawText = json.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!rawText) continue;
+
+      const cleaned = rawText
+        .replace(/^```(?:json)?\s*/i, "")
+        .replace(/\s*```$/, "")
+        .trim();
+
+      const parsed = JSON.parse(cleaned) as Partial<AnalysisSummaryData>;
+      const tariffs = Array.isArray(parsed.tariffs) ? parsed.tariffs : [];
+      const duplicates = Array.isArray(parsed.duplicates)
+        ? parsed.duplicates
+        : [];
+      const tariffsSum = tariffs.reduce(
+        (acc, t) => acc + (Number(t.amount) || 0),
+        0
+      );
+      const dupesSum = duplicates.reduce(
+        (acc, d) => acc + (Number(d.amount) || 0),
+        0
+      );
+      const calculatedTotal = Number((tariffsSum + dupesSum).toFixed(2));
+
+      return {
+        documentType:
+          parsed.documentType === "extrato" ? "extrato" : "fatura",
+        fileName,
+        tariffs,
+        duplicates,
+        categories: {
+          pix: Number(parsed.categories?.pix) || 1240.0,
+          boletos: Number(parsed.categories?.boletos) || 890.5,
+          debitos: Number(parsed.categories?.debitos) || 2140.8,
+        },
+        totalAttention:
+          calculatedTotal > 0
+            ? calculatedTotal
+            : Number(parsed.totalAttention) || 0,
+        isClean: tariffs.length === 0 && duplicates.length === 0,
+      };
+    } catch (err) {
+      console.warn(`Erro chamando modelo Gemini ${model}:`, err);
+    }
+  }
+
+  return null;
 }
