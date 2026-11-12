@@ -1,4 +1,5 @@
 import { CANCEL_GUIDES } from "./cancel-guides";
+import type { AnalysisSummaryData } from "@/lib/detect-charges";
 
 export interface Charge {
   id: string;
@@ -15,6 +16,8 @@ export interface Charge {
 
 export interface AnalysisResult {
   charges: Charge[];
+  analysisData?: AnalysisSummaryData;
+  engine?: "openai" | "gemini" | "claude" | "heuristic";
 }
 
 /**

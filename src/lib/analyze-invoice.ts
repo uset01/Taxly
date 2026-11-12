@@ -1,4 +1,8 @@
 import { AnalysisResult, MOCK_CHARGES } from "@/data/charges";
+import {
+  AnalysisSummaryData,
+  analyzeDocumentContent,
+} from "@/lib/detect-charges";
 
 export type AnalysisStageId =
   | "reading"
@@ -133,18 +137,40 @@ export async function analyzeInvoice(
 
   completedStages.push("masking");
 
-  // Etapa 3: Identificando assinaturas…
+  // Etapa 3: Identificando transações e consultando API…
   onProgress?.({
     stage: "identifying",
     completedStages: [...completedStages],
     progressPercent: 75,
   });
 
-  await new Promise((resolve) => requestAnimationFrame(resolve));
-  // TODO: Integrar endpoint de OCR / parser de fatura real quando backend estiver disponível
-  const rawCharges = USE_DEV_MOCK_DATA
-    ? MOCK_CHARGES.map((charge) => ({ ...charge }))
-    : [];
+  let analysisData: AnalysisSummaryData;
+  let detectedEngine: "openai" | "gemini" | "claude" | "heuristic" =
+    "heuristic";
+
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch("/api/analyze", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success && json.data) {
+        analysisData = json.data;
+        detectedEngine = json.meta?.engine || "heuristic";
+      } else {
+        analysisData = analyzeDocumentContent(file.name);
+      }
+    } else {
+      analysisData = analyzeDocumentContent(file.name);
+    }
+  } catch {
+    analysisData = analyzeDocumentContent(file.name);
+  }
 
   completedStages.push("identifying");
 
@@ -156,6 +182,9 @@ export async function analyzeInvoice(
   });
 
   await new Promise((resolve) => requestAnimationFrame(resolve));
+  const rawCharges = USE_DEV_MOCK_DATA
+    ? MOCK_CHARGES.map((charge) => ({ ...charge }))
+    : [];
   const verifiedCharges = rawCharges.filter((item) => item.amount > 0);
   completedStages.push("duplicates");
 
@@ -167,6 +196,8 @@ export async function analyzeInvoice(
 
   return {
     charges: verifiedCharges,
+    analysisData,
+    engine: detectedEngine,
   };
 }
 

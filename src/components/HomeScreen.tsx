@@ -245,7 +245,8 @@ export function HomeScreen() {
         ...charge,
         status: resolvedIds.includes(charge.id) ? "resolved" : charge.status,
       }));
-      const analysis = analyzeDocumentContent(file.name);
+      const analysis =
+        result.analysisData ?? analyzeDocumentContent(file.name);
       setCurrentAnalysisData(analysis);
       setCharges(hydratedCharges);
       setScreenState("result");
