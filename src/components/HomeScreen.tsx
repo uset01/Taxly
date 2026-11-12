@@ -572,7 +572,7 @@ export function HomeScreen() {
           />
         </header>
 
-        {statusBanner && (
+        {statusBanner && screenState !== "result" && (
           <div
             role="status"
             className="mx-6 mt-2 rounded-[14px] bg-[#F5F5F5] px-4 py-2.5 text-[13px] font-medium text-[#171717] text-left"
@@ -1041,6 +1041,7 @@ export function HomeScreen() {
           {screenState === "result" && (
             <ResultScreen
               data={currentAnalysisData}
+              isSubscribed={isSubscribed}
               onSaveToVault={handleSaveResultToVault}
               onSendAnotherFile={handleSendAnotherInvoice}
               onUnlockEconomyReport={() => setScreenState("paywall")}

@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   AnalysisSummaryData,
   analyzeDocumentContent,
+  DEFAULT_SAMPLE_ECONOMY_ITEMS,
   DocumentTransaction,
+  EconomyItem,
 } from "@/lib/detect-charges";
 
 interface AnalysisApiResponse {
@@ -440,6 +442,15 @@ DIRETRIZES CRÍTICAS (NÃO INVENTE COISAS):
    - true se totalAttention for 0 (nenhuma tarifa e nenhuma duplicidade).
    - false se houver pelo menos uma tarifa ou duplicidade real.
 
+7. "isSingleTransaction" e "singleTransactionAmount":
+   - isSingleTransaction: true se o documento contiver apenas 1 transação isolada (ex: 1 comprovante PIX avulso, 1 transferência única), false se for fatura de cartão ou extrato com múltiplas transações.
+   - singleTransactionAmount: valor numérico em R$ dessa única transação (ou 0 se não for única).
+
+8. "economyItems" e "totalRecurringSavings":
+   - economyItems: lista de cobranças recorrentes, assinaturas ou tarifas que o usuário pode cortar ou negociar estorno. Cada item:
+     { "id": "eco-1", "name": "Nome da cobrança", "monthlyAmount": 55.90, "yearlyImpact": 670.80, "actionTip": "Cancelar assinatura no app" ou "Pedir estorno de tarifa ao banco", "category": "Assinaturas" }
+   - totalRecurringSavings: soma em R$ dos gastos mensais que podem ser otimizados (ou o valor de singleTransactionAmount se for comprovante de transação única).
+
 Responda SOMENTE em formato JSON estrito:
 {
   "documentType": "fatura" ou "extrato",
@@ -448,7 +459,11 @@ Responda SOMENTE em formato JSON estrito:
   "duplicates": [],
   "categories": { "pix": 0, "boletos": 0, "debitos": 0 },
   "totalAttention": 0,
-  "isClean": true
+  "isClean": true,
+  "isSingleTransaction": false,
+  "singleTransactionAmount": 0,
+  "economyItems": [],
+  "totalRecurringSavings": 0
 }`;
 
   const lowerName = fileName.toLowerCase();
@@ -603,6 +618,87 @@ Responda SOMENTE em formato JSON estrito:
         calculatedTotal === 0 ||
         (tariffs.length === 0 && duplicates.length === 0);
 
+      const isSingleTransaction = Boolean(parsed.isSingleTransaction);
+      const singleTransactionAmount = parseAmount(parsed.singleTransactionAmount);
+
+      const rawEconomyItems = Array.isArray(parsed.economyItems)
+        ? (parsed.economyItems as Record<string, unknown>[])
+        : [];
+
+      let economyItems: EconomyItem[] = rawEconomyItems
+        .map((item, idx) => {
+          const monthly = parseAmount(item.monthlyAmount || item.amount);
+          const yearly =
+            parseAmount(item.yearlyImpact) || Number((monthly * 12).toFixed(2));
+          const name = extractItemName(item, "Assinatura ou tarifa");
+          const defaultTip = name.toLowerCase().includes("tarifa") || name.toLowerCase().includes("banco")
+            ? "Pedir estorno de tarifa ao banco"
+            : "Cancelar assinatura no app";
+          const actionTip =
+            typeof item.actionTip === "string" && item.actionTip.trim()
+              ? item.actionTip.trim()
+              : defaultTip;
+
+          return {
+            id: String(item.id || `eco-${idx + 1}`),
+            name,
+            monthlyAmount: monthly,
+            yearlyImpact: yearly,
+            actionTip,
+            category: typeof item.category === "string" ? item.category : undefined,
+          };
+        })
+        .filter((item) => item.monthlyAmount > 0);
+
+      if (economyItems.length === 0) {
+        tariffs.forEach((t, i) => {
+          economyItems.push({
+            id: `eco-tariff-${i + 1}`,
+            name: t.name,
+            monthlyAmount: t.amount,
+            yearlyImpact: Number((t.amount * 12).toFixed(2)),
+            actionTip: "Pedir estorno de tarifa ao banco",
+            category: "Tarifas",
+          });
+        });
+        duplicates.forEach((d, i) => {
+          economyItems.push({
+            id: `eco-dup-${i + 1}`,
+            name: `Cobrança duplicada: ${d.merchant}`,
+            monthlyAmount: d.amount,
+            yearlyImpact: Number((d.amount * 12).toFixed(2)),
+            actionTip: "Pedir estorno de tarifa ao banco",
+            category: "Duplicidades",
+          });
+        });
+        if (isSingleTransaction && singleTransactionAmount > 0) {
+          economyItems.push({
+            id: "eco-single-1",
+            name: "Transação enviada no comprovante",
+            monthlyAmount: singleTransactionAmount,
+            yearlyImpact: Number((singleTransactionAmount * 12).toFixed(2)),
+            actionTip: "Analisar fatura mensal para mais gastos",
+            category: "Transação",
+          });
+        }
+      }
+
+      if (economyItems.length === 0 && !isSingleTransaction) {
+        economyItems = DEFAULT_SAMPLE_ECONOMY_ITEMS;
+      }
+
+      const calculatedSavings = economyItems.reduce(
+        (acc, item) => acc + item.monthlyAmount,
+        0
+      );
+      const totalRecurringSavings =
+        parseAmount(parsed.totalRecurringSavings) ||
+        (isSingleTransaction
+          ? singleTransactionAmount
+          : calculatedSavings > 0
+            ? Number(calculatedSavings.toFixed(2))
+            : 184.7);
+
       const finalResult: AnalysisSummaryData = {
         documentType:
           parsed.documentType === "extrato" ? "extrato" : "fatura",
@@ -616,6 +712,10 @@ Responda SOMENTE em formato JSON estrito:
         },
         totalAttention: isClean ? 0 : calculatedTotal,
         isClean,
+        economyItems,
+        totalRecurringSavings,
+        isSingleTransaction,
+        singleTransactionAmount,
       };
       console.log(`[Gemini] Resultado formatado:`, JSON.stringify(finalResult));
       return finalResult;

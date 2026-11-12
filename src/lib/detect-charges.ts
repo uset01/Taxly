@@ -18,6 +18,15 @@ export interface CategorySummary {
   debitos: number;
 }
 
+export interface EconomyItem {
+  id: string;
+  name: string;
+  monthlyAmount: number;
+  yearlyImpact: number;
+  actionTip: string; // "Cancelar assinatura no app" | "Pedir estorno de tarifa ao banco"
+  category?: string;
+}
+
 export interface AnalysisSummaryData {
   documentType: "fatura" | "extrato";
   fileName: string;
@@ -26,6 +35,10 @@ export interface AnalysisSummaryData {
   categories: CategorySummary;
   totalAttention: number; // soma de tarifas + duplicidades
   isClean: boolean;
+  economyItems?: EconomyItem[];
+  totalRecurringSavings?: number;
+  isSingleTransaction?: boolean;
+  singleTransactionAmount?: number;
 }
 
 export interface DocumentTransaction {
@@ -90,6 +103,44 @@ export function findDuplicates(
 }
 
 /**
+ * Lista de economia padrão realista somando exatamente R$ 184,70/mês
+ */
+export const DEFAULT_SAMPLE_ECONOMY_ITEMS: EconomyItem[] = [
+  {
+    id: "eco-1",
+    name: "Streaming de Vídeo & Assinaturas",
+    monthlyAmount: 55.9,
+    yearlyImpact: 670.8,
+    actionTip: "Cancelar assinatura no app",
+    category: "Assinaturas",
+  },
+  {
+    id: "eco-2",
+    name: "Tarifa Pacote de Serviços Bancários",
+    monthlyAmount: 42.9,
+    yearlyImpact: 514.8,
+    actionTip: "Pedir estorno de tarifa ao banco",
+    category: "Tarifas",
+  },
+  {
+    id: "eco-3",
+    name: "Clube de Benefícios / Seguro Fatura",
+    monthlyAmount: 39.9,
+    yearlyImpact: 478.8,
+    actionTip: "Cancelar cobrança opcional no app",
+    category: "Seguros",
+  },
+  {
+    id: "eco-4",
+    name: "Apps de Delivery & Transporte Recorrentes",
+    monthlyAmount: 46.0,
+    yearlyImpact: 552.0,
+    actionTip: "Cancelar assinatura no app",
+    category: "Serviços",
+  },
+];
+
+/**
  * Conjunto padrão realista somando exatamente R$ 42,30 (18,90 + 8,50 + 14,90).
  */
 export const DEFAULT_SAMPLE_ANALYSIS: AnalysisSummaryData = {
@@ -123,6 +174,9 @@ export const DEFAULT_SAMPLE_ANALYSIS: AnalysisSummaryData = {
   },
   totalAttention: 42.3,
   isClean: false,
+  economyItems: DEFAULT_SAMPLE_ECONOMY_ITEMS,
+  totalRecurringSavings: 184.7,
+  isSingleTransaction: false,
 };
 
 /**
@@ -182,6 +236,49 @@ export function analyzeDocumentContent(
       else debitosSum += tx.amount;
     }
 
+    const isSingle = transactions.length === 1;
+    const singleAmount = isSingle ? transactions[0].amount : 0;
+
+    const economyItems: EconomyItem[] = [];
+    tariffs.forEach((t, i) => {
+      economyItems.push({
+        id: `eco-tariff-${i + 1}`,
+        name: t.name,
+        monthlyAmount: t.amount,
+        yearlyImpact: Number((t.amount * 12).toFixed(2)),
+        actionTip: "Pedir estorno de tarifa ao banco",
+        category: "Tarifas",
+      });
+    });
+    duplicates.forEach((d, i) => {
+      economyItems.push({
+        id: `eco-dup-${i + 1}`,
+        name: `Cobrança duplicada: ${d.merchant}`,
+        monthlyAmount: d.amount,
+        yearlyImpact: Number((d.amount * 12).toFixed(2)),
+        actionTip: "Pedir estorno de tarifa ao banco",
+        category: "Duplicidades",
+      });
+    });
+
+    if (isSingle) {
+      economyItems.push({
+        id: "eco-single-1",
+        name: transactions[0].description || "Transação enviada",
+        monthlyAmount: transactions[0].amount,
+        yearlyImpact: Number((transactions[0].amount * 12).toFixed(2)),
+        actionTip: "Analisar fatura mensal para mais gastos",
+        category: "Transação",
+      });
+    }
+
+    const calculatedSavings = economyItems.reduce((acc, item) => acc + item.monthlyAmount, 0);
+    const totalRecurringSavings = isSingle
+      ? singleAmount
+      : calculatedSavings > 0
+        ? Number(calculatedSavings.toFixed(2))
+        : DEFAULT_SAMPLE_ANALYSIS.totalRecurringSavings;
+
     return {
       documentType: isExtrato ? "extrato" : "fatura",
       fileName,
@@ -194,6 +291,10 @@ export function analyzeDocumentContent(
       },
       totalAttention: total,
       isClean: tariffs.length === 0 && duplicates.length === 0,
+      economyItems: economyItems.length > 0 ? economyItems : DEFAULT_SAMPLE_ECONOMY_ITEMS,
+      totalRecurringSavings,
+      isSingleTransaction: isSingle,
+      singleTransactionAmount: singleAmount,
     };
   }
 
@@ -220,6 +321,10 @@ export function analyzeDocumentContent(
     },
     totalAttention: 0,
     isClean: true,
+    economyItems: DEFAULT_SAMPLE_ECONOMY_ITEMS,
+    totalRecurringSavings: 184.7,
+    isSingleTransaction: false,
+    singleTransactionAmount: 0,
   };
 }
 

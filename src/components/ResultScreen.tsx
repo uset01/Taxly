@@ -11,11 +11,16 @@ import {
   ShareIcon,
 } from "@/components/icons";
 import { formatBRL } from "@/data/charges";
-import { AnalysisSummaryData } from "@/lib/detect-charges";
+import {
+  AnalysisSummaryData,
+  DEFAULT_SAMPLE_ECONOMY_ITEMS,
+  EconomyItem,
+} from "@/lib/detect-charges";
 import { useCountUp } from "@/lib/use-count-up";
 
 interface ResultScreenProps {
   data: AnalysisSummaryData;
+  isSubscribed?: boolean;
   onSaveToVault: () => void;
   onSendAnotherFile: () => void;
   onUnlockEconomyReport?: () => void;
@@ -24,6 +29,7 @@ interface ResultScreenProps {
 
 export function ResultScreen({
   data,
+  isSubscribed = false,
   onSaveToVault,
   onSendAnotherFile,
   onUnlockEconomyReport,
@@ -34,15 +40,37 @@ export function ResultScreen({
   const hasDuplicates = data.duplicates.length > 0;
   const hasFindings = hasTariffs || hasDuplicates;
 
+  const displayEconomyItems: EconomyItem[] =
+    data.economyItems && data.economyItems.length > 0
+      ? data.economyItems
+      : DEFAULT_SAMPLE_ECONOMY_ITEMS;
+
+  const itemsSum = displayEconomyItems.reduce(
+    (acc, it) => acc + it.monthlyAmount,
+    0
+  );
+
+  const savingsAmount =
+    data.totalRecurringSavings !== undefined && data.totalRecurringSavings > 0
+      ? data.totalRecurringSavings
+      : data.isSingleTransaction && data.singleTransactionAmount
+        ? data.singleTransactionAmount
+        : itemsSum > 0
+          ? itemsSum
+          : 184.7;
+
+  const previewItems = displayEconomyItems.slice(0, 2);
+
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const formattedValue = formatBRL(data.totalAttention);
+  const formattedSavings = formatBRL(savingsAmount);
   const shareHeadline = hasFindings
     ? `Meu extrato escondia R$ ${formattedValue} em tarifas. Quanto o seu esconde?`
-    : "Diagnóstico Parcial concluído no taxly: 0 duplicidades ou taxas ilegais encontradas hoje. Alerta: R$ 184,70/mês em gastos recorrentes identificados para otimização.";
+    : `Diagnóstico Parcial concluído no taxly: 0 duplicidades ou taxas ilegais encontradas hoje. Alerta: R$ ${formattedSavings}/mês em gastos recorrentes identificados.`;
   const shareFullText = `${shareHeadline} Descubra no taxly.app`;
 
   const drawCardOnCanvas = (): HTMLCanvasElement => {
@@ -140,7 +168,13 @@ export function ResultScreen({
 
       ctx.fillStyle = "#FFFFFF";
       ctx.font = "500 36px -apple-system, BlinkMacSystemFont, sans-serif";
-      ctx.fillText("⚠️ Alerta: R$ 184,70/mês em gastos recorrentes", 100, 560);
+      ctx.fillText(
+        data.isSingleTransaction
+          ? `Transação analisada: R$ ${formattedSavings}`
+          : `⚠️ Alerta: R$ ${formattedSavings}/mês em gastos recorrentes`,
+        100,
+        560
+      );
     }
 
     // Linha divisória
@@ -262,6 +296,17 @@ export function ResultScreen({
       style={{ paddingBottom: "140px" }}
       className="pt-1 text-left pb-[140px]"
     >
+      {/* Barra superior de assinante: exibida APENAS se isSubscribed === true */}
+      {isSubscribed && (
+        <aside
+          aria-label="Status do plano de assinatura"
+          className="mb-4 rounded-[14px] bg-[#E8F8EE] border border-[#B9E9C8] px-4 py-2.5 text-[13px] font-semibold text-[#008A39] flex items-center gap-2"
+        >
+          <CheckIcon className="w-4 h-4 shrink-0 text-[#00C853]" />
+          <span>Plano Mensal ativado! Análise completa desbloqueada.</span>
+        </aside>
+      )}
+
       {/* Header */}
       {hasFindings ? (
         <header>
@@ -311,20 +356,118 @@ export function ResultScreen({
             0 duplicidades ou taxas ilegais encontradas hoje.
           </p>
 
-          {/* Nova seção de 'Volume de Dados Analisado' */}
+          {/* Seção de Volume de Dados Analisado */}
           <p className="mt-2 text-[12.5px] text-[#8E8E93] font-normal">
-            Escanificados 100% dos dados da sua fatura.
+            Escaneados 100% dos dados enviados.
           </p>
 
-          {/* Texto de Alerta de Oportunidades (Gatilhador de desejo) */}
-          <div className="mt-4 pt-3.5 border-t border-[#EAEAEA] text-left sm:text-center">
-            <p className="text-[13.5px] text-[#1A1A1A] font-medium leading-relaxed bg-white border border-[#E5E5E5] rounded-[14px] p-3">
-              ⚠️ <strong className="font-semibold text-[#1A1A1A]">Alerta:</strong>{" "}
-              Identificamos gastos recorrentes de{" "}
-              <span className="font-bold text-[#00C853]">R$ 184,70/mês</span>{" "}
-              que podem ser cortados ou otimizados.
-            </p>
-          </div>
+          {/* Seção condicional: Grátis (Bloqueado) vs Assinante (Desbloqueado) */}
+          {!isSubscribed ? (
+            /* ESTADO BLOQUEADO (GRÁTIS) */
+            <div className="mt-4 pt-3.5 border-t border-[#EAEAEA] text-left">
+              {/* Alerta de Oportunidades Dinâmico */}
+              <div className="text-[13.5px] text-[#1A1A1A] font-medium leading-relaxed bg-white border border-[#E5E5E5] rounded-[14px] p-3">
+                {data.isSingleTransaction ? (
+                  <p>
+                    ⚠️ <strong className="font-semibold text-[#1A1A1A]">Alerta:</strong>{" "}
+                    Identificamos 1 transação de{" "}
+                    <span className="font-bold text-[#00C853]">R$ {formattedSavings}</span>.{" "}
+                    Envie sua fatura ou extrato mensal completo para achar mais gastos.
+                  </p>
+                ) : (
+                  <p>
+                    ⚠️ <strong className="font-semibold text-[#1A1A1A]">Alerta:</strong>{" "}
+                    Identificamos gastos recorrentes de{" "}
+                    <span className="font-bold text-[#00C853]">R$ {formattedSavings}/mês</span>{" "}
+                    que podem ser cortados ou otimizados.
+                  </p>
+                )}
+              </div>
+
+              {/* Prévia com 2 itens borrados para gerar curiosidade */}
+              <div className="mt-3 relative rounded-[14px] bg-white border border-[#E5E5E5] p-3 overflow-hidden select-none">
+                <div
+                  aria-hidden="true"
+                  className="filter blur-[4px] select-none pointer-events-none space-y-2.5 opacity-60"
+                >
+                  {previewItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between text-left"
+                    >
+                      <div className="min-w-0 pr-2">
+                        <p className="text-[13px] font-semibold text-[#1A1A1A] truncate">
+                          {item.name}
+                        </p>
+                        <p className="text-[11.5px] text-[#6B7280]">
+                          Impacto em 12 meses: R$ {formatBRL(item.yearlyImpact || item.monthlyAmount * 12)}/ano
+                        </p>
+                      </div>
+                      <span className="text-[13.5px] font-bold text-[#E5484D] tabular-nums shrink-0">
+                        R$ {formatBRL(item.monthlyAmount)}/mês
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="absolute inset-0 flex items-center justify-center bg-white/40 backdrop-blur-[1px]">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1A1A1A] text-white text-[11.5px] font-semibold shadow-sm">
+                    <LockSmallIcon className="w-3.5 h-3.5 text-[#00C853]" />
+                    <span>Conteúdo bloqueado • Desbloqueie o relatório</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* ESTADO DESBLOQUEADO (ASSINANTE) */
+            <div className="mt-4 pt-3.5 border-t border-[#EAEAEA] text-left">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-[14px] font-bold text-[#1A1A1A]">
+                  Relatório de Economia Desbloqueado
+                </h2>
+                <span className="text-[11.5px] font-bold text-[#00A844] bg-[#00C853]/10 px-2 py-0.5 rounded-full">
+                  Economia de R$ {formattedSavings}/mês
+                </span>
+              </div>
+
+              <ul className="space-y-2.5">
+                {displayEconomyItems.map((item) => (
+                  <li
+                    key={item.id}
+                    className="rounded-[14px] bg-white border border-[#E5E5E5] p-3 text-left shadow-[0_1px_2px_rgba(0,0,0,0.03)]"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-[14px] font-semibold text-[#1A1A1A]">
+                          {item.name}
+                        </p>
+                        <p className="text-[12px] text-[#6B7280] mt-0.5">
+                          Impacto em 12 meses:{" "}
+                          <strong className="text-[#1A1A1A] font-semibold">
+                            R$ {formatBRL(item.yearlyImpact || item.monthlyAmount * 12)}/ano
+                          </strong>
+                        </p>
+                      </div>
+                      <span className="text-[14.5px] font-bold text-[#E5484D] tabular-nums shrink-0">
+                        -R$ {formatBRL(item.monthlyAmount)}/mês
+                      </span>
+                    </div>
+
+                    <div className="mt-2.5 pt-2 border-t border-[#F0F0F0] flex items-center justify-between">
+                      <span className="inline-flex items-center gap-1 text-[11.5px] font-medium text-[#008A39] bg-[#E8F8EE] px-2 py-0.5 rounded-md">
+                        💡 {item.actionTip}
+                      </span>
+                      {item.category && (
+                        <span className="text-[11px] font-medium text-[#8E8E93]">
+                          {item.category}
+                        </span>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </header>
       )}
 
@@ -431,15 +574,32 @@ export function ResultScreen({
       {/* Rodapé de Ações */}
       <div className="mt-6 space-y-2.5">
         {/* Botão Verde Principal */}
-        <button
-          type="button"
-          onClick={onUnlockEconomyReport || onSaveToVault}
-          disabled={isSavingToVault}
-          className="w-full min-h-[52px] rounded-[16px] bg-[#00C853] hover:bg-[#00B54B] active:bg-[#00A047] text-white font-semibold text-[15px] px-5 flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-60"
-        >
-          <LockSmallIcon className="w-4 h-4 text-white shrink-0" />
-          <span>Destravar Relatório de Economia (R$ 184,70/mês)</span>
-        </button>
+        {!isSubscribed ? (
+          <button
+            type="button"
+            onClick={onUnlockEconomyReport || onSaveToVault}
+            disabled={isSavingToVault}
+            className="w-full min-h-[52px] rounded-[16px] bg-[#00C853] hover:bg-[#00B54B] active:bg-[#00A047] text-white font-semibold text-[15px] px-5 flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-60"
+          >
+            <LockSmallIcon className="w-4 h-4 text-white shrink-0" />
+            <span>
+              Destravar Relatório de Economia (R$ {formattedSavings}
+              {data.isSingleTransaction ? "" : "/mês"})
+            </span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={onSaveToVault}
+            disabled={isSavingToVault}
+            className="w-full min-h-[52px] rounded-[16px] bg-[#00C853] hover:bg-[#00B54B] active:bg-[#00A047] text-white font-semibold text-[15px] px-5 flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-60"
+          >
+            <CheckIcon className="w-4 h-4 text-white shrink-0" />
+            <span>
+              {isSavingToVault ? "Salvando..." : "Salvar Diagnóstico no Cofre"}
+            </span>
+          </button>
+        )}
 
         {/* Botão Secundário de Compartilhamento */}
         <button
