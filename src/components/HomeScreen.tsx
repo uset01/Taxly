@@ -1043,6 +1043,7 @@ export function HomeScreen() {
               data={currentAnalysisData}
               onSaveToVault={handleSaveResultToVault}
               onSendAnotherFile={handleSendAnotherInvoice}
+              onUnlockEconomyReport={() => setScreenState("paywall")}
             />
           )}
         </main>

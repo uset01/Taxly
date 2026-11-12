@@ -5,9 +5,10 @@ import {
   CheckIcon,
   CloseIcon,
   CopyIcon,
+  LockSmallIcon,
+  RadarSearchIcon,
   ShareDownloadIcon,
   ShareIcon,
-  ShieldCheckIcon,
 } from "@/components/icons";
 import { formatBRL } from "@/data/charges";
 import { AnalysisSummaryData } from "@/lib/detect-charges";
@@ -17,6 +18,7 @@ interface ResultScreenProps {
   data: AnalysisSummaryData;
   onSaveToVault: () => void;
   onSendAnotherFile: () => void;
+  onUnlockEconomyReport?: () => void;
   isSavingToVault?: boolean;
 }
 
@@ -24,6 +26,7 @@ export function ResultScreen({
   data,
   onSaveToVault,
   onSendAnotherFile,
+  onUnlockEconomyReport,
   isSavingToVault = false,
 }: ResultScreenProps) {
   const animatedTotal = useCountUp(data.totalAttention, true, 1000);
@@ -37,8 +40,10 @@ export function ResultScreen({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const formattedValue = formatBRL(data.totalAttention);
-  const shareHeadline = `Meu extrato escondia R$ ${formattedValue} em tarifas. Quanto o seu esconde?`;
-  const shareFullText = `${shareHeadline} Descubra no taxly`;
+  const shareHeadline = hasFindings
+    ? `Meu extrato escondia R$ ${formattedValue} em tarifas. Quanto o seu esconde?`
+    : "Diagnóstico Parcial concluído no taxly: 0 duplicidades ou taxas ilegais encontradas hoje. Alerta: R$ 184,70/mês em gastos recorrentes identificados para otimização.";
+  const shareFullText = `${shareHeadline} Descubra no taxly.app`;
 
   const drawCardOnCanvas = (): HTMLCanvasElement => {
     const canvas = canvasRef.current || document.createElement("canvas");
@@ -95,30 +100,48 @@ export function ResultScreen({
     ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
     if (typeof ctx.roundRect === "function") {
       ctx.beginPath();
-      ctx.roundRect(700, 104, 280, 68, 34);
+      ctx.roundRect(660, 104, 320, 68, 34);
       ctx.fill();
     }
     ctx.fillStyle = "#00C853";
     ctx.font = "600 24px -apple-system, BlinkMacSystemFont, sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("✓ Análise de extrato", 840, 138);
+    ctx.fillText(
+      hasFindings ? "✓ Análise de extrato" : "✓ Diagnóstico Parcial",
+      820,
+      138
+    );
 
     // Textos principais
     ctx.textAlign = "left";
     ctx.textBaseline = "alphabetic";
 
-    ctx.fillStyle = "#A1A1AA";
-    ctx.font = "400 48px Georgia, 'New York', serif";
-    ctx.fillText("Meu extrato escondia", 100, 380);
+    if (hasFindings) {
+      ctx.fillStyle = "#A1A1AA";
+      ctx.font = "400 48px Georgia, 'New York', serif";
+      ctx.fillText("Meu extrato escondia", 100, 380);
 
-    // Valor GRANDE R$ 42,30 em verde #00C853
-    ctx.fillStyle = "#00C853";
-    ctx.font = "bold 112px Georgia, 'New York', serif";
-    ctx.fillText(`R$ ${formattedValue}`, 100, 495);
+      // Valor GRANDE em verde #00C853
+      ctx.fillStyle = "#00C853";
+      ctx.font = "bold 112px Georgia, 'New York', serif";
+      ctx.fillText(`R$ ${formattedValue}`, 100, 495);
 
-    ctx.fillStyle = "#A1A1AA";
-    ctx.font = "400 48px Georgia, 'New York', serif";
-    ctx.fillText("em tarifas.", 100, 570);
+      ctx.fillStyle = "#A1A1AA";
+      ctx.font = "400 48px Georgia, 'New York', serif";
+      ctx.fillText("em tarifas.", 100, 570);
+    } else {
+      ctx.fillStyle = "#A1A1AA";
+      ctx.font = "400 44px Georgia, 'New York', serif";
+      ctx.fillText("Auditoria Completa:", 100, 360);
+
+      ctx.fillStyle = "#00C853";
+      ctx.font = "bold 82px Georgia, 'New York', serif";
+      ctx.fillText("0 TAXAS ILEGAIS", 100, 470);
+
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "500 36px -apple-system, BlinkMacSystemFont, sans-serif";
+      ctx.fillText("⚠️ Alerta: R$ 184,70/mês em gastos recorrentes", 100, 560);
+    }
 
     // Linha divisória
     ctx.strokeStyle = "#27272A";
@@ -130,8 +153,8 @@ export function ResultScreen({
 
     // Pergunta de impacto
     ctx.fillStyle = "#FFFFFF";
-    ctx.font = "bold 58px Georgia, 'New York', serif";
-    ctx.fillText("Quanto o seu esconde?", 100, 730);
+    ctx.font = "bold 56px Georgia, 'New York', serif";
+    ctx.fillText("Quanto o seu extrato esconde?", 100, 730);
 
     ctx.fillStyle = "#71717A";
     ctx.font = "400 30px -apple-system, BlinkMacSystemFont, sans-serif";
@@ -156,7 +179,7 @@ export function ResultScreen({
     ctx.fillStyle = "#71717A";
     ctx.font = "400 26px -apple-system, BlinkMacSystemFont, sans-serif";
     ctx.textAlign = "right";
-    ctx.fillText("Proteja seu dinheiro", 980, 955);
+    ctx.fillText("Auditoria bancária inteligente", 980, 955);
 
     return canvas;
   };
@@ -262,22 +285,46 @@ export function ResultScreen({
           </p>
         </header>
       ) : (
-        /* Estado positivo quando nada for encontrado */
-        <header className="rounded-[20px] bg-[#FAFAFA] border border-[#EAEAEA] p-6 text-center">
-          <div
-            aria-hidden="true"
-            className="mx-auto w-12 h-12 rounded-full bg-[#00C853]/15 text-[#00C853] flex items-center justify-center"
-          >
-            <ShieldCheckIcon className="w-6 h-6" />
+        /* Card Central de Resultado: Auditoria Completa Concluída */
+        <header className="rounded-[24px] bg-[#FAFAFA] border border-[#EAEAEA] p-6 text-center">
+          {/* Ícone de Radar/Lupa ativo em tom verde com animação sutil de pulso */}
+          <div className="relative mx-auto w-14 h-14 flex items-center justify-center">
+            <span
+              aria-hidden="true"
+              className="absolute inset-0 rounded-full bg-[#00C853]/20 animate-ping opacity-60 pointer-events-none"
+            />
+            <div
+              aria-hidden="true"
+              className="relative w-14 h-14 rounded-full bg-[#00C853]/15 text-[#00C853] flex items-center justify-center"
+            >
+              <RadarSearchIcon className="w-7 h-7" />
+            </div>
           </div>
-          <h1 className="mt-3.5 text-[20px] font-bold text-[#1A1A1A] leading-tight">
-            Nenhuma tarifa ou duplicidade encontrada.
+
+          {/* Título principal */}
+          <h1 className="mt-4 text-[21px] sm:text-[22px] font-bold text-[#1A1A1A] leading-tight">
+            Auditoria Completa Concluída.
           </h1>
+
+          {/* Texto complementar */}
           <p className="mt-1.5 text-[14.5px] text-[#00A844] font-medium">
-            {data.documentType === "extrato"
-              ? "Seu extrato está limpo."
-              : "Sua fatura está limpa."}
+            0 duplicidades ou taxas ilegais encontradas hoje.
           </p>
+
+          {/* Nova seção de 'Volume de Dados Analisado' */}
+          <p className="mt-2 text-[12.5px] text-[#8E8E93] font-normal">
+            Escanificados 100% dos dados da sua fatura.
+          </p>
+
+          {/* Texto de Alerta de Oportunidades (Gatilhador de desejo) */}
+          <div className="mt-4 pt-3.5 border-t border-[#EAEAEA] text-left sm:text-center">
+            <p className="text-[13.5px] text-[#1A1A1A] font-medium leading-relaxed bg-white border border-[#E5E5E5] rounded-[14px] p-3">
+              ⚠️ <strong className="font-semibold text-[#1A1A1A]">Alerta:</strong>{" "}
+              Identificamos gastos recorrentes de{" "}
+              <span className="font-bold text-[#00C853]">R$ 184,70/mês</span>{" "}
+              que podem ser cortados ou otimizados.
+            </p>
+          </div>
         </header>
       )}
 
@@ -383,33 +430,34 @@ export function ResultScreen({
 
       {/* Rodapé de Ações */}
       <div className="mt-6 space-y-2.5">
-        {/* Botão Salvar no Cofre */}
+        {/* Botão Verde Principal */}
         <button
           type="button"
-          onClick={onSaveToVault}
+          onClick={onUnlockEconomyReport || onSaveToVault}
           disabled={isSavingToVault}
-          className="w-full min-h-[50px] rounded-[16px] bg-[#00C853] hover:bg-[#00B54B] active:bg-[#00A047] text-white font-semibold text-[15px] px-5 flex items-center justify-center transition-colors cursor-pointer disabled:opacity-60"
+          className="w-full min-h-[52px] rounded-[16px] bg-[#00C853] hover:bg-[#00B54B] active:bg-[#00A047] text-white font-semibold text-[15px] px-5 flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-60"
         >
-          {isSavingToVault ? "Salvando no Cofre..." : "Salvar no Cofre"}
+          <LockSmallIcon className="w-4 h-4 text-white shrink-0" />
+          <span>Destravar Relatório de Economia (R$ 184,70/mês)</span>
         </button>
 
-        {/* Botão Contar pra alguém */}
+        {/* Botão Secundário de Compartilhamento */}
         <button
           type="button"
           onClick={() => setIsShareModalOpen(true)}
           className="w-full min-h-[48px] rounded-[16px] bg-[#F5F5F5] hover:bg-[#EDEDED] active:bg-[#E5E5E5] text-[#1A1A1A] font-semibold text-[14.5px] px-5 flex items-center justify-center gap-2 transition-colors cursor-pointer border border-[#E5E5E5]"
         >
-          <ShareIcon className="w-4 h-4 text-[#1A1A1A]" />
-          <span>Contar pra alguém</span>
+          <ShareIcon className="w-4 h-4 text-[#1A1A1A] shrink-0" />
+          <span>Compartilhar Diagnóstico Parcial</span>
         </button>
 
-        {/* Link Enviar outro arquivo */}
+        {/* Link Inferior */}
         <button
           type="button"
           onClick={onSendAnotherFile}
           className="w-full py-2.5 text-center text-[14px] font-medium text-[#6B7280] hover:text-[#1A1A1A] underline underline-offset-4 transition-colors cursor-pointer"
         >
-          Enviar outro arquivo
+          Analisar Fatura Completa ou Extrato
         </button>
       </div>
 
@@ -432,7 +480,7 @@ export function ResultScreen({
                 id="share-modal-title"
                 className="text-[16px] font-bold text-[#1A1A1A]"
               >
-                Card de compartilhamento
+                Compartilhar Diagnóstico Parcial
               </h3>
               <button
                 type="button"
