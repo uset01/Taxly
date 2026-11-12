@@ -517,14 +517,16 @@ Responda SOMENTE em formato JSON estrito:
   }
 
   // Modelos disponíveis suportados pela chave do usuário em ordem de prioridade
+  // Priorizando os modelos Lite que possuem cota ativa no plano gratuito
   const modelsToTry = [
-    "gemini-3.5-flash",
     "gemini-3.5-flash-lite",
     "gemini-3.1-flash-lite",
+    "gemini-3.5-flash",
   ];
 
   for (const model of modelsToTry) {
     try {
+      console.log(`[Gemini] Tentando modelo ${model} para arquivo "${fileName}"...`);
       const res = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
         {
@@ -542,7 +544,7 @@ Responda SOMENTE em formato JSON estrito:
 
       if (!res.ok) {
         const errorText = await res.text();
-        console.warn(`Gemini (${model}) retornou status ${res.status}:`, errorText);
+        console.warn(`[Gemini] (${model}) retornou status ${res.status}:`, errorText);
         if (res.status === 403 || res.status === 401) {
           throw new Error(
             "Chave de API do Gemini não autorizada ou expirada (Erro 403). Gere uma API Key válida em https://aistudio.google.com/apikey (formato AIzaSy...)."
@@ -553,6 +555,7 @@ Responda SOMENTE em formato JSON estrito:
 
       const json = await res.json();
       const rawText = json.candidates?.[0]?.content?.parts?.[0]?.text;
+      console.log(`[Gemini] Resposta recebida de ${model}:`, rawText);
       if (!rawText) continue;
 
       const cleaned = rawText
@@ -600,7 +603,7 @@ Responda SOMENTE em formato JSON estrito:
         calculatedTotal === 0 ||
         (tariffs.length === 0 && duplicates.length === 0);
 
-      return {
+      const finalResult: AnalysisSummaryData = {
         documentType:
           parsed.documentType === "extrato" ? "extrato" : "fatura",
         fileName,
@@ -614,6 +617,8 @@ Responda SOMENTE em formato JSON estrito:
         totalAttention: isClean ? 0 : calculatedTotal,
         isClean,
       };
+      console.log(`[Gemini] Resultado formatado:`, JSON.stringify(finalResult));
+      return finalResult;
     } catch (err) {
       console.warn(`Erro chamando modelo Gemini ${model}:`, err);
     }
