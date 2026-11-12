@@ -188,20 +188,38 @@ export function analyzeDocumentContent(
       tariffs,
       duplicates,
       categories: {
-        pix: pixSum > 0 ? pixSum : 1240.0,
-        boletos: boletosSum > 0 ? boletosSum : 890.5,
-        debitos: debitosSum > 0 ? debitosSum : 2140.8,
+        pix: pixSum,
+        boletos: boletosSum,
+        debitos: debitosSum,
       },
       totalAttention: total,
       isClean: tariffs.length === 0 && duplicates.length === 0,
     };
   }
 
-  // Fallback com o exemplo especificado
+  // Se for explicitamente o exemplo/demonstração inicial
+  const isDemo = lowerName.includes("exemplo") || lowerName.includes("demo");
+  if (isDemo) {
+    return {
+      ...DEFAULT_SAMPLE_ANALYSIS,
+      documentType: isExtrato ? "extrato" : "fatura",
+      fileName,
+    };
+  }
+
+  // Para qualquer arquivo real em que nada suspeito for detectado:
   return {
-    ...DEFAULT_SAMPLE_ANALYSIS,
     documentType: isExtrato ? "extrato" : "fatura",
     fileName,
+    tariffs: [],
+    duplicates: [],
+    categories: {
+      pix: 0,
+      boletos: 0,
+      debitos: 0,
+    },
+    totalAttention: 0,
+    isClean: true,
   };
 }
 

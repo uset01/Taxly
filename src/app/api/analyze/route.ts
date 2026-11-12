@@ -132,7 +132,20 @@ export async function POST(req: NextRequest) {
           });
         }
       } catch (geminiErr) {
-        console.warn("Gemini falhou, tentando fallback:", geminiErr);
+        console.warn("Gemini erro:", geminiErr);
+        const errMsg =
+          geminiErr instanceof Error
+            ? geminiErr.message
+            : "Falha na API Gemini.";
+        if (errMsg.includes("403") || errMsg.includes("Permission Denied")) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: errMsg,
+            },
+            { status: 403 }
+          );
+        }
       }
     }
 
@@ -305,6 +318,80 @@ ${text.slice(0, 10000)}`;
 }
 
 /**
+ * Utilitários robustos para extrair e normalizar valores monetários
+ */
+function parseAmount(val: unknown): number {
+  if (typeof val === "number") {
+    return isNaN(val) ? 0 : Number(val.toFixed(2));
+  }
+  if (typeof val === "string") {
+    // Trata "R$ 42,90", "42,90", "42.90", "1.240,50", " 14.90 "
+    const cleaned = val.replace(/[^\d,.-]/g, "").trim();
+    if (!cleaned) return 0;
+
+    // Se possui vírgula e ponto (ex: 1.250,50)
+    if (cleaned.includes(",") && cleaned.includes(".")) {
+      const normalized = cleaned.replace(/\./g, "").replace(",", ".");
+      const parsed = parseFloat(normalized);
+      return isNaN(parsed) ? 0 : Number(parsed.toFixed(2));
+    }
+    // Se possui apenas vírgula (ex: 42,90)
+    if (cleaned.includes(",")) {
+      const normalized = cleaned.replace(",", ".");
+      const parsed = parseFloat(normalized);
+      return isNaN(parsed) ? 0 : Number(parsed.toFixed(2));
+    }
+    // Formato padrão com ponto (ex: 42.90)
+    const parsed = parseFloat(cleaned);
+    return isNaN(parsed) ? 0 : Number(parsed.toFixed(2));
+  }
+  return 0;
+}
+
+function extractItemAmount(item: Record<string, unknown>): number {
+  const possible =
+    item.amount ??
+    item.value ??
+    item.valor ??
+    item.price ??
+    item.preco ??
+    item.val;
+  return parseAmount(possible);
+}
+
+function extractItemName(item: Record<string, unknown>, fallback: string): string {
+  const possible =
+    item.name ??
+    item.nome ??
+    item.description ??
+    item.descricao ??
+    item.merchant ??
+    item.favorecido ??
+    item.estabelecimento;
+  return typeof possible === "string" && possible.trim().length > 0
+    ? possible.trim()
+    : fallback;
+}
+
+function extractItemDate(item: Record<string, unknown>): string {
+  const possible = item.date ?? item.data ?? item.dia;
+  return typeof possible === "string" && possible.trim().length > 0
+    ? possible.trim()
+    : "Recente";
+}
+
+function extractItemOccurrences(item: Record<string, unknown>): number {
+  const possible =
+    item.occurrences ??
+    item.ocorrencias ??
+    item.repeticoes ??
+    item.quantidade ??
+    item.count;
+  const num = typeof possible === "number" ? possible : parseInt(String(possible), 10);
+  return isNaN(num) || num < 2 ? 2 : num;
+}
+
+/**
  * Chamada à API Google Gemini com suporte multimodal (PDF, Imagens e Texto)
  */
 async function callGeminiAnalysis(
@@ -315,33 +402,54 @@ async function callGeminiAnalysis(
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
 
-  const prompt = `Você é o analisador oficial de extratos e faturas bancárias do Taxly.
-Analise detalhadamente este documento financeiro ("${fileName}") e extraia estritamente um objeto JSON com esta estrutura:
+  const prompt = `Você é o auditor financeiro oficial do app Taxly.
+Sua missão é auditar com rigor e precisão o arquivo recebido ("${fileName}").
+
+DIRETRIZES CRÍTICAS (NÃO INVENTE COISAS):
+1. Verifique se o arquivo enviado é de fato um extrato bancário, fatura de cartão de crédito ou comprovante financeiro legível.
+   - Se for uma imagem não financeira (ex: foto de pessoa, selfie, paisagem, meme, foto aleatória) OU se for uma fatura/extrato sem cobranças indevidas e sem compras duplicadas:
+     Você DEVE retornar:
+     "tariffs": [],
+     "duplicates": [],
+     "categories": { "pix": 0, "boletos": 0, "debitos": 0 },
+     "totalAttention": 0,
+     "isClean": true
+   - NUNCA invente tarifas ou duplicidades que não estejam explicitamente no documento.
+
+2. "tariffs" (Tarifas bancárias pagas):
+   - Inclua APENAS cobranças bancárias reais identificadas por termos como: tarifa, taxa, juros, iof, anuidade, manutenção, pacote de serviços, encargos.
+   - Cada tarifa deve ter:
+     { "id": "tarifa-1", "name": "Nome da tarifa", "amount": 42.90 }
+   - Se não houver tarifas, deixe a lista vazia: [].
+
+3. "duplicates" (Possíveis cobranças duplicadas):
+   - Inclua APENAS transações do mesmo estabelecimento/favorecido, com o mesmo valor no mesmo dia que apareçam 2 ou mais vezes.
+   - Cada duplicidade deve ter:
+     { "id": "dup-1", "merchant": "Nome do favorecido", "date": "Data", "amount": 24.90, "occurrences": 2 }
+   - Se não houver duplicidade, deixe a lista vazia: [].
+
+4. "categories" (Gastos reais identificados):
+   - "pix": soma total em R$ de transações via PIX (0 se não houver).
+   - "boletos": soma total em R$ de boletos (0 se não houver).
+   - "debitos": soma total em R$ de outros débitos e compras no cartão (0 se não houver).
+
+5. "totalAttention":
+   - Soma total em R$ de (tarifas + duplicidades). Se não houver tarifas nem duplicidades, DEVE ser 0.
+
+6. "isClean":
+   - true se totalAttention for 0 (nenhuma tarifa e nenhuma duplicidade).
+   - false se houver pelo menos uma tarifa ou duplicidade real.
+
+Responda SOMENTE em formato JSON estrito:
 {
   "documentType": "fatura" ou "extrato",
   "fileName": "${fileName}",
-  "tariffs": [
-    { "id": "tarifa-1", "name": "Nome da Tarifa (ex: Tarifa de Manutenção, Juros)", "amount": 18.90 }
-  ],
-  "duplicates": [
-    { "id": "dup-1", "merchant": "Nome do Estabelecimento", "date": "12/10", "amount": 14.90, "occurrences": 2 }
-  ],
-  "categories": {
-    "pix": 1240.0,
-    "boletos": 890.5,
-    "debitos": 2140.8
-  },
-  "totalAttention": 42.30,
-  "isClean": false
-}
-
-Regras:
-1. "tariffs": procure qualquer cobrança bancária com as palavras-chave: tarifa, juros, IOF, anuidade, manutenção, pacote de serviços, taxa.
-2. "duplicates": procure transações de mesmo valor no mesmo dia que foram cobradas 2 ou mais vezes.
-3. "categories": estime os totais de PIX, Boletos e Débitos no documento.
-4. "totalAttention": a soma de todas as tarifas + o valor das possíveis duplicidades encontradas.
-5. "isClean": true apenas se totalAttention for 0 (nenhuma tarifa nem duplicidade encontrada).
-Retorne EXCLUSIVAMENTE o objeto JSON puro.`;
+  "tariffs": [],
+  "duplicates": [],
+  "categories": { "pix": 0, "boletos": 0, "debitos": 0 },
+  "totalAttention": 0,
+  "isClean": true
+}`;
 
   const lowerName = fileName.toLowerCase();
   const isPdf = lowerName.endsWith(".pdf");
@@ -433,7 +541,13 @@ Retorne EXCLUSIVAMENTE o objeto JSON puro.`;
       );
 
       if (!res.ok) {
-        console.warn(`Gemini (${model}) retornou status ${res.status}`);
+        const errorText = await res.text();
+        console.warn(`Gemini (${model}) retornou status ${res.status}:`, errorText);
+        if (res.status === 403 || res.status === 401) {
+          throw new Error(
+            "Chave de API do Gemini não autorizada ou expirada (Erro 403). Gere uma API Key válida em https://aistudio.google.com/apikey (formato AIzaSy...)."
+          );
+        }
         continue;
       }
 
@@ -446,37 +560,59 @@ Retorne EXCLUSIVAMENTE o objeto JSON puro.`;
         .replace(/\s*```$/, "")
         .trim();
 
-      const parsed = JSON.parse(cleaned) as Partial<AnalysisSummaryData>;
-      const tariffs = Array.isArray(parsed.tariffs) ? parsed.tariffs : [];
-      const duplicates = Array.isArray(parsed.duplicates)
+      const parsed = JSON.parse(cleaned) as Record<string, unknown>;
+      const rawTariffs = Array.isArray(parsed.tariffs) ? parsed.tariffs : [];
+      const tariffs = rawTariffs
+        .map((t: Record<string, unknown>, idx: number) => ({
+          id: String(t.id || `tarifa-${idx + 1}`),
+          name: extractItemName(t, "Tarifa bancária"),
+          amount: extractItemAmount(t),
+        }))
+        .filter((t) => t.amount > 0);
+
+      const rawDuplicates = Array.isArray(parsed.duplicates)
         ? parsed.duplicates
         : [];
-      const tariffsSum = tariffs.reduce(
-        (acc, t) => acc + (Number(t.amount) || 0),
-        0
-      );
-      const dupesSum = duplicates.reduce(
-        (acc, d) => acc + (Number(d.amount) || 0),
-        0
-      );
+      const duplicates = rawDuplicates
+        .map((d: Record<string, unknown>, idx: number) => ({
+          id: String(d.id || `dup-${idx + 1}`),
+          merchant: extractItemName(d, "Cobrança"),
+          date: extractItemDate(d),
+          amount: extractItemAmount(d),
+          occurrences: extractItemOccurrences(d),
+        }))
+        .filter((d) => d.amount > 0);
+
+      const tariffsSum = tariffs.reduce((acc, t) => acc + t.amount, 0);
+      const dupesSum = duplicates.reduce((acc, d) => acc + d.amount, 0);
       const calculatedTotal = Number((tariffsSum + dupesSum).toFixed(2));
+
+      const categoriesObj =
+        typeof parsed.categories === "object" && parsed.categories !== null
+          ? (parsed.categories as Record<string, unknown>)
+          : {};
+
+      const pixTotal = parseAmount(categoriesObj.pix);
+      const boletosTotal = parseAmount(categoriesObj.boletos);
+      const debitosTotal = parseAmount(categoriesObj.debitos);
+
+      const isClean =
+        calculatedTotal === 0 ||
+        (tariffs.length === 0 && duplicates.length === 0);
 
       return {
         documentType:
           parsed.documentType === "extrato" ? "extrato" : "fatura",
         fileName,
-        tariffs,
-        duplicates,
+        tariffs: isClean ? [] : tariffs,
+        duplicates: isClean ? [] : duplicates,
         categories: {
-          pix: Number(parsed.categories?.pix) || 1240.0,
-          boletos: Number(parsed.categories?.boletos) || 890.5,
-          debitos: Number(parsed.categories?.debitos) || 2140.8,
+          pix: pixTotal,
+          boletos: boletosTotal,
+          debitos: debitosTotal,
         },
-        totalAttention:
-          calculatedTotal > 0
-            ? calculatedTotal
-            : Number(parsed.totalAttention) || 0,
-        isClean: tariffs.length === 0 && duplicates.length === 0,
+        totalAttention: isClean ? 0 : calculatedTotal,
+        isClean,
       };
     } catch (err) {
       console.warn(`Erro chamando modelo Gemini ${model}:`, err);

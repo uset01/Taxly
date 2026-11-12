@@ -440,60 +440,21 @@ export function HomeScreen() {
     if (isCardScanning) return;
     setIsCardScanning(true);
 
-    const rawName = file?.name
-      ? file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ")
-      : "";
-    const lowerName = rawName.toLowerCase();
-
-    const isPix = lowerName.includes("pix") || lowerName.includes("comprovante");
-    const isBoleto = lowerName.includes("boleto");
-    const detectedType: VaultReceiptType = isPix
-      ? "PIX"
-      : isBoleto
-        ? "Boleto"
-        : "Fatura";
-
-    const formattedReceiver = rawName
-      ? rawName.charAt(0).toUpperCase() + rawName.slice(1)
-      : "Fatura Cartão Itaú";
+    if (file) {
+      window.setTimeout(() => {
+        setIsCardScanning(false);
+        void handleStartAnalysis(file);
+      }, 400);
+      return;
+    }
 
     window.setTimeout(() => {
-      const newReceipt: VaultReceiptItem = {
-        id: `rec-${Date.now()}`,
-        receiver: formattedReceiver,
-        date: "09 Nov 2026",
-        tag:
-          detectedType === "Fatura"
-            ? "#Cartão"
-            : detectedType === "Boleto"
-              ? "#Moradia"
-              : "#Saúde",
-        amount: detectedType === "Fatura" ? 1890.4 : 265.0,
-        type: detectedType,
-        isHealthIR: detectedType === "PIX",
-        maskedDocument: "***.452.890-**",
-        institution:
-          detectedType === "Fatura"
-            ? "Itaú Unibanco S.A."
-            : "Nu Pagamentos S.A.",
-        extractedText: `CNPJ 60.701.190/0001-04 ${formattedReceiver} documento analisado e mascarado`,
-      };
-
-      setVaultReceipts((prev) => [newReceipt, ...prev]);
-      setActiveVaultCategory("Todos");
-      setVaultSearchQuery("");
       setIsCardScanning(false);
-
-      if (file) {
-        void handleStartAnalysis(file);
-        return;
-      }
-
-      const analysis = analyzeDocumentContent("Fatura Cartão Itaú.pdf");
+      const analysis = analyzeDocumentContent("fatura_exemplo.pdf");
       setCurrentAnalysisData(analysis);
-      setSelectedFileName("Fatura Cartão Itaú.pdf");
+      setSelectedFileName("fatura_exemplo.pdf");
       setScreenState("result");
-    }, 1400);
+    }, 800);
   };
 
   const handleSelectModalTag = (id: string, newTag: string) => {

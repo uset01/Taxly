@@ -163,12 +163,22 @@ export async function analyzeInvoice(
         analysisData = json.data;
         detectedEngine = json.meta?.engine || "heuristic";
       } else {
-        analysisData = analyzeDocumentContent(file.name);
+        throw new InvoiceAnalysisError(
+          json.error || "Erro ao analisar o documento na API."
+        );
       }
     } else {
-      analysisData = analyzeDocumentContent(file.name);
+      const errJson = await res.json().catch(() => null);
+      throw new InvoiceAnalysisError(
+        errJson?.error ||
+          "Não foi possível analisar o arquivo. Verifique se o documento é legível e tente novamente."
+      );
     }
-  } catch {
+  } catch (err) {
+    if (err instanceof InvoiceAnalysisError) {
+      throw err;
+    }
+    // Fallback somente para falha de conexão com a rede
     analysisData = analyzeDocumentContent(file.name);
   }
 

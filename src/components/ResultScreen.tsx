@@ -348,33 +348,43 @@ export function ResultScreen({
         </div>
       )}
 
-      {/* Bloco 3 — Resumo por categoria */}
-      <div className="mt-5 rounded-[16px] bg-[#FAFAFA] border border-[#EAEAEA] p-4 sm:p-5">
-        <h2 className="text-[15px] font-semibold text-[#1A1A1A]">
-          Resumo por categoria
-        </h2>
+      {/* Bloco 3 — Resumo por categoria (só aparece se houver transações categorizadas) */}
+      {(data.categories.pix > 0 ||
+        data.categories.boletos > 0 ||
+        data.categories.debitos > 0) && (
+        <div className="mt-5 rounded-[16px] bg-[#FAFAFA] border border-[#EAEAEA] p-4 sm:p-5">
+          <h2 className="text-[15px] font-semibold text-[#1A1A1A]">
+            Resumo por categoria
+          </h2>
 
-        <div className="mt-3 divide-y divide-[#EAEAEA] border-t border-[#EAEAEA]">
-          <div className="py-2.5 flex items-center justify-between text-[14.5px]">
-            <span className="font-medium text-[#1A1A1A]">PIX</span>
-            <span className="font-semibold text-[#1A1A1A] tabular-nums">
-              R$ {formatBRL(data.categories.pix)}
-            </span>
-          </div>
-          <div className="py-2.5 flex items-center justify-between text-[14.5px]">
-            <span className="font-medium text-[#1A1A1A]">Boletos</span>
-            <span className="font-semibold text-[#1A1A1A] tabular-nums">
-              R$ {formatBRL(data.categories.boletos)}
-            </span>
-          </div>
-          <div className="py-2.5 flex items-center justify-between text-[14.5px]">
-            <span className="font-medium text-[#1A1A1A]">Débitos</span>
-            <span className="font-semibold text-[#1A1A1A] tabular-nums">
-              R$ {formatBRL(data.categories.debitos)}
-            </span>
+          <div className="mt-3 divide-y divide-[#EAEAEA] border-t border-[#EAEAEA]">
+            {data.categories.pix > 0 && (
+              <div className="py-2.5 flex items-center justify-between text-[14.5px]">
+                <span className="font-medium text-[#1A1A1A]">PIX</span>
+                <span className="font-semibold text-[#1A1A1A] tabular-nums">
+                  R$ {formatBRL(data.categories.pix)}
+                </span>
+              </div>
+            )}
+            {data.categories.boletos > 0 && (
+              <div className="py-2.5 flex items-center justify-between text-[14.5px]">
+                <span className="font-medium text-[#1A1A1A]">Boletos</span>
+                <span className="font-semibold text-[#1A1A1A] tabular-nums">
+                  R$ {formatBRL(data.categories.boletos)}
+                </span>
+              </div>
+            )}
+            {data.categories.debitos > 0 && (
+              <div className="py-2.5 flex items-center justify-between text-[14.5px]">
+                <span className="font-medium text-[#1A1A1A]">Débitos</span>
+                <span className="font-semibold text-[#1A1A1A] tabular-nums">
+                  R$ {formatBRL(data.categories.debitos)}
+                </span>
+              </div>
+            )}
           </div>
         </div>
-      </div>
+      )}
 
       {/* Rodapé de Ações */}
       <div className="mt-6 space-y-2.5">
