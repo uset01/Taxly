@@ -532,8 +532,8 @@ export function HomeScreen() {
       className="taxly-app min-h-screen w-full bg-white text-[#111111] overflow-x-hidden"
     >
       <div
-        style={{ paddingBottom: isPaywallFlowScreen ? "0px" : "140px" }}
-        className={`mx-auto w-full max-w-[430px] min-w-0 min-h-screen bg-white relative ${isPaywallFlowScreen ? "" : "pb-[140px]"
+        style={{ paddingBottom: isPaywallFlowScreen ? "0px" : "7rem" }}
+        className={`mx-auto w-full max-w-[430px] min-w-0 min-h-screen bg-white relative ${isPaywallFlowScreen ? "" : "pb-28"
           }`}
       >
         {/* Top Row: Logo taxly + Ícone de perfil */}
@@ -592,14 +592,14 @@ export function HomeScreen() {
 
         {/* Main Content */}
         <main
-          style={{ paddingBottom: isPaywallFlowScreen ? "0px" : "140px" }}
-          className={`px-6 pt-3 ${isPaywallFlowScreen ? "" : "pb-[140px]"}`}
+          style={{ paddingBottom: isPaywallFlowScreen ? "0px" : "7rem" }}
+          className={`px-6 pt-3 ${isPaywallFlowScreen ? "" : "pb-28"}`}
         >
           {screenState === "empty" && activeTab === "home" && (
             <section
               aria-label="Boas-vindas e envio de fatura ou comprovante"
-              style={{ paddingBottom: "140px" }}
-              className="pb-[140px]"
+              style={{ paddingBottom: "7rem" }}
+              className="pb-28"
             >
               {/* Headline, Subtítulo & Prova Social */}
               <div>
@@ -619,6 +619,13 @@ export function HomeScreen() {
                   </p>
                   <p className="text-[14.5px] font-normal text-[#8E8E93] leading-[1.4] mt-0.5">
                     Ninguém sabe de cor. Agora você vai saber.
+                  </p>
+                </div>
+
+                {/* Gatilho de valor / Prova social */}
+                <div className="mt-4 rounded-[14px] bg-[#F5F5F5] border border-[#EAEAEA] p-3 text-left">
+                  <p className="text-[13.5px] leading-snug text-[#1A1A1A] font-medium">
+                    <span className="text-[#00A844] font-bold">R$ 184,70/mês</span> em média recuperados pelos usuários em cobranças ocultas e tarifas.
                   </p>
                 </div>
               </div>
@@ -701,8 +708,8 @@ export function HomeScreen() {
           {screenState === "empty" && activeTab === "vault" && (
             <section
               aria-label="Meu Cofre"
-              style={{ paddingBottom: "130px" }}
-              className="pb-[130px]"
+              style={{ paddingBottom: "7rem" }}
+              className="pb-28"
             >
               {/* Header "Meu Cofre" */}
               <div className="flex items-center justify-between">
@@ -858,8 +865,8 @@ export function HomeScreen() {
           {screenState === "analyzing" && (
             <section
               aria-label="Análise da fatura em andamento"
-              style={{ paddingBottom: "130px" }}
-              className="pt-2 pb-[130px]"
+              style={{ paddingBottom: "7rem" }}
+              className="pt-2 pb-28"
             >
               {!analysisError ? (
                 <div className="rounded-[28px] bg-[#F0EFEA] p-6">

@@ -39,24 +39,83 @@ export function ResultScreen({
   const hasDuplicates = data.duplicates.length > 0;
   const hasFindings = hasTariffs || hasDuplicates;
 
-  const displayEconomyItems: EconomyItem[] =
+  // Categorias do extrato para cálculo dinâmico
+  const catPix = data.categories?.pix ?? 0;
+  const catDebitos = data.categories?.debitos ?? 0;
+  const catBoletos = data.categories?.boletos ?? 0;
+
+  // Soma de Débitos + PIX (ou valores padrão do extrato se vier zerado)
+  const baseDebitosAndPix =
+    catDebitos + catPix > 0
+      ? catDebitos + catPix
+      : catBoletos > 0
+        ? catBoletos
+        : 1240.0 + 2140.8;
+
+  // 15% da soma total de Débitos + PIX
+  const calculated15Percent = Number((baseDebitosAndPix * 0.15).toFixed(2));
+
+  // Itens padrão simulados para teaser e relatório desbloqueado
+  const defaultSimulatedItems: EconomyItem[] = [
+    {
+      id: "sim-1",
+      name: "Assinatura Recorrente / Streaming VIP",
+      monthlyAmount: 149.9,
+      yearlyImpact: 1798.8,
+      actionTip: "Cancelar assinatura no app",
+      category: "Cobrança Recorrente",
+    },
+    {
+      id: "sim-2",
+      name: "Seguro Proteção Fatura Premiada",
+      monthlyAmount: 110.1,
+      yearlyImpact: 1321.2,
+      actionTip: "Pedir estorno de tarifa ao banco",
+      category: "Débito Automático",
+    },
+    {
+      id: "sim-3",
+      name: "Tarifa Pacote de Serviços Essenciais",
+      monthlyAmount: 90.0,
+      yearlyImpact: 1080.0,
+      actionTip: "Mudar para pacote gratuito BACEN",
+      category: "Taxa/Serviço",
+    },
+  ];
+
+  const effectiveEconomyList: EconomyItem[] =
     data.economyItems && data.economyItems.length > 0
       ? data.economyItems
-      : [];
+      : defaultSimulatedItems;
 
-  const itemsSum = displayEconomyItems.reduce(
-    (acc, it) => acc + it.monthlyAmount,
-    0
-  );
+  // 3 linhas simulando itens encontrados no documento com tag de categoria e nome borrado
+  const teaserItems = [
+    {
+      prefix: "1.",
+      categoryTag: "Cobrança Recorrente",
+      blurredName: "Streaming / Clube VIP",
+      amount: effectiveEconomyList[0]?.monthlyAmount || 149.9,
+    },
+    {
+      prefix: "2.",
+      categoryTag: "Débito Automático",
+      blurredName: "Seguro Proteção Fatura",
+      amount: effectiveEconomyList[1]?.monthlyAmount || 110.1,
+    },
+    {
+      prefix: "3.",
+      categoryTag: "Taxa/Serviço",
+      blurredName: "Tarifa Pacote Essencial",
+      amount: effectiveEconomyList[2]?.monthlyAmount || 90.0,
+    },
+  ];
 
   const savingsAmount =
-    data.totalRecurringSavings !== undefined
-      ? data.totalRecurringSavings
-      : data.isSingleTransaction && data.singleTransactionAmount
-        ? data.singleTransactionAmount
-        : itemsSum;
-
-  const previewItems = displayEconomyItems.slice(0, 2);
+    data.isSingleTransaction && data.singleTransactionAmount
+      ? data.singleTransactionAmount
+      : calculated15Percent > 0
+        ? calculated15Percent
+        : 184.7;
 
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState(false);
@@ -67,9 +126,7 @@ export function ResultScreen({
   const formattedSavings = formatBRL(savingsAmount);
   const shareHeadline = hasFindings
     ? `Meu extrato escondia R$ ${formattedValue} em tarifas. Quanto o seu esconde?`
-    : savingsAmount > 0
-      ? `Diagnóstico Parcial concluído no taxly: 0 duplicidades ou taxas ilegais encontradas hoje. Alerta: R$ ${formattedSavings}/mês em gastos recorrentes identificados.`
-      : "Auditoria concluída no taxly: 0 duplicidades ou taxas ilegais encontradas hoje. Meu extrato está 100% limpo!";
+    : `Diagnóstico Parcial concluído no taxly: 0 duplicidades ou taxas ilegais encontradas hoje. Alerta: R$ ${formattedSavings}/mês em pequenos débitos e transferências que podem ser cortados.`;
   const shareFullText = `${shareHeadline} Descubra no taxly.app`;
 
   const drawCardOnCanvas = (): HTMLCanvasElement => {
@@ -170,7 +227,7 @@ export function ResultScreen({
       ctx.fillText(
         data.isSingleTransaction
           ? `Transação analisada: R$ ${formattedSavings}`
-          : `⚠️ Alerta: R$ ${formattedSavings}/mês em gastos recorrentes`,
+          : `⚠️ Alerta: R$ ${formattedSavings}/mês em pequenos débitos otimizáveis`,
         100,
         560
       );
@@ -292,8 +349,8 @@ export function ResultScreen({
   return (
     <section
       aria-label="Resultado da análise"
-      style={{ paddingBottom: "140px" }}
-      className="pt-1 text-left pb-[140px]"
+      style={{ paddingBottom: "7rem" }}
+      className="pt-1 text-left pb-28"
     >
       {/* Barra superior de assinante: exibida APENAS se isSubscribed === true */}
       {isSubscribed && (
@@ -360,74 +417,71 @@ export function ResultScreen({
             Escaneados 100% dos dados enviados.
           </p>
 
-          {/* Seção condicional: Limpo vs Grátis (Bloqueado) vs Assinante (Desbloqueado) */}
-          {savingsAmount === 0 ? (
-            /* ESTADO 100% LIMPO (SEM TARIFAS NEM ASSINATURAS IDENTIFICADAS) */
-            <div className="mt-4 pt-3.5 border-t border-[#EAEAEA] text-left">
-              <div className="rounded-[14px] bg-[#E8F8EE] border border-[#B9E9C8] p-3.5">
-                <p className="text-[14px] font-semibold text-[#008A39] flex items-center gap-2">
-                  <CheckIcon className="w-4 h-4 shrink-0 text-[#00C853]" />
-                  <span>Suas contas estão limpas e protegidas</span>
-                </p>
-                <p className="mt-1 text-[13px] text-[#006A2B] leading-relaxed">
-                  A auditoria de IA analisou seu arquivo e não encontrou tarifas abusivas, duplicidades ou cobranças desnecessárias.
-                </p>
-              </div>
-            </div>
-          ) : !isSubscribed ? (
+          {/* Seção condicional: Grátis (Bloqueado) vs Assinante (Desbloqueado) */}
+          {!isSubscribed ? (
             /* ESTADO BLOQUEADO (GRÁTIS) */
             <div className="mt-4 pt-3.5 border-t border-[#EAEAEA] text-left">
-              {/* Alerta de Oportunidades Dinâmico */}
-              <div className="text-[13.5px] text-[#1A1A1A] font-medium leading-relaxed bg-white border border-[#E5E5E5] rounded-[14px] p-3">
+              {/* Alerta de Otimização Amarelo (15% de Débitos + PIX) */}
+              <div className="rounded-[14px] bg-[#FFFBEB] border border-[#FDE68A] p-3.5 text-left">
                 {data.isSingleTransaction ? (
-                  <p>
-                    ⚠️ <strong className="font-semibold text-[#1A1A1A]">Alerta:</strong>{" "}
+                  <p className="text-[13px] sm:text-[13.5px] leading-relaxed text-[#78350F]">
+                    <span className="font-bold text-[#92400E]">⚠️ Alerta:</span>{" "}
                     Identificamos 1 transação de{" "}
-                    <span className="font-bold text-[#00C853]">R$ {formattedSavings}</span>.{" "}
-                    Envie sua fatura ou extrato mensal completo para achar mais gastos.
+                    <strong className="font-bold text-[#B45309]">
+                      R$ {formattedSavings}
+                    </strong>
+                    . Envie sua fatura ou extrato mensal completo para achar mais gastos.
                   </p>
                 ) : (
-                  <p>
-                    ⚠️ <strong className="font-semibold text-[#1A1A1A]">Alerta:</strong>{" "}
-                    Identificamos gastos recorrentes de{" "}
-                    <span className="font-bold text-[#00C853]">R$ {formattedSavings}/mês</span>{" "}
-                    que podem ser cortados ou otimizados.
+                  <p className="text-[13px] sm:text-[13.5px] leading-relaxed text-[#78350F]">
+                    <span className="font-bold text-[#92400E]">
+                      ⚠️ Alerta de Otimização:
+                    </span>{" "}
+                    Você não teve tarifas ilegais, mas identificamos{" "}
+                    <strong className="font-bold text-[#B45309]">
+                      R$ {formattedSavings}/mês
+                    </strong>{" "}
+                    em pequenos débitos e transferências que podem ser cortados.
+                    Desbloqueie o raio-x detalhado abaixo.
                   </p>
                 )}
               </div>
 
-              {/* Prévia com 2 itens borrados para gerar curiosidade */}
-              <div className="mt-3 relative rounded-[14px] bg-white border border-[#E5E5E5] p-3 overflow-hidden select-none">
-                <div
-                  aria-hidden="true"
-                  className="filter blur-[4px] select-none pointer-events-none space-y-2.5 opacity-60"
-                >
-                  {previewItems.map((item) => (
+              {/* Prévia Teaser: 3 itens simulando os itens com nome borrado e valor visível + Barra preta */}
+              <div className="mt-3 rounded-[14px] bg-white border border-[#E5E5E5] p-3.5 text-left">
+                <div className="space-y-1.5">
+                  {teaserItems.map((item) => (
                     <div
-                      key={item.id}
-                      className="flex items-center justify-between text-left"
+                      key={item.prefix}
+                      className="flex items-center justify-between py-1.5 border-b border-[#F0F0F0] last:border-b-0 text-left"
                     >
-                      <div className="min-w-0 pr-2">
-                        <p className="text-[13px] font-semibold text-[#1A1A1A] truncate">
-                          {item.name}
-                        </p>
-                        <p className="text-[11.5px] text-[#6B7280]">
-                          Impacto em 12 meses: R$ {formatBRL(item.yearlyImpact || item.monthlyAmount * 12)}/ano
-                        </p>
+                      <div className="flex items-center gap-1.5 min-w-0 pr-2">
+                        <span className="text-[12.5px] font-semibold text-[#1A1A1A] shrink-0">
+                          {item.prefix}
+                        </span>
+                        <span className="text-[12.5px] font-medium text-[#1A1A1A] truncate">
+                          [{item.categoryTag}]{" "}
+                          <span className="filter blur-[4px] select-none pointer-events-none opacity-80">
+                            {item.blurredName}
+                          </span>
+                        </span>
                       </div>
-                      <span className="text-[13.5px] font-bold text-[#E5484D] tabular-nums shrink-0">
-                        R$ {formatBRL(item.monthlyAmount)}/mês
+                      <span className="text-[12.5px] font-bold text-[#E5484D] tabular-nums shrink-0 whitespace-nowrap">
+                        — R$ {formatBRL(item.amount)}
                       </span>
                     </div>
                   ))}
                 </div>
 
-                <div className="absolute inset-0 flex items-center justify-center bg-white/40 backdrop-blur-[1px]">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1A1A1A] text-white text-[11.5px] font-semibold shadow-sm">
-                    <LockSmallIcon className="w-3.5 h-3.5 text-[#00C853]" />
-                    <span>Conteúdo bloqueado • Desbloqueie o relatório</span>
-                  </span>
-                </div>
+                {/* Botão preto estático logo abaixo das 3 linhas */}
+                <button
+                  type="button"
+                  onClick={onUnlockEconomyReport || onSaveToVault}
+                  className="w-full mt-3 min-h-[40px] rounded-[10px] bg-[#1A1A1A] hover:bg-[#2A2A2A] text-white text-[12px] font-semibold py-2 px-3 flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-sm"
+                >
+                  <LockSmallIcon className="w-3.5 h-3.5 text-[#00C853]" />
+                  <span>Conteúdo bloqueado • Desbloqueie o relatório</span>
+                </button>
               </div>
             </div>
           ) : (
@@ -443,7 +497,7 @@ export function ResultScreen({
               </div>
 
               <ul className="space-y-2.5">
-                {displayEconomyItems.map((item) => (
+                {effectiveEconomyList.map((item) => (
                   <li
                     key={item.id}
                     className="rounded-[14px] bg-white border border-[#E5E5E5] p-3 text-left shadow-[0_1px_2px_rgba(0,0,0,0.03)]"
@@ -586,7 +640,7 @@ export function ResultScreen({
       {/* Rodapé de Ações */}
       <div className="mt-6 space-y-2.5">
         {/* Botão Verde Principal */}
-        {savingsAmount === 0 || isSubscribed ? (
+        {isSubscribed ? (
           <button
             type="button"
             onClick={onSaveToVault}

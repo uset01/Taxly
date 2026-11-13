@@ -51,8 +51,8 @@ export function PaywallScreen({ onBack, onSubscribe }: PaywallScreenProps) {
   return (
     <section
       aria-label="Planos e assinatura taxly"
-      style={{ paddingBottom: "130px" }}
-      className="pt-1 text-left"
+      style={{ paddingBottom: "7rem" }}
+      className="pt-1 text-left pb-28"
     >
       {/* Header com seta de retorno, frase âncora e subtítulo */}
       <header>

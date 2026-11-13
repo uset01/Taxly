@@ -33,8 +33,8 @@ export function PartialResultScreen({
     <>
       <section
         aria-label="Resultado parcial da análise"
-        style={{ paddingBottom: "130px" }}
-        className="pt-1 text-left"
+        style={{ paddingBottom: "7rem" }}
+        className="pt-1 text-left pb-28"
       >
         {/* Header: Selo pequeno + Valor grande com count-up + Subtítulo */}
         <header>
