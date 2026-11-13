@@ -23,15 +23,15 @@ const PLAN_OPTIONS: PlanOption[] = [
   {
     id: "annual",
     title: "Anual",
-    priceMain: "R$ 119,90",
+    priceMain: "R$ 179,90",
     pricePeriod: "/ano",
     badge: "MAIS ECONÔMICO",
-    highlightNote: "Equivale a R$ 9,99/mês — 50% OFF",
+    highlightNote: "Equivale a R$ 14,99/mês — 50% OFF",
   },
   {
     id: "monthly",
     title: "Mensal",
-    priceMain: "R$ 19,90",
+    priceMain: "R$ 29,90",
     pricePeriod: "/mês",
   },
 ];

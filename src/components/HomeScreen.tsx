@@ -15,6 +15,7 @@ import {
   SearchIcon,
   ShareDownloadIcon,
   TrashIcon,
+  UserIcon,
 } from "@/components/icons";
 import { PartialResultScreen } from "@/components/PartialResultScreen";
 import { BillingPlanId, PaywallScreen } from "@/components/PaywallScreen";
@@ -24,6 +25,8 @@ import {
   ProfileMenu,
 } from "@/components/ProfileMenu";
 import { ResultScreen } from "@/components/ResultScreen";
+import { LiveCounter } from "@/components/LiveCounter";
+import { ConnectBankScreen } from "@/components/ConnectBankScreen";
 import {
   Charge,
   UNLOCKED_PARTIAL_CHARGES,
@@ -45,7 +48,8 @@ export type ScreenState =
   | "analyzing"
   | "partialResult"
   | "paywall"
-  | "result";
+  | "result"
+  | "connectBank";
 
 const RESOLVED_STORAGE_KEY = "vazamentozero:resolved_charge_ids";
 
@@ -171,6 +175,7 @@ export function HomeScreen() {
   const [analysisProgress, setAnalysisProgress] = useState<number>(0);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [statusBanner, setStatusBanner] = useState<string | null>(null);
+  const [auditLevel, setAuditLevel] = useState<number>(1);
 
   // States do Cofre de Comprovantes
   const [vaultReceipts, setVaultReceipts] = useState<VaultReceiptItem[]>(
@@ -249,6 +254,7 @@ export function HomeScreen() {
         result.analysisData ?? analyzeDocumentContent(file.name);
       setCurrentAnalysisData(analysis);
       setCharges(hydratedCharges);
+      setAuditLevel((prev) => Math.min(3, prev + 1));
       setScreenState("result");
     } catch (err) {
       if (err instanceof InvoiceAnalysisError) {
@@ -520,7 +526,9 @@ export function HomeScreen() {
 
   const totalVaultFilesCount = 8 + vaultReceipts.length;
   const isPaywallFlowScreen =
-    screenState === "partialResult" || screenState === "paywall";
+    screenState === "partialResult" ||
+    screenState === "paywall" ||
+    screenState === "connectBank";
   const resolvedTheme =
     appearanceMode === "dark" || (appearanceMode === "system" && systemDark)
       ? "dark"
@@ -603,31 +611,21 @@ export function HomeScreen() {
             >
               {/* Headline, Subtítulo & Prova Social */}
               <div>
-                <h1 className="text-[36px] sm:text-[38px] leading-[1.06] tracking-[-0.035em] font-bold text-left break-words">
-                  <span className="text-[#0F0F0F]">
-                    Você pode estar pagando por algo que{" "}
-                  </span>
-                  <span className="text-[#BDBDBD]">não usa.</span>
-                </h1>
-                <p className="mt-3 text-[14.5px] leading-[1.45] text-[#8E8E93] font-normal text-left">
-                  Envie uma fatura, extrato ou comprovante e descubra cobranças
-                  duplicadas e tarifas escondidas em segundos.
-                </p>
-                <div className="mt-4 text-left">
-                  <p className="text-[17px] sm:text-[18px] font-semibold text-[#1A1A1A] leading-[1.3]">
-                    Quanto você pagou de tarifa esse mês?
-                  </p>
-                  <p className="text-[14.5px] font-normal text-[#8E8E93] leading-[1.4] mt-0.5">
-                    Ninguém sabe de cor. Agora você vai saber.
-                  </p>
+                {/* Contador animado no topo (Task 1) */}
+                <div className="mb-3.5">
+                  <LiveCounter />
                 </div>
 
-                {/* Gatilho de valor / Prova social */}
-                <div className="mt-4 rounded-[14px] bg-[#F5F5F5] border border-[#EAEAEA] p-3 text-left">
-                  <p className="text-[13.5px] leading-snug text-[#1A1A1A] font-medium">
-                    <span className="text-[#00A844] font-bold">R$ 184,70/mês</span> em média recuperados pelos usuários em cobranças ocultas e tarifas.
-                  </p>
-                </div>
+                <h1 className="text-[34px] sm:text-[38px] leading-[1.06] tracking-[-0.035em] font-bold text-left break-words">
+                  <span className="text-[#0F0F0F] dark:text-white">
+                    Você pode estar pagando por algo que{" "}
+                  </span>
+                  <span className="text-[#BDBDBD] dark:text-[#71717A]">não usa.</span>
+                </h1>
+
+                <p className="mt-3 text-[14.5px] leading-[1.45] text-[#6B7280] dark:text-[#A1A1AA] font-normal text-left">
+                  Em média, encontramos R$ 340 escondidos por mês em extratos de brasileiros. Quanto você está deixando passar?
+                </p>
               </div>
 
               {/* Card de Upload cinza-claro original com botão quadrado verde + */}
@@ -635,15 +633,15 @@ export function HomeScreen() {
                 <div
                   role="status"
                   aria-live="polite"
-                  className="mt-5 w-full rounded-[28px] bg-[#F5F5F5] py-8 px-6 flex flex-col items-center justify-center text-center"
+                  className="mt-5 w-full rounded-[28px] bg-[#F5F5F5] dark:bg-[#1E1E20] py-8 px-6 flex flex-col items-center justify-center text-center"
                 >
                   <div className="w-[58px] h-[58px] rounded-[18px] bg-[#22C55E] text-[#0A2914] flex items-center justify-center mb-3 animate-pulse">
                     <DocumentScannerIcon className="w-6 h-6" />
                   </div>
-                  <p className="text-[15px] font-semibold text-[#111111]">
+                  <p className="text-[15px] font-semibold text-[#111111] dark:text-white">
                     Varrendo documento e mascarando dados sensíveis...
                   </p>
-                  <div className="mt-3.5 w-44 h-1.5 rounded-full bg-[#E5E5E5] overflow-hidden">
+                  <div className="mt-3.5 w-44 h-1.5 rounded-full bg-[#E5E5E5] dark:bg-[#333] overflow-hidden">
                     <div className="h-full w-2/3 rounded-full bg-[#22C55E] animate-pulse" />
                   </div>
                 </div>
@@ -655,14 +653,14 @@ export function HomeScreen() {
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
                   className={`group mt-5 w-full rounded-[28px] py-7 px-6 flex flex-col items-center justify-center text-center transition-colors cursor-pointer select-none ${isDragging
-                      ? "bg-[#EBEBEB]"
-                      : "bg-[#F5F5F5] hover:bg-[#EFEFEF] active:bg-[#E8E8E8]"
+                      ? "bg-[#EBEBEB] dark:bg-[#2A2A2A]"
+                      : "bg-[#F5F5F5] dark:bg-[#1C1C1E] hover:bg-[#EFEFEF] dark:hover:bg-[#242426] active:bg-[#E8E8E8]"
                     }`}
                 >
-                  <div className="cta-plus-button w-[58px] h-[58px] rounded-[18px] bg-[#22C55E] group-active:bg-[#00A047] active:bg-[#00A047] text-[#0A2914] flex items-center justify-center mb-3">
+                  <div className="cta-plus-button w-[58px] h-[58px] rounded-[18px] bg-[#22C55E] group-active:bg-[#00A047] active:bg-[#00A047] text-[#0A2914] flex items-center justify-center mb-3 shadow-sm">
                     <PlusIcon className="w-6 h-6" />
                   </div>
-                  <span className="text-[17px] font-semibold tracking-[-0.02em] text-[#111111]">
+                  <span className="text-[17px] font-semibold tracking-[-0.02em] text-[#111111] dark:text-white">
                     Enviar arquivo
                   </span>
                   <span className="text-[13.5px] text-[#8E8E93] mt-1">
@@ -673,6 +671,16 @@ export function HomeScreen() {
                   </span>
                 </label>
               )}
+
+              {/* Botão secundário abaixo do CTA de upload (Task 1 e 6) */}
+              <button
+                type="button"
+                onClick={() => setScreenState("connectBank")}
+                className="mt-3 w-full min-h-[46px] rounded-[16px] bg-[#FAFAFA] dark:bg-[#1E1E20] hover:bg-[#F0F0F0] dark:hover:bg-[#28282A] text-[#111111] dark:text-white text-[13.5px] font-semibold px-4 flex items-center justify-center gap-2 transition-colors cursor-pointer border border-[#EAEAEA] dark:border-[#2C2C2E]"
+              >
+                <span>Não tem a fatura em mãos? Conecte seu banco</span>
+                <span className="text-[#00C853] font-bold">→</span>
+              </button>
 
               {/* Checklist + Nota de Privacidade */}
               <ul
@@ -1014,6 +1022,19 @@ export function HomeScreen() {
             </section>
           )}
 
+          {screenState === "connectBank" && (
+            <ConnectBankScreen
+              onBack={() => setScreenState("empty")}
+              onSelectManualFile={() => {
+                setScreenState("empty");
+                if (fileInputRef.current) {
+                  fileInputRef.current.value = "";
+                  fileInputRef.current.click();
+                }
+              }}
+            />
+          )}
+
           {screenState === "partialResult" && (
             <PartialResultScreen
               onUnlock={() => setScreenState("paywall")}
@@ -1023,7 +1044,7 @@ export function HomeScreen() {
 
           {screenState === "paywall" && (
             <PaywallScreen
-              onBack={() => setScreenState("partialResult")}
+              onBack={() => setScreenState("result")}
               onSubscribe={handleSubscribePlan}
             />
           )}
@@ -1032,6 +1053,7 @@ export function HomeScreen() {
             <ResultScreen
               data={currentAnalysisData}
               isSubscribed={isSubscribed}
+              auditLevel={auditLevel}
               onSaveToVault={handleSaveResultToVault}
               onSendAnotherFile={handleSendAnotherInvoice}
               onUnlockEconomyReport={() => setScreenState("paywall")}
@@ -1039,44 +1061,111 @@ export function HomeScreen() {
           )}
         </main>
 
-        {/* Barra Flutuante Inferior (Home e Histórico) */}
-        <nav
-          aria-label="Navegação principal"
-          style={{ position: "fixed" }}
-          className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 rounded-full bg-white/95 backdrop-blur-md px-2.5 py-2 border border-[#F0F0F0] flex items-center gap-2"
-        >
-          <button
-            type="button"
-            aria-label="Início"
-            onClick={() => {
-              setScreenState("empty");
-              setActiveTab("home");
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-            className={`w-[44px] h-[44px] rounded-full flex items-center justify-center transition-colors cursor-pointer ${screenState !== "empty" || activeTab === "home"
-                ? "bg-[#141414] text-white"
-                : "bg-transparent hover:bg-[#F5F5F5] active:bg-[#EAEAEA] text-[#141414]"
-              }`}
+        {/* Barra Flutuante Inferior com Rótulos e FAB centralizado (Task 7) */}
+        {!isPaywallFlowScreen && (
+          <nav
+            aria-label="Navegação principal"
+            style={{ position: "fixed" }}
+            className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-2rem)] max-w-[400px] rounded-full bg-white/95 dark:bg-[#1A1A1A]/95 backdrop-blur-md px-3 py-2 border border-[#F0F0F0] dark:border-[#2E2E30] shadow-xl flex items-center justify-between"
           >
-            <HomeIcon className="w-5 h-5" />
-          </button>
+            {/* 1. Início */}
+            <button
+              type="button"
+              onClick={() => {
+                setScreenState("empty");
+                setActiveTab("home");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              className={`flex-1 py-1 flex flex-col items-center justify-center gap-0.5 rounded-full transition-colors cursor-pointer ${
+                screenState === "empty" && activeTab === "home"
+                  ? "text-[#111111] dark:text-white font-bold"
+                  : "text-[#8E8E93] hover:text-[#111111] dark:hover:text-white font-medium"
+              }`}
+            >
+              <HomeIcon className="w-4 h-4" />
+              <span className="text-[10.5px]">Início</span>
+            </button>
 
-          <button
-            type="button"
-            aria-label="Histórico"
-            onClick={() => {
-              setScreenState("empty");
-              setActiveTab("vault");
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-            className={`w-[44px] h-[44px] rounded-full flex items-center justify-center transition-colors cursor-pointer ${screenState === "empty" && activeTab === "vault"
-                ? "bg-[#141414] text-white"
-                : "bg-transparent hover:bg-[#F5F5F5] active:bg-[#EAEAEA] text-[#141414]"
+            {/* 2. Histórico */}
+            <button
+              type="button"
+              onClick={() => {
+                setScreenState("empty");
+                setActiveTab("vault");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              className={`flex-1 py-1 flex flex-col items-center justify-center gap-0.5 rounded-full transition-colors cursor-pointer ${
+                screenState === "empty" && activeTab === "vault"
+                  ? "text-[#111111] dark:text-white font-bold"
+                  : "text-[#8E8E93] hover:text-[#111111] dark:hover:text-white font-medium"
               }`}
-          >
-            <HistoryIcon className="w-5 h-5" />
-          </button>
-        </nav>
+            >
+              <HistoryIcon className="w-4 h-4" />
+              <span className="text-[10.5px]">Histórico</span>
+            </button>
+
+            {/* 3. FAB Centralizado (+) */}
+            <div className="relative px-1 -mt-5 flex items-center justify-center">
+              <button
+                type="button"
+                aria-label="Enviar novo arquivo"
+                onClick={() => {
+                  if (fileInputRef.current) {
+                    fileInputRef.current.value = "";
+                    fileInputRef.current.click();
+                  }
+                }}
+                className="w-[52px] h-[52px] rounded-full bg-[#00C853] hover:bg-[#00B54B] active:bg-[#00A047] text-white flex items-center justify-center shadow-lg border-[3.5px] border-white dark:border-[#1A1A1A] transition-transform active:scale-95 cursor-pointer"
+              >
+                <PlusIcon className="w-6 h-6 stroke-[2.5]" />
+              </button>
+            </div>
+
+            {/* 4. Análises (com badge 2 anexado) */}
+            <button
+              type="button"
+              onClick={() => {
+                if (currentAnalysisData) {
+                  setScreenState("result");
+                } else {
+                  setActiveTab("vault");
+                  setScreenState("empty");
+                }
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              className={`flex-1 py-1 flex flex-col items-center justify-center gap-0.5 rounded-full transition-colors cursor-pointer ${
+                screenState === "result"
+                  ? "text-[#111111] dark:text-white font-bold"
+                  : "text-[#8E8E93] hover:text-[#111111] dark:hover:text-white font-medium"
+              }`}
+            >
+              <div className="relative flex items-center justify-center">
+                <DocumentScannerIcon className="w-4 h-4" />
+                <span className="absolute -top-1 -right-2.5 w-3.5 h-3.5 rounded-full bg-[#00C853] text-[9px] font-bold text-black flex items-center justify-center">
+                  2
+                </span>
+              </div>
+              <span className="text-[10.5px]">Análises</span>
+            </button>
+
+            {/* 5. Perfil */}
+            <button
+              type="button"
+              onClick={() => {
+                const profileBtn = document.querySelector(
+                  'button[aria-label="Abrir perfil e opções da conta"]'
+                ) as HTMLButtonElement | null;
+                if (profileBtn) {
+                  profileBtn.click();
+                }
+              }}
+              className="flex-1 py-1 flex flex-col items-center justify-center gap-0.5 rounded-full text-[#8E8E93] hover:text-[#111111] dark:hover:text-white font-medium transition-colors cursor-pointer"
+            >
+              <UserIcon className="w-4 h-4" />
+              <span className="text-[10.5px]">Perfil</span>
+            </button>
+          </nav>
+        )}
 
         {/* Modal / Bottom Sheet de Detalhes do Documento */}
         {selectedModalReceipt && (
