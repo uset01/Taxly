@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   AnalysisSummaryData,
   analyzeDocumentContent,
-  DEFAULT_SAMPLE_ECONOMY_ITEMS,
   DocumentTransaction,
   EconomyItem,
 } from "@/lib/detect-charges";
@@ -677,7 +676,7 @@ Responda SOMENTE em formato JSON estrito:
         ? (parsed.economyItems as Record<string, unknown>[])
         : [];
 
-      let economyItems: EconomyItem[] = rawEconomyItems
+      const economyItems: EconomyItem[] = rawEconomyItems
         .map((item, idx) => {
           const monthly = parseAmount(item.monthlyAmount || item.amount);
           const yearly =

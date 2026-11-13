@@ -190,12 +190,6 @@ export function ProfileMenu({
     },
   };
 
-  const loggedOutSecondaryItems: MenuItemConfig[] = [
-    sharedSecondaryItems.privacy,
-    sharedSecondaryItems.help,
-    sharedSecondaryItems.appearance,
-  ];
-
   const loggedInGroups: MenuItemConfig[][] = [
     // Grupo 1: [Meu plano, Enviar outra fatura]
     [
@@ -384,11 +378,6 @@ export function ProfileMenu({
                     <span>Criar conta grátis</span>
                   </button>
                 </div>
-
-                <hr className="my-1.5 border-t border-[#E5E5E5]" />
-
-                {/* Opções secundárias */}
-                {loggedOutSecondaryItems.map(renderMenuItemRow)}
               </>
             ) : (
               <div className="space-y-1">

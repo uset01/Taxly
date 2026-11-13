@@ -13,7 +13,6 @@ import {
 import { formatBRL } from "@/data/charges";
 import {
   AnalysisSummaryData,
-  DEFAULT_SAMPLE_ECONOMY_ITEMS,
   EconomyItem,
 } from "@/lib/detect-charges";
 import { useCountUp } from "@/lib/use-count-up";

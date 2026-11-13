@@ -462,11 +462,11 @@ export function HomeScreen() {
       prev.map((item) =>
         item.id === id
           ? {
-              ...item,
-              tag: newTag,
-              isHealthIR:
-                newTag === "#Saúde" || newTag === "#ImpostoDeRenda",
-            }
+            ...item,
+            tag: newTag,
+            isHealthIR:
+              newTag === "#Saúde" || newTag === "#ImpostoDeRenda",
+          }
           : item
       )
     );
@@ -533,9 +533,8 @@ export function HomeScreen() {
     >
       <div
         style={{ paddingBottom: isPaywallFlowScreen ? "0px" : "140px" }}
-        className={`mx-auto w-full max-w-[430px] min-w-0 min-h-screen bg-white relative ${
-          isPaywallFlowScreen ? "" : "pb-[140px]"
-        }`}
+        className={`mx-auto w-full max-w-[430px] min-w-0 min-h-screen bg-white relative ${isPaywallFlowScreen ? "" : "pb-[140px]"
+          }`}
       >
         {/* Top Row: Logo taxly + Ícone de perfil */}
         <header className="px-6 pt-5 pb-2 flex items-center justify-between">
@@ -648,11 +647,10 @@ export function HomeScreen() {
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
-                  className={`group mt-5 w-full rounded-[28px] py-7 px-6 flex flex-col items-center justify-center text-center transition-colors cursor-pointer select-none ${
-                    isDragging
+                  className={`group mt-5 w-full rounded-[28px] py-7 px-6 flex flex-col items-center justify-center text-center transition-colors cursor-pointer select-none ${isDragging
                       ? "bg-[#EBEBEB]"
                       : "bg-[#F5F5F5] hover:bg-[#EFEFEF] active:bg-[#E8E8E8]"
-                  }`}
+                    }`}
                 >
                   <div className="cta-plus-button w-[58px] h-[58px] rounded-[18px] bg-[#22C55E] group-active:bg-[#00A047] active:bg-[#00A047] text-[#0A2914] flex items-center justify-center mb-3">
                     <PlusIcon className="w-6 h-6" />
@@ -757,11 +755,10 @@ export function HomeScreen() {
                       role="tab"
                       aria-selected={isActive}
                       onClick={() => setActiveVaultCategory(pill)}
-                      className={`px-3.5 py-1.5 rounded-full text-[12.5px] font-medium whitespace-nowrap transition-colors shrink-0 cursor-pointer ${
-                        isActive
+                      className={`px-3.5 py-1.5 rounded-full text-[12.5px] font-medium whitespace-nowrap transition-colors shrink-0 cursor-pointer ${isActive
                           ? "bg-[#141414] text-white"
                           : "bg-[#F5F5F5] text-[#52525B] hover:bg-[#EAEAEA]"
-                      }`}
+                        }`}
                     >
                       {pill}
                     </button>
@@ -935,13 +932,12 @@ export function HomeScreen() {
                         >
                           <span
                             aria-hidden="true"
-                            className={`w-[22px] h-[22px] rounded-full flex items-center justify-center shrink-0 transition-colors ${
-                              isCompleted
+                            className={`w-[22px] h-[22px] rounded-full flex items-center justify-center shrink-0 transition-colors ${isCompleted
                                 ? "bg-[#181B19] text-white"
                                 : isCurrent
                                   ? "border-2 border-[#181B19] bg-white text-[#181B19]"
                                   : "border border-[#C5C3BC] bg-[#FAF9F6] text-transparent"
-                            }`}
+                              }`}
                           >
                             {isCompleted ? (
                               <CheckIcon className="w-3.5 h-3.5" />
@@ -1050,11 +1046,10 @@ export function HomeScreen() {
               setActiveTab("home");
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
-            className={`w-[44px] h-[44px] rounded-full flex items-center justify-center transition-colors cursor-pointer ${
-              screenState !== "empty" || activeTab === "home"
+            className={`w-[44px] h-[44px] rounded-full flex items-center justify-center transition-colors cursor-pointer ${screenState !== "empty" || activeTab === "home"
                 ? "bg-[#141414] text-white"
                 : "bg-transparent hover:bg-[#F5F5F5] active:bg-[#EAEAEA] text-[#141414]"
-            }`}
+              }`}
           >
             <HomeIcon className="w-5 h-5" />
           </button>
@@ -1067,11 +1062,10 @@ export function HomeScreen() {
               setActiveTab("vault");
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
-            className={`w-[44px] h-[44px] rounded-full flex items-center justify-center transition-colors cursor-pointer ${
-              screenState === "empty" && activeTab === "vault"
+            className={`w-[44px] h-[44px] rounded-full flex items-center justify-center transition-colors cursor-pointer ${screenState === "empty" && activeTab === "vault"
                 ? "bg-[#141414] text-white"
                 : "bg-transparent hover:bg-[#F5F5F5] active:bg-[#EAEAEA] text-[#141414]"
-            }`}
+              }`}
           >
             <HistoryIcon className="w-5 h-5" />
           </button>
@@ -1157,11 +1151,10 @@ export function HomeScreen() {
                             tagOption
                           )
                         }
-                        className={`px-3 py-1.5 rounded-full text-[12px] font-medium transition-colors cursor-pointer ${
-                          isSelectedTag
+                        className={`px-3 py-1.5 rounded-full text-[12px] font-medium transition-colors cursor-pointer ${isSelectedTag
                             ? "bg-[#141414] text-white border border-[#141414]"
                             : "bg-white text-[#4A504C] border border-[#E5E5E0] hover:border-[#141414]/40"
-                        }`}
+                          }`}
                       >
                         {tagOption}
                       </button>
@@ -1223,13 +1216,13 @@ export function HomeScreen() {
 
                     {(selectedModalReceipt.tag === "#Saúde" ||
                       selectedModalReceipt.tag === "#ImpostoDeRenda") && (
-                      <div className="mt-2 pt-2 border-t border-[#F0EFEA] flex items-center justify-between">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#EBF3EE] text-[#1E4635] text-[12px] font-semibold w-full justify-center">
-                          <CheckIcon className="w-3.5 h-3.5" />
-                          <span>Elegível para dedução IRPF</span>
-                        </span>
-                      </div>
-                    )}
+                        <div className="mt-2 pt-2 border-t border-[#F0EFEA] flex items-center justify-between">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#EBF3EE] text-[#1E4635] text-[12px] font-semibold w-full justify-center">
+                            <CheckIcon className="w-3.5 h-3.5" />
+                            <span>Elegível para dedução IRPF</span>
+                          </span>
+                        </div>
+                      )}
                   </div>
                 </div>
               )}
