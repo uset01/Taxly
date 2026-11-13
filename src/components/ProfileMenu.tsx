@@ -334,37 +334,39 @@ export function ProfileMenu({
           <div
             role="menu"
             aria-label="Menu do perfil"
-            className="absolute right-0 mt-2 w-[272px] max-h-[calc(100vh-92px)] overflow-y-auto rounded-[20px] bg-white border border-[#EAEAEA] p-2 z-50"
+            className={`absolute right-0 mt-2 ${
+              !isLoggedIn ? "w-[240px]" : "w-[272px]"
+            } max-h-[calc(100vh-92px)] overflow-y-auto rounded-[20px] bg-white border border-[#EAEAEA] p-2 z-50 shadow-lg`}
           >
             {!isLoggedIn ? (
               <>
                 {/* Cabeçalho do menu para usuário não logado */}
-                <div className="px-2.5 pt-1.5 pb-3 flex items-start gap-3 text-left">
+                <div className="px-2 pt-1 pb-2.5 flex items-start gap-2.5 text-left">
                   <span
                     aria-hidden="true"
-                    className="w-9 h-9 rounded-full bg-[#F5F5F5] border border-[#EAEAEA] flex items-center justify-center text-[#52525B] shrink-0 mt-0.5"
+                    className="w-8 h-8 rounded-full bg-[#F5F5F5] border border-[#EAEAEA] flex items-center justify-center text-[#52525B] shrink-0 mt-0.5"
                   >
-                    <UserIcon className="w-[18px] h-[18px]" />
+                    <UserIcon className="w-4 h-4" />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-[14.5px] font-bold text-[#1A1A1A] leading-snug">
+                    <p className="text-[14px] font-bold text-[#1A1A1A] leading-snug">
                       Bem-vindo ao Taxly
                     </p>
-                    <p className="mt-0.5 text-[12.5px] text-[#6B7280] leading-snug">
+                    <p className="mt-0.5 text-[12px] text-[#6B7280] leading-snug">
                       Acesse sua conta para salvar suas análises.
                     </p>
                   </div>
                 </div>
 
-                {/* Ações principais */}
-                <div className="px-1.5 pb-1.5 space-y-2">
+                {/* Ações principais compactas lado a lado */}
+                <div className="px-1 pb-1 grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     role="menuitem"
                     onClick={() => openAuthSheet("login")}
-                    className="w-full min-h-[40px] px-3.5 py-2 rounded-[12px] bg-[#00C853] hover:bg-[#00B54B] active:bg-[#00A047] text-white text-[13.5px] font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                    className="min-h-[38px] px-2 py-1.5 rounded-[12px] bg-[#00C853] hover:bg-[#00B54B] active:bg-[#00A047] text-white text-[13px] font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                   >
-                    <LogInIcon className="w-4 h-4 shrink-0" />
+                    <LogInIcon className="w-3.5 h-3.5 shrink-0" />
                     <span>Entrar</span>
                   </button>
 
@@ -372,9 +374,9 @@ export function ProfileMenu({
                     type="button"
                     role="menuitem"
                     onClick={() => openAuthSheet("signup")}
-                    className="w-full min-h-[40px] px-3.5 py-2 rounded-[12px] bg-[#FAFAFA] hover:bg-[#F0F0F0] border border-[#EAEAEA] text-[#1A1A1A] text-[13.5px] font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                    className="min-h-[38px] px-2 py-1.5 rounded-[12px] bg-[#FAFAFA] hover:bg-[#F0F0F0] border border-[#EAEAEA] text-[#1A1A1A] text-[13px] font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                   >
-                    <UserPlusIcon className="w-4 h-4 text-[#52525B] shrink-0" />
+                    <UserPlusIcon className="w-3.5 h-3.5 text-[#52525B] shrink-0" />
                     <span>Criar</span>
                   </button>
                 </div>
