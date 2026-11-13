@@ -669,17 +669,6 @@ export function HomeScreen() {
                 </label>
               )}
 
-              {/* Acesso rápido para testar com dados de exemplo */}
-              <div className="mt-2.5 text-center">
-                <button
-                  type="button"
-                  onClick={() => handleSimulatedVaultUpload()}
-                  className="text-[12.5px] text-[#6B7280] hover:text-[#00C853] underline underline-offset-4 transition-colors cursor-pointer"
-                >
-                  Ou ver exemplo com tarifas encontradas (R$ 42,30)
-                </button>
-              </div>
-
               {/* Checklist + Nota de Privacidade */}
               <ul
                 aria-label="Benefícios da análise de fatura"
