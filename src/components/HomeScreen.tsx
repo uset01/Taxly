@@ -15,7 +15,6 @@ import {
   SearchIcon,
   ShareDownloadIcon,
   TrashIcon,
-  UserIcon,
 } from "@/components/icons";
 import { PartialResultScreen } from "@/components/PartialResultScreen";
 import { BillingPlanId, PaywallScreen } from "@/components/PaywallScreen";
@@ -1061,12 +1060,12 @@ export function HomeScreen() {
           )}
         </main>
 
-        {/* Barra Flutuante Inferior com Rótulos e FAB centralizado (Task 7) */}
+        {/* Barra Flutuante Inferior (Início, Histórico, Análises) */}
         {!isPaywallFlowScreen && (
           <nav
             aria-label="Navegação principal"
             style={{ position: "fixed" }}
-            className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-2rem)] max-w-[400px] rounded-full bg-white/95 dark:bg-[#1A1A1A]/95 backdrop-blur-md px-3 py-2 border border-[#F0F0F0] dark:border-[#2E2E30] shadow-xl flex items-center justify-between"
+            className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 w-[280px] max-w-[calc(100%-2rem)] rounded-full bg-white/95 dark:bg-[#1A1A1A]/95 backdrop-blur-md px-3 py-2 border border-[#F0F0F0] dark:border-[#2E2E30] shadow-xl flex items-center justify-around"
           >
             {/* 1. Início */}
             <button
@@ -1104,24 +1103,7 @@ export function HomeScreen() {
               <span className="text-[10.5px]">Histórico</span>
             </button>
 
-            {/* 3. FAB Centralizado (+) */}
-            <div className="relative px-1 -mt-5 flex items-center justify-center">
-              <button
-                type="button"
-                aria-label="Enviar novo arquivo"
-                onClick={() => {
-                  if (fileInputRef.current) {
-                    fileInputRef.current.value = "";
-                    fileInputRef.current.click();
-                  }
-                }}
-                className="w-[52px] h-[52px] rounded-full bg-[#00C853] hover:bg-[#00B54B] active:bg-[#00A047] text-white flex items-center justify-center shadow-lg border-[3.5px] border-white dark:border-[#1A1A1A] transition-transform active:scale-95 cursor-pointer"
-              >
-                <PlusIcon className="w-6 h-6 stroke-[2.5]" />
-              </button>
-            </div>
-
-            {/* 4. Análises (com badge 2 anexado) */}
+            {/* 3. Análises (com badge 2 anexado) */}
             <button
               type="button"
               onClick={() => {
@@ -1146,23 +1128,6 @@ export function HomeScreen() {
                 </span>
               </div>
               <span className="text-[10.5px]">Análises</span>
-            </button>
-
-            {/* 5. Perfil */}
-            <button
-              type="button"
-              onClick={() => {
-                const profileBtn = document.querySelector(
-                  'button[aria-label="Abrir perfil e opções da conta"]'
-                ) as HTMLButtonElement | null;
-                if (profileBtn) {
-                  profileBtn.click();
-                }
-              }}
-              className="flex-1 py-1 flex flex-col items-center justify-center gap-0.5 rounded-full text-[#8E8E93] hover:text-[#111111] dark:hover:text-white font-medium transition-colors cursor-pointer"
-            >
-              <UserIcon className="w-4 h-4" />
-              <span className="text-[10.5px]">Perfil</span>
             </button>
           </nav>
         )}
