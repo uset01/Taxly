@@ -365,7 +365,7 @@ export function ProfileMenu({
                     className="w-full min-h-[40px] px-3.5 py-2 rounded-[12px] bg-[#00C853] hover:bg-[#00B54B] active:bg-[#00A047] text-white text-[13.5px] font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
                   >
                     <LogInIcon className="w-4 h-4 shrink-0" />
-                    <span>Entrar na minha conta</span>
+                    <span>Entrar</span>
                   </button>
 
                   <button
@@ -375,7 +375,7 @@ export function ProfileMenu({
                     className="w-full min-h-[40px] px-3.5 py-2 rounded-[12px] bg-[#FAFAFA] hover:bg-[#F0F0F0] border border-[#EAEAEA] text-[#1A1A1A] text-[13.5px] font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
                   >
                     <UserPlusIcon className="w-4 h-4 text-[#52525B] shrink-0" />
-                    <span>Criar conta grátis</span>
+                    <span>Criar</span>
                   </button>
                 </div>
               </>
