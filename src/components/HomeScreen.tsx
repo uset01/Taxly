@@ -1060,52 +1060,53 @@ export function HomeScreen() {
           )}
         </main>
 
-        {/* Barra Flutuante Inferior (Início, Histórico, Análises) */}
+        {/* Barra Flutuante Inferior (Apenas ícones compactos) */}
         {!isPaywallFlowScreen && (
           <nav
             aria-label="Navegação principal"
             style={{ position: "fixed" }}
-            className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 w-[280px] max-w-[calc(100%-2rem)] rounded-full bg-white/95 dark:bg-[#1A1A1A]/95 backdrop-blur-md px-3 py-2 border border-[#F0F0F0] dark:border-[#2E2E30] shadow-xl flex items-center justify-around"
+            className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 rounded-full bg-white/95 dark:bg-[#1A1A1A]/95 backdrop-blur-md p-1.5 border border-[#F0F0F0] dark:border-[#2E2E30] shadow-xl flex items-center gap-1"
           >
             {/* 1. Início */}
             <button
               type="button"
+              aria-label="Início"
               onClick={() => {
                 setScreenState("empty");
                 setActiveTab("home");
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className={`flex-1 py-1 flex flex-col items-center justify-center gap-0.5 rounded-full transition-colors cursor-pointer ${
+              className={`w-[42px] h-[42px] rounded-full flex items-center justify-center transition-colors cursor-pointer ${
                 screenState === "empty" && activeTab === "home"
-                  ? "text-[#111111] dark:text-white font-bold"
-                  : "text-[#8E8E93] hover:text-[#111111] dark:hover:text-white font-medium"
+                  ? "bg-[#141414] dark:bg-white text-white dark:text-[#141414]"
+                  : "bg-transparent hover:bg-[#F5F5F5] dark:hover:bg-[#262626] active:bg-[#EAEAEA] text-[#71717A] dark:text-[#A1A1AA] hover:text-[#111111] dark:hover:text-white"
               }`}
             >
-              <HomeIcon className="w-4 h-4" />
-              <span className="text-[10.5px]">Início</span>
+              <HomeIcon className="w-5 h-5" />
             </button>
 
             {/* 2. Histórico */}
             <button
               type="button"
+              aria-label="Histórico"
               onClick={() => {
                 setScreenState("empty");
                 setActiveTab("vault");
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className={`flex-1 py-1 flex flex-col items-center justify-center gap-0.5 rounded-full transition-colors cursor-pointer ${
+              className={`w-[42px] h-[42px] rounded-full flex items-center justify-center transition-colors cursor-pointer ${
                 screenState === "empty" && activeTab === "vault"
-                  ? "text-[#111111] dark:text-white font-bold"
-                  : "text-[#8E8E93] hover:text-[#111111] dark:hover:text-white font-medium"
+                  ? "bg-[#141414] dark:bg-white text-white dark:text-[#141414]"
+                  : "bg-transparent hover:bg-[#F5F5F5] dark:hover:bg-[#262626] active:bg-[#EAEAEA] text-[#71717A] dark:text-[#A1A1AA] hover:text-[#111111] dark:hover:text-white"
               }`}
             >
-              <HistoryIcon className="w-4 h-4" />
-              <span className="text-[10.5px]">Histórico</span>
+              <HistoryIcon className="w-5 h-5" />
             </button>
 
             {/* 3. Análises (com badge 2 anexado) */}
             <button
               type="button"
+              aria-label="Análises"
               onClick={() => {
                 if (currentAnalysisData) {
                   setScreenState("result");
@@ -1115,19 +1116,16 @@ export function HomeScreen() {
                 }
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className={`flex-1 py-1 flex flex-col items-center justify-center gap-0.5 rounded-full transition-colors cursor-pointer ${
+              className={`relative w-[42px] h-[42px] rounded-full flex items-center justify-center transition-colors cursor-pointer ${
                 screenState === "result"
-                  ? "text-[#111111] dark:text-white font-bold"
-                  : "text-[#8E8E93] hover:text-[#111111] dark:hover:text-white font-medium"
+                  ? "bg-[#141414] dark:bg-white text-white dark:text-[#141414]"
+                  : "bg-transparent hover:bg-[#F5F5F5] dark:hover:bg-[#262626] active:bg-[#EAEAEA] text-[#71717A] dark:text-[#A1A1AA] hover:text-[#111111] dark:hover:text-white"
               }`}
             >
-              <div className="relative flex items-center justify-center">
-                <DocumentScannerIcon className="w-4 h-4" />
-                <span className="absolute -top-1 -right-2.5 w-3.5 h-3.5 rounded-full bg-[#00C853] text-[9px] font-bold text-black flex items-center justify-center">
-                  2
-                </span>
-              </div>
-              <span className="text-[10.5px]">Análises</span>
+              <DocumentScannerIcon className="w-5 h-5" />
+              <span className="absolute top-1.5 right-1.5 w-3.5 h-3.5 rounded-full bg-[#00C853] text-[9px] font-bold text-black flex items-center justify-center leading-none">
+                2
+              </span>
             </button>
           </nav>
         )}
