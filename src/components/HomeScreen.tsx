@@ -1078,7 +1078,7 @@ export function HomeScreen() {
               }}
               className={`w-[42px] h-[42px] rounded-full flex items-center justify-center transition-colors cursor-pointer ${
                 screenState === "empty" && activeTab === "home"
-                  ? "bg-[#141414] dark:bg-white text-white dark:text-[#141414]"
+                  ? "bg-[#F1F2F6] dark:bg-[#2A2A2E] text-[#111111] dark:text-white"
                   : "bg-transparent hover:bg-[#F5F5F5] dark:hover:bg-[#262626] active:bg-[#EAEAEA] text-[#71717A] dark:text-[#A1A1AA] hover:text-[#111111] dark:hover:text-white"
               }`}
             >
@@ -1096,7 +1096,7 @@ export function HomeScreen() {
               }}
               className={`w-[42px] h-[42px] rounded-full flex items-center justify-center transition-colors cursor-pointer ${
                 screenState === "empty" && activeTab === "vault"
-                  ? "bg-[#141414] dark:bg-white text-white dark:text-[#141414]"
+                  ? "bg-[#F1F2F6] dark:bg-[#2A2A2E] text-[#111111] dark:text-white"
                   : "bg-transparent hover:bg-[#F5F5F5] dark:hover:bg-[#262626] active:bg-[#EAEAEA] text-[#71717A] dark:text-[#A1A1AA] hover:text-[#111111] dark:hover:text-white"
               }`}
             >
@@ -1118,7 +1118,7 @@ export function HomeScreen() {
               }}
               className={`relative w-[42px] h-[42px] rounded-full flex items-center justify-center transition-colors cursor-pointer ${
                 screenState === "result"
-                  ? "bg-[#141414] dark:bg-white text-white dark:text-[#141414]"
+                  ? "bg-[#F1F2F6] dark:bg-[#2A2A2E] text-[#111111] dark:text-white"
                   : "bg-transparent hover:bg-[#F5F5F5] dark:hover:bg-[#262626] active:bg-[#EAEAEA] text-[#71717A] dark:text-[#A1A1AA] hover:text-[#111111] dark:hover:text-white"
               }`}
             >
