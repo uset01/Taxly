@@ -675,10 +675,10 @@ export function HomeScreen() {
               <button
                 type="button"
                 onClick={() => setScreenState("connectBank")}
-                className="mt-3 w-full min-h-[46px] rounded-[16px] bg-[#FAFAFA] dark:bg-[#1E1E20] hover:bg-[#F0F0F0] dark:hover:bg-[#28282A] text-[#111111] dark:text-white text-[13.5px] font-semibold px-4 flex items-center justify-center gap-2 transition-colors cursor-pointer border border-[#EAEAEA] dark:border-[#2C2C2E]"
+                className="mt-3 w-full min-h-[46px] rounded-[16px] bg-[#FAFAFA] dark:bg-[#1E1E20] hover:bg-[#F0F0F0] dark:hover:bg-[#28282A] text-[#111111] dark:text-white text-[11.5px] min-[350px]:text-[12px] min-[380px]:text-[12.5px] min-[410px]:text-[13.5px] font-semibold px-2 min-[360px]:px-2.5 sm:px-4 flex items-center justify-center gap-1.5 sm:gap-2 transition-colors cursor-pointer border border-[#EAEAEA] dark:border-[#2C2C2E] whitespace-nowrap"
               >
-                <span>Não tem a fatura em mãos? Conecte seu banco</span>
-                <span className="text-[#00C853] font-bold">→</span>
+                <span className="whitespace-nowrap">Não tem a fatura em mãos? Conecte seu banco</span>
+                <span className="text-[#00C853] font-bold shrink-0">→</span>
               </button>
 
               {/* Checklist + Nota de Privacidade */}

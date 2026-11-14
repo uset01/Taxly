@@ -36,13 +36,13 @@ export function LiveCounter({
     <div
       role="status"
       aria-live="polite"
-      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#00C853]/10 border border-[#00C853]/25 select-none ${className}`}
+      className={`inline-flex items-center gap-1.5 min-[360px]:gap-2 px-2.5 min-[360px]:px-3 py-1.5 rounded-full bg-[#00C853]/10 border border-[#00C853]/25 select-none whitespace-nowrap max-w-full ${className}`}
     >
       <span
         aria-hidden="true"
         className="w-2 h-2 rounded-full bg-[#00C853] shrink-0 animate-ping"
       />
-      <p className="text-[12.5px] sm:text-[13px] font-medium text-[#008A39] dark:text-[#22C55E] tracking-tight leading-none">
+      <p className="text-[11px] min-[350px]:text-[11.5px] min-[380px]:text-[12px] sm:text-[13px] font-medium text-[#008A39] dark:text-[#22C55E] tracking-tight leading-none whitespace-nowrap">
         <span
           className={`font-semibold tabular-nums transition-transform duration-200 inline-block ${
             isPulsing ? "scale-105 text-[#00A844]" : ""
