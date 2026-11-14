@@ -54,7 +54,7 @@ export function AuditLevelBar({
       {safeLevel < 3 ? (
         <div className="flex items-start justify-between gap-3 mt-2">
           <p className="text-[12.5px] leading-snug text-[#4B5563] dark:text-[#A1A1AA]">
-            Envie mais {3 - safeLevel === 1 ? "1 extrato" : `${3 - safeLevel} extratos`} e libere o diagnóstico completo do mês.
+            Envie mais {3 - safeLevel === 1 ? "1 fatura ou extrato" : `${3 - safeLevel} faturas ou extratos`} para encontrar até 3x mais valores ocultos.
           </p>
           {onSendAnother && (
             <button
@@ -89,3 +89,4 @@ export function AuditLevelBar({
     </div>
   );
 }
+

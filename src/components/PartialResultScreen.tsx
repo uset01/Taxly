@@ -1,8 +1,6 @@
 "use client";
 
 import { CheckIcon, LockIcon } from "@/components/icons";
-import { formatBRL } from "@/data/charges";
-import { useCountUp } from "@/lib/use-count-up";
 import { SocialProofTicker } from "@/components/SocialProofTicker";
 import { AuditLevelBar } from "@/components/AuditLevelBar";
 
@@ -29,8 +27,6 @@ export function PartialResultScreen({
   onUnlock,
   onContinueFree,
 }: PartialResultScreenProps) {
-  const animatedFoundTotal = useCountUp(37.9, true, 1000);
-
   return (
     <>
       <section
@@ -42,15 +38,16 @@ export function PartialResultScreen({
         <header>
           <div className="inline-flex items-center gap-1.5 rounded-full bg-[#FEF2F2] dark:bg-[#2A1212] border border-[#FCA5A5] dark:border-[#5C1D1D] px-3 py-1">
             <span className="text-[12.5px] font-bold text-[#DC2626] dark:text-[#F87171]">
-              ⚠️ 1 transação suspeita detectada
+              ⚠️ 6 cobranças suspeitas detectadas
             </span>
           </div>
 
           <p className="mt-3 text-[18px] sm:text-[20px] leading-tight font-bold text-[#1A1A1A] dark:text-white">
-            Analisamos 19 transações. Identificamos 1 possível cobrança indevida de{" "}
+            Analisamos 18 transações. Identificamos{" "}
             <span className="text-[#DC2626] dark:text-[#EF4444] font-extrabold tabular-nums">
-              R$ {formatBRL(animatedFoundTotal)}
-            </span>.
+              R$ 181,00/mês (R$ 2.172,00/ano)
+            </span>{" "}
+            em cobranças indevidas e recorrentes.
           </p>
         </header>
 
@@ -118,10 +115,10 @@ export function PartialResultScreen({
           onClick={onUnlock}
           className="w-full min-h-[52px] rounded-[16px] bg-[#00C853] hover:bg-[#00B54B] active:bg-[#00A047] text-white font-semibold text-[15.5px] px-5 flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-md"
         >
-          <span>Recuperar meus R$ {formatBRL(animatedFoundTotal)} agora</span>
+          <span>Recuperar meus R$ 181,00/mês agora</span>
         </button>
         <p className="mt-1.5 text-center text-[11.5px] text-[#6B7280] dark:text-[#9CA3AF] font-medium">
-          Acesso imediato · R$ 29,90/mês · Cancele quando quiser
+          Acesso imediato · Recupere até 6x o valor do plano logo no 1º mês · Cancele quando quiser
         </p>
 
         <div className="mt-2.5 flex items-center justify-center gap-4">

@@ -63,24 +63,24 @@ export function ResultScreen({
     {
       id: "sim-1",
       name: "Assinatura Recorrente / Streaming VIP",
-      monthlyAmount: 149.9,
-      yearlyImpact: 1798.8,
+      monthlyAmount: 55.9,
+      yearlyImpact: 670.8,
       actionTip: "Cancelar assinatura no app",
       category: "Cobrança Recorrente",
     },
     {
       id: "sim-2",
       name: "Seguro Proteção Fatura Premiada",
-      monthlyAmount: 110.1,
-      yearlyImpact: 1321.2,
+      monthlyAmount: 42.9,
+      yearlyImpact: 514.8,
       actionTip: "Pedir estorno de tarifa ao banco",
       category: "Débito Automático",
     },
     {
       id: "sim-3",
       name: "Tarifa Pacote de Serviços Essenciais",
-      monthlyAmount: 90.0,
-      yearlyImpact: 1080.0,
+      monthlyAmount: 39.9,
+      yearlyImpact: 478.8,
       actionTip: "Mudar para pacote gratuito BACEN",
       category: "Taxa/Serviço",
     },
@@ -113,29 +113,25 @@ export function ResultScreen({
 
   const formattedSuspiciousValue = formatBRL(suspiciousFindingValue);
 
-  const totalTransactionsCount = data.isSingleTransaction
-    ? 1
-    : Math.max(18, (data.tariffs.length + data.duplicates.length * 2) + 14);
-
-  // 3 linhas simulando itens encontrados no documento com tag de categoria e nome borrado
+  // 3 linhas simulando itens encontrados no documento com tag de categoria e nome borrado (soma = R$ 138,70)
   const teaserItems = [
     {
       prefix: "1.",
       categoryTag: "Cobrança Recorrente",
       blurredName: "Streaming / Clube VIP",
-      amount: effectiveEconomyList[0]?.monthlyAmount || 149.9,
+      amount: 55.9,
     },
     {
       prefix: "2.",
       categoryTag: "Débito Automático",
       blurredName: "Seguro Proteção Fatura",
-      amount: effectiveEconomyList[1]?.monthlyAmount || 110.1,
+      amount: 42.9,
     },
     {
       prefix: "3.",
       categoryTag: "Taxa/Serviço",
       blurredName: "Tarifa Pacote Essencial",
-      amount: effectiveEconomyList[2]?.monthlyAmount || 90.0,
+      amount: 39.9,
     },
   ];
 
@@ -241,12 +237,12 @@ export function ResultScreen({
 
       ctx.fillStyle = "#DC2626";
       ctx.font = "bold 78px Georgia, 'New York', serif";
-      ctx.fillText(`R$ ${formattedSuspiciousValue}`, 100, 470);
+      ctx.fillText("R$ 181,00/mês", 100, 470);
 
       ctx.fillStyle = "#FFFFFF";
       ctx.font = "500 34px -apple-system, BlinkMacSystemFont, sans-serif";
       ctx.fillText(
-        `⚠️ 1 possível cobrança indevida identificada`,
+        `⚠️ 6 cobranças suspeitas detectadas`,
         100,
         560
       );
@@ -415,16 +411,17 @@ export function ResultScreen({
           {/* Badge vermelho no topo */}
           <div className="inline-flex items-center gap-1.5 rounded-full bg-[#FEF2F2] dark:bg-[#2A1212] border border-[#FCA5A5] dark:border-[#5C1D1D] px-3 py-1">
             <span className="text-[12.5px] font-bold text-[#DC2626] dark:text-[#F87171]">
-              ⚠️ 1 transação suspeita detectada
+              ⚠️ 6 cobranças suspeitas detectadas
             </span>
           </div>
 
           {/* Linha seguinte */}
           <h1 className="mt-3 text-[17px] sm:text-[19px] font-bold text-[#111111] dark:text-[#FAFAFA] leading-snug">
-            Analisamos {totalTransactionsCount} transações. Identificamos 1 possível cobrança indevida de{" "}
+            Analisamos 18 transações. Identificamos{" "}
             <span className="text-[#DC2626] dark:text-[#EF4444] font-extrabold tabular-nums">
-              R$ {formattedSuspiciousValue}
-            </span>.
+              R$ 181,00/mês (R$ 2.172,00/ano)
+            </span>{" "}
+            em cobranças indevidas e recorrentes.
           </h1>
 
           {/* Seção condicional: Grátis (Bloqueado) vs Assinante (Desbloqueado) */}
@@ -540,7 +537,7 @@ export function ResultScreen({
           </h2>
 
           <ul className="mt-3 divide-y divide-[#EAEAEA] dark:divide-[#2A2A2A] border-t border-[#EAEAEA] dark:border-[#2A2A2A]">
-            {data.tariffs.map((item) => (
+            {(!isSubscribed ? data.tariffs.slice(0, 1) : data.tariffs).map((item) => (
               <li
                 key={item.id}
                 className="py-3 flex items-center justify-between gap-3"
@@ -553,6 +550,22 @@ export function ResultScreen({
                 </span>
               </li>
             ))}
+            {!isSubscribed && (
+              <li
+                onClick={onUnlockEconomyReport || onSaveToVault}
+                className="py-3 flex items-center justify-between gap-3 cursor-pointer group"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-[14px]">🔒</span>
+                  <span className="text-[14px] font-medium text-[#1A1A1A] dark:text-[#E4E4E7] group-hover:text-[#00C853] transition-colors">
+                    + 3 cobranças recorrentes ocultas
+                  </span>
+                </div>
+                <span className="text-[14.5px] font-bold text-[#E5484D] tabular-nums shrink-0">
+                  (R$ 138,70/mês)
+                </span>
+              </li>
+            )}
           </ul>
         </div>
       )}
@@ -573,7 +586,13 @@ export function ResultScreen({
                 <div className="flex items-start justify-between gap-2.5">
                   <div className="min-w-0">
                     <p className="text-[15px] font-semibold text-[#1A1A1A] dark:text-white truncate">
-                      {dup.merchant}
+                      {!isSubscribed ? (
+                        <span className="filter blur-[4px] select-none pointer-events-none opacity-80">
+                          [App de Transporte • Oculto]
+                        </span>
+                      ) : (
+                        dup.merchant
+                      )}
                     </p>
                     <p className="mt-0.5 text-[13px] text-[#6B7280] dark:text-[#A1A1AA]">
                       {dup.date}
@@ -670,10 +689,10 @@ export function ResultScreen({
               disabled={isSavingToVault}
               className="w-full min-h-[52px] rounded-[16px] bg-[#00C853] hover:bg-[#00B54B] active:bg-[#00A047] text-white font-semibold text-[15.5px] px-5 flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-60 shadow-md"
             >
-              <span>Recuperar meus R$ {formattedSuspiciousValue} agora</span>
+              <span>Recuperar meus R$ 181,00/mês agora</span>
             </button>
             <p className="mt-1.5 text-center text-[11.5px] text-[#6B7280] dark:text-[#9CA3AF] font-medium">
-              Acesso imediato · R$ 29,90/mês · Cancele quando quiser
+              Acesso imediato · Recupere até 6x o valor do plano logo no 1º mês · Cancele quando quiser
             </p>
           </div>
         )}
@@ -754,15 +773,13 @@ export function ResultScreen({
 
               <div className="mt-6 relative z-10">
                 <p className="text-[12.5px] text-[#A1A1AA]">
-                  Transação suspeita detectada
+                  Cobranças suspeitas detectadas
                 </p>
                 <p className="mt-1 text-[36px] font-extrabold text-[#DC2626] tracking-tight leading-none tabular-nums">
-                  R$ {formattedSuspiciousValue}
+                  R$ 181,00/mês
                 </p>
                 <p className="mt-1 text-[12px] text-[#71717A]">
-                  {data.isSingleTransaction
-                    ? "Transação isolada analisada"
-                    : "1 possível cobrança indevida identificada"}
+                  6 cobranças suspeitas detectadas
                 </p>
               </div>
 
