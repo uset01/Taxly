@@ -558,24 +558,26 @@ export function HomeScreen() {
             </span>
           </div>
 
-          <ProfileMenu
-            isLoggedIn={isLoggedIn}
-            isSubscribed={isSubscribed}
-            activePlan={activePlan}
-            appearanceMode={appearanceMode}
-            onAuthenticate={handleAuthenticate}
-            onChangeAppearance={handleChangeAppearance}
-            onSendAnotherInvoice={handleSendAnotherInvoice}
-            onOpenHistory={() => {
-              setScreenState("empty");
-              setActiveTab("vault");
-            }}
-            onOpenPaywall={() => setScreenState("paywall")}
-            onCancelSubscription={handleCancelSubscription}
-            onExportAnalyses={handleExportAnalyses}
-            onDeleteData={handleConfirmDeleteData}
-            onSignOut={handleSignOut}
-          />
+          {screenState === "empty" && activeTab === "home" && (
+            <ProfileMenu
+              isLoggedIn={isLoggedIn}
+              isSubscribed={isSubscribed}
+              activePlan={activePlan}
+              appearanceMode={appearanceMode}
+              onAuthenticate={handleAuthenticate}
+              onChangeAppearance={handleChangeAppearance}
+              onSendAnotherInvoice={handleSendAnotherInvoice}
+              onOpenHistory={() => {
+                setScreenState("empty");
+                setActiveTab("vault");
+              }}
+              onOpenPaywall={() => setScreenState("paywall")}
+              onCancelSubscription={handleCancelSubscription}
+              onExportAnalyses={handleExportAnalyses}
+              onDeleteData={handleConfirmDeleteData}
+              onSignOut={handleSignOut}
+            />
+          )}
         </header>
 
         {statusBanner && screenState !== "result" && (
