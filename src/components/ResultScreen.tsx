@@ -697,22 +697,13 @@ export function ResultScreen({
           </div>
         )}
 
-        {/* 1º: Analisar Fatura Completa (ANTES) */}
+        {/* Analisar Fatura Completa */}
         <button
           type="button"
           onClick={onSendAnotherFile}
           className="w-full min-h-[46px] rounded-[14px] bg-[#F5F5F5] dark:bg-[#1E1E20] hover:bg-[#ECECEC] active:bg-[#E0E0E0] text-[#111111] dark:text-[#FAFAFA] text-[14px] font-semibold px-4 flex items-center justify-center gap-2 transition-colors cursor-pointer border border-[#E5E5E5] dark:border-[#2D2D2D]"
         >
           <span>Analisar Fatura Completa ou Extrato</span>
-        </button>
-
-        {/* 2º: Compartilhar Diagnóstico Parcial (DEPOIS) */}
-        <button
-          type="button"
-          onClick={() => setIsShareModalOpen(true)}
-          className="w-full py-2 text-center text-[13.5px] font-medium text-[#6B7280] dark:text-[#9CA3AF] hover:text-[#111111] dark:hover:text-white underline underline-offset-4 transition-colors cursor-pointer"
-        >
-          Compartilhar Diagnóstico Parcial
         </button>
       </div>
 
