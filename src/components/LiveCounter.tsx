@@ -10,7 +10,7 @@ interface LiveCounterProps {
 
 /**
  * Contador animado de valor recuperado por usuários Taxly este mês.
- * Incrementa periodicamente (~1.5s) com fonte média e tom verde.
+ * Exibido em um retângulo com cantos arredondados (design system taxly) com os números e a frase em verde.
  */
 export function LiveCounter({
   initialValue = 1842300,
@@ -36,20 +36,16 @@ export function LiveCounter({
     <div
       role="status"
       aria-live="polite"
-      className={`inline-flex items-center gap-1.5 min-[360px]:gap-2 px-2.5 min-[360px]:px-3 py-1.5 rounded-full bg-[#00C853]/10 border border-[#00C853]/25 select-none whitespace-nowrap max-w-full ${className}`}
+      className={`w-full min-h-[44px] rounded-[16px] bg-[#FAFAFA] dark:bg-[#1E1E20] border border-[#EAEAEA] dark:border-[#2C2C2E] px-2.5 sm:px-4 py-2.5 flex items-center justify-center text-center select-none whitespace-nowrap shadow-none ${className}`}
     >
-      <span
-        aria-hidden="true"
-        className="w-2 h-2 rounded-full bg-[#00C853] shrink-0 animate-ping"
-      />
-      <p className="text-[11px] min-[350px]:text-[11.5px] min-[380px]:text-[12px] sm:text-[13px] font-medium text-[#008A39] dark:text-[#22C55E] tracking-tight leading-none whitespace-nowrap">
+      <p className="text-[11px] min-[350px]:text-[11.5px] min-[380px]:text-[12px] min-[410px]:text-[13px] font-semibold text-[#00A844] dark:text-[#22C55E] tracking-tight leading-none whitespace-nowrap">
         <span
-          className={`font-semibold tabular-nums transition-transform duration-200 inline-block ${
-            isPulsing ? "scale-105 text-[#00A844]" : ""
+          className={`font-bold tabular-nums transition-transform duration-200 inline-block mr-1.5 ${
+            isPulsing ? "scale-105" : ""
           }`}
         >
           R$ {formatBRL(totalRecovered)}
-        </span>{" "}
+        </span>
         recuperados por usuários taxly este mês
       </p>
     </div>
