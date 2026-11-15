@@ -26,6 +26,7 @@ import {
 import { ResultScreen } from "@/components/ResultScreen";
 import { LiveCounter } from "@/components/LiveCounter";
 import { ConnectBankScreen } from "@/components/ConnectBankScreen";
+import { LossQuizScreen } from "@/components/LossQuizScreen";
 import {
   Charge,
   UNLOCKED_PARTIAL_CHARGES,
@@ -48,7 +49,8 @@ export type ScreenState =
   | "partialResult"
   | "paywall"
   | "result"
-  | "connectBank";
+  | "connectBank"
+  | "quiz";
 
 const RESOLVED_STORAGE_KEY = "vazamentozero:resolved_charge_ids";
 
@@ -527,7 +529,8 @@ export function HomeScreen() {
   const isPaywallFlowScreen =
     screenState === "partialResult" ||
     screenState === "paywall" ||
-    screenState === "connectBank";
+    screenState === "connectBank" ||
+    screenState === "quiz";
   const resolvedTheme =
     appearanceMode === "dark" || (appearanceMode === "system" && systemDark)
       ? "dark"
@@ -673,13 +676,13 @@ export function HomeScreen() {
                 </label>
               )}
 
-              {/* Botão secundário abaixo do CTA de upload (Task 1 e 6) */}
+              {/* Botão secundário: Quiz interativo de cálculo de perda */}
               <button
                 type="button"
-                onClick={() => setScreenState("connectBank")}
-                className="mt-3 w-full min-h-[46px] rounded-[16px] bg-[#FAFAFA] dark:bg-[#1E1E20] hover:bg-[#F0F0F0] dark:hover:bg-[#28282A] text-[#111111] dark:text-white text-[11.5px] min-[350px]:text-[12px] min-[380px]:text-[12.5px] min-[410px]:text-[13.5px] font-semibold px-2 min-[360px]:px-2.5 sm:px-4 flex items-center justify-center gap-1.5 sm:gap-2 transition-colors cursor-pointer border border-[#EAEAEA] dark:border-[#2C2C2E] whitespace-nowrap"
+                onClick={() => setScreenState("quiz")}
+                className="mt-3 w-full min-h-[46px] rounded-[16px] bg-[#FAFAFA] dark:bg-[#1E1E20] hover:bg-[#F0F0F0] dark:hover:bg-[#28282A] text-[#111111] dark:text-white text-[11px] min-[350px]:text-[11.5px] min-[380px]:text-[12px] min-[410px]:text-[13px] font-semibold px-2 min-[360px]:px-2.5 sm:px-4 flex items-center justify-center gap-1.5 sm:gap-2 transition-colors cursor-pointer border border-[#EAEAEA] dark:border-[#2C2C2E] whitespace-nowrap shadow-sm"
               >
-                <span className="whitespace-nowrap">Não tem a fatura em mãos? Conecte seu banco</span>
+                <span className="whitespace-nowrap">Não tem a fatura em mãos? Calcule sua perda em 10s</span>
                 <span className="text-[#00C853] font-bold shrink-0">→</span>
               </button>
 
@@ -1027,6 +1030,33 @@ export function HomeScreen() {
             <ConnectBankScreen
               onBack={() => setScreenState("empty")}
               onSelectManualFile={() => {
+                setScreenState("empty");
+                if (fileInputRef.current) {
+                  fileInputRef.current.value = "";
+                  fileInputRef.current.click();
+                }
+              }}
+            />
+          )}
+
+          {screenState === "quiz" && (
+            <LossQuizScreen
+              onBack={() => setScreenState("empty")}
+              onActivateSubscription={(price) => {
+                setIsSubscribed(true);
+                setActivePlan("monthly");
+                setStatusBanner(
+                  `Plano Promocional Taxly (R$ ${formatBRL(price)}/mês) ativado com sucesso! Envie sua fatura para auditar.`
+                );
+                window.setTimeout(() => setStatusBanner(null), 6000);
+                setScreenState("empty");
+                setActiveTab("home");
+                if (fileInputRef.current) {
+                  fileInputRef.current.value = "";
+                  fileInputRef.current.click();
+                }
+              }}
+              onSendManualFile={() => {
                 setScreenState("empty");
                 if (fileInputRef.current) {
                   fileInputRef.current.value = "";
