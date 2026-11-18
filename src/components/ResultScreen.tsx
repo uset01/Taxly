@@ -2,6 +2,15 @@
 
 import { useRef, useState } from "react";
 import {
+  Copy,
+  FileUp,
+  Info,
+  Landmark,
+  Repeat,
+  Sparkles,
+} from "lucide-react";
+import {
+  AlertCircleIcon,
   CheckIcon,
   CloseIcon,
   CopyIcon,
@@ -20,120 +29,278 @@ import { SocialProofTicker } from "@/components/SocialProofTicker";
 
 interface ResultScreenProps {
   data: AnalysisSummaryData;
+  hasAnalysis?: boolean;
   isSubscribed?: boolean;
+  isLoggedIn?: boolean;
   auditLevel?: number;
+  resolvedChargeIds?: string[];
+  onToggleChargeResolved?: (chargeId: string, nextResolved: boolean) => void;
+  onRequestSignup?: () => void;
   onSaveToVault: () => void;
   onSendAnotherFile: () => void;
+  onTriggerFilePicker?: () => void;
+  onOpenQuiz?: () => void;
   onUnlockEconomyReport?: () => void;
   isSavingToVault?: boolean;
 }
 
+const DEMO_SHOWCASE_ITEMS = [
+  {
+    id: "demo-1",
+    label: "Tarifa de manutenção de conta — R$ 18,90/mês",
+    tag: "Estornável",
+    Icon: Landmark,
+  },
+  {
+    id: "demo-2",
+    label: "Cobrança duplicada no mesmo dia — R$ 29,90",
+    tag: "Duplicidade",
+    Icon: Copy,
+  },
+  {
+    id: "demo-3",
+    label: "Assinatura digital não utilizada — R$ 55,90/mês",
+    tag: "Recorrente",
+    Icon: Repeat,
+  },
+];
+
 export function ResultScreen({
   data,
+  hasAnalysis = true,
   isSubscribed = false,
+  isLoggedIn = false,
   auditLevel = 1,
+  resolvedChargeIds = [],
+  onToggleChargeResolved,
+  onRequestSignup,
   onSaveToVault,
   onSendAnotherFile,
+  onTriggerFilePicker,
+  onOpenQuiz,
   onUnlockEconomyReport,
   isSavingToVault = false,
 }: ResultScreenProps) {
+  const [localResolvedIds, setLocalResolvedIds] = useState<string[]>([]);
+  const [copiedScriptItemId, setCopiedScriptItemId] = useState<string | null>(
+    null
+  );
+
+  const isChargeResolved = (id: string) =>
+    resolvedChargeIds.includes(id) || localResolvedIds.includes(id);
+
+  const handleToggleResolved = (id: string) => {
+    const currentlyResolved = isChargeResolved(id);
+    const nextState = !currentlyResolved;
+    setLocalResolvedIds((prev) =>
+      nextState ? [...prev, id] : prev.filter((item) => item !== id)
+    );
+    onToggleChargeResolved?.(id, nextState);
+  };
+
+  const handleCopyRefundScript = async (item: {
+    id: string;
+    nomeEstabelecimento: string;
+    valorMensal: number;
+    data: string;
+    tag: string;
+  }) => {
+    const scriptText = `Olá! Identifiquei na minha fatura/extrato a cobrança "${item.nomeEstabelecimento}" no valor de R$ ${formatBRL(
+      item.valorMensal
+    )} (${item.data} · ${
+      item.tag
+    }). Solicito o cancelamento imediato e o estorno integral do valor cobrado, conforme o Código de Defesa do Consumidor (Art. 39 e Art. 42) e normas do Banco Central.`;
+
+    try {
+      await navigator.clipboard.writeText(scriptText);
+    } catch {
+      // Fallback silencioso
+    }
+    setCopiedScriptItemId(item.id);
+    window.setTimeout(() => {
+      setCopiedScriptItemId((prev) => (prev === item.id ? null : prev));
+    }, 2500);
+  };
   const animatedTotal = useCountUp(data.totalAttention, true, 1000);
   const hasTariffs = data.tariffs.length > 0;
   const hasDuplicates = data.duplicates.length > 0;
   const hasFindings = hasTariffs || hasDuplicates;
 
-  // Categorias do extrato para cálculo dinâmico
-  const catPix = data.categories?.pix ?? 0;
-  const catDebitos = data.categories?.debitos ?? 0;
-  const catBoletos = data.categories?.boletos ?? 0;
+  // Normaliza a tag específica do problema exatamente para uma das 4 opções exigidas
+  const normalizeProblemTag = (rawCategory?: string, rawName?: string): string => {
+    const combined = `${rawCategory || ""} ${rawName || ""}`.toLowerCase();
+    if (combined.includes("duplic")) return "Cobrança duplicada";
+    if (
+      combined.includes("tarifa") ||
+      combined.includes("juros") ||
+      combined.includes("iof") ||
+      combined.includes("anuidade") ||
+      combined.includes("manuten") ||
+      combined.includes("encargo") ||
+      combined.includes("taxa")
+    ) {
+      return "Tarifa bancária";
+    }
+    if (
+      combined.includes("seguro") ||
+      combined.includes("opcional") ||
+      combined.includes("prote") ||
+      combined.includes("clube") ||
+      combined.includes("pacote")
+    ) {
+      return "Serviço opcional";
+    }
+    return "Renovação recorrente";
+  };
 
-  // Soma de Débitos + PIX (ou valores padrão do extrato se vier zerado)
-  const baseDebitosAndPix =
-    catDebitos + catPix > 0
-      ? catDebitos + catPix
-      : catBoletos > 0
-        ? catBoletos
-        : 1240.0 + 2140.8;
+  // Categorias reais do extrato vindas da OpenAI
+  const catPix = data.resumoCategorias?.pix ?? data.categories?.pix ?? 0;
+  const catBoletos =
+    data.resumoCategorias?.boletos ?? data.categories?.boletos ?? 0;
+  const catDebitos =
+    data.resumoCategorias?.debitos ?? data.categories?.debitos ?? 0;
 
-  // 15% da soma total de Débitos + PIX
-  const calculated15Percent = Number((baseDebitosAndPix * 0.15).toFixed(2));
+  // Base real de débitos/movimentações para o cálculo de 15% quando o extrato está limpo de tarifas ilegais
+  const baseDebitosTotal =
+    catDebitos > 0 ? catDebitos : catPix + catBoletos > 0 ? catPix + catBoletos : 0;
 
-  // Itens padrão simulados para teaser e relatório desbloqueado
-  const defaultSimulatedItems: EconomyItem[] = [
-    {
-      id: "sim-1",
-      name: "Assinatura Recorrente / Streaming VIP",
-      monthlyAmount: 55.9,
-      yearlyImpact: 670.8,
-      actionTip: "Cancelar assinatura no app",
-      category: "Cobrança Recorrente",
-    },
-    {
-      id: "sim-2",
-      name: "Seguro Proteção Fatura Premiada",
-      monthlyAmount: 42.9,
-      yearlyImpact: 514.8,
-      actionTip: "Pedir estorno de tarifa ao banco",
-      category: "Débito Automático",
-    },
-    {
-      id: "sim-3",
-      name: "Tarifa Pacote de Serviços Essenciais",
-      monthlyAmount: 39.9,
-      yearlyImpact: 478.8,
-      actionTip: "Mudar para pacote gratuito BACEN",
-      category: "Taxa/Serviço",
-    },
-  ];
+  // 15% real dos débitos identificados
+  const calculated15Percent = Number((baseDebitosTotal * 0.15).toFixed(2));
 
-  const effectiveEconomyList: EconomyItem[] =
-    data.economyItems && data.economyItems.length > 0
-      ? data.economyItems
-      : defaultSimulatedItems;
+  // Constrói a lista unificada real de itens encontrados pela API
+  const rawOpportunities =
+    data.itensOportunidade && data.itensOportunidade.length > 0
+      ? data.itensOportunidade.map((op, idx) => ({
+          id: `op-${idx + 1}`,
+          tag: normalizeProblemTag(op.categoria, op.nomeEstabelecimento),
+          data: op.data || "Recente",
+          nomeEstabelecimento: op.nomeEstabelecimento,
+          valorMensal: op.valorMensal,
+          custoAnual: Number((op.valorMensal * 12).toFixed(2)),
+        }))
+      : [
+          ...data.tariffs.map((t, idx) => ({
+            id: `tar-${idx + 1}`,
+            tag: normalizeProblemTag("Tarifa bancária", t.name),
+            data: "Neste ciclo",
+            nomeEstabelecimento: t.name,
+            valorMensal: t.amount,
+            custoAnual: Number((t.amount * 12).toFixed(2)),
+          })),
+          ...data.duplicates.map((d, idx) => ({
+            id: `dup-${idx + 1}`,
+            tag: "Cobrança duplicada",
+            data: d.date || "Neste ciclo",
+            nomeEstabelecimento: d.merchant,
+            valorMensal: d.amount,
+            custoAnual: Number((d.amount * 12).toFixed(2)),
+          })),
+        ];
 
-  // Maior tarifa ou achado para garantir que sempre haja valor identificado
-  const largestTariff = data.tariffs.length > 0
-    ? [...data.tariffs].sort((a, b) => b.amount - a.amount)[0]
-    : null;
+  // Adiciona duplicidade da OpenAI se encontrada e ainda não listada em rawOpportunities
+  if (
+    data.possivelDuplicidade?.encontrada &&
+    data.possivelDuplicidade.nomeEstabelecimento &&
+    data.possivelDuplicidade.valor > 0
+  ) {
+    const dupExists = rawOpportunities.some(
+      (item) =>
+        item.nomeEstabelecimento.toLowerCase() ===
+          data.possivelDuplicidade?.nomeEstabelecimento.toLowerCase() &&
+        Math.abs(item.valorMensal - (data.possivelDuplicidade?.valor ?? 0)) <
+          0.01
+    );
+    if (!dupExists) {
+      rawOpportunities.push({
+        id: "dup-openai-1",
+        tag: "Cobrança duplicada",
+        data: data.possivelDuplicidade.data || "Neste ciclo",
+        nomeEstabelecimento: data.possivelDuplicidade.nomeEstabelecimento,
+        valorMensal: data.possivelDuplicidade.valor,
+        custoAnual: Number((data.possivelDuplicidade.valor * 12).toFixed(2)),
+      });
+    }
+  }
 
-  const largestDuplicate = data.duplicates.length > 0
-    ? [...data.duplicates].sort((a, b) => b.amount - a.amount)[0]
-    : null;
+  // Coerência matemática: nunca listar mais itens suspeitos do que totalTransacoes
+  const maxAllowedItems =
+    data.totalTransacoes && data.totalTransacoes > 0
+      ? data.totalTransacoes
+      : rawOpportunities.length;
+
+  const listedItems = rawOpportunities.slice(0, Math.max(1, maxAllowedItems));
+
+  // Total de transações nunca menor que a quantidade de itens listados
+  const totalTxCount =
+    data.totalTransacoes && data.totalTransacoes > 0
+      ? Math.max(data.totalTransacoes, listedItems.length)
+      : Math.max(1, listedItems.length);
+
+  // Selo vermelho sempre igual à quantidade real de itens listados e nunca maior que totalTransacoes
+  const suspiciousCount = listedItems.length;
+
+  const effectiveEconomyList: EconomyItem[] = listedItems.map((item) => ({
+    id: item.id,
+    name: item.nomeEstabelecimento,
+    monthlyAmount: item.valorMensal,
+    yearlyImpact: item.custoAnual,
+    actionTip:
+      item.tag === "Tarifa bancária" || item.tag === "Cobrança duplicada"
+        ? "Pedir estorno ao banco"
+        : "Cancelar cobrança no app",
+    category: item.tag,
+  }));
+
+  const opportunitiesMonthlySum = Number(
+    listedItems
+      .reduce((acc, item) => acc + item.valorMensal, 0)
+      .toFixed(2)
+  );
+
+  const monthlyIdentified =
+    opportunitiesMonthlySum > 0
+      ? opportunitiesMonthlySum
+      : data.totalAttention > 0
+        ? data.totalAttention
+        : data.tarifaAmostraGratis?.valor && data.tarifaAmostraGratis.valor > 0
+          ? data.tarifaAmostraGratis.valor
+          : calculated15Percent;
+
+  const annualIdentified = Number((monthlyIdentified * 12).toFixed(2));
 
   const suspiciousFindingValue =
-    data.totalAttention > 0
-      ? animatedTotal
-      : largestTariff
-        ? largestTariff.amount
-        : largestDuplicate
-          ? largestDuplicate.amount
-          : data.isSingleTransaction && data.singleTransactionAmount
-            ? data.singleTransactionAmount
-            : effectiveEconomyList[0]?.monthlyAmount || (calculated15Percent > 0 ? calculated15Percent : 149.9);
+    opportunitiesMonthlySum > 0
+      ? opportunitiesMonthlySum
+      : data.totalAttention > 0
+        ? animatedTotal
+        : monthlyIdentified;
 
   const formattedSuspiciousValue = formatBRL(suspiciousFindingValue);
+  const formattedMonthlyIdentified = formatBRL(monthlyIdentified);
+  const formattedAnnualIdentified = formatBRL(annualIdentified);
 
-  // 3 linhas simulando itens encontrados no documento com tag de categoria e nome borrado (soma = R$ 138,70)
-  const teaserItems = [
-    {
-      prefix: "1.",
-      categoryTag: "Cobrança Recorrente",
-      blurredName: "Streaming / Clube VIP",
-      amount: 55.9,
-    },
-    {
-      prefix: "2.",
-      categoryTag: "Débito Automático",
-      blurredName: "Seguro Proteção Fatura",
-      amount: 42.9,
-    },
-    {
-      prefix: "3.",
-      categoryTag: "Taxa/Serviço",
-      blurredName: "Tarifa Pacote Essencial",
-      amount: 39.9,
-    },
-  ];
+  const freeSampleTariff =
+    data.tarifaAmostraGratis &&
+    data.tarifaAmostraGratis.nome &&
+    data.tarifaAmostraGratis.valor > 0
+      ? {
+          id: "tarifa-sample-free",
+          name: data.tarifaAmostraGratis.nome,
+          amount: data.tarifaAmostraGratis.valor,
+        }
+      : data.tariffs[0] || null;
+
+  const hiddenTariffsCount = Math.max(
+    0,
+    listedItems.length - (freeSampleTariff ? 1 : 0)
+  );
+
+  const hiddenTariffsSum = Number(
+    Math.max(
+      0,
+      monthlyIdentified - (freeSampleTariff ? freeSampleTariff.amount : 0)
+    ).toFixed(2)
+  );
 
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState(false);
@@ -361,466 +528,635 @@ export function ResultScreen({
     }
   };
 
+  const hasActualAnalysis = hasAnalysis && Boolean(data.fileName);
+
+  if (!hasActualAnalysis) {
+    return (
+      <section
+        aria-label="Vitrine de demonstração de auditoria"
+        className="mx-[-24px] mt-[-12px] px-6 pt-3 pb-36 bg-[#F6F5F1] text-[#18181B] text-left min-h-[calc(100dvh-70px)]"
+      >
+        {/* 1. Badge superior discreta */}
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-white border border-black/[0.06] px-3 py-1 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+          <Sparkles
+            size={13}
+            strokeWidth={1.5}
+            className="text-[#0F9D58] shrink-0"
+          />
+          <span className="text-[10.5px] font-medium uppercase tracking-[0.04em] text-[#18181B]">
+            EXEMPLO DE AUDITORIA · VEJA O QUE O TAXLY ENCONTRA
+          </span>
+        </div>
+
+        {/* 2. Card de Demonstração Realista */}
+        <div className="mt-4 rounded-2xl bg-white border border-black/[0.06] p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
+          <h1 className="text-[20px] sm:text-[22px] leading-[1.2] tracking-[-0.03em] font-medium text-[#18181B] tabular-nums">
+            Em média, encontramos{" "}
+            <span className="text-[#0F9D58]">
+              R$ 181,00/mês (R$ 2.172,00/ano)
+            </span>{" "}
+            escondidos na 1ª fatura.
+          </h1>
+
+          <div className="mt-4 pt-4 border-t border-black/[0.06] space-y-2.5">
+            {DEMO_SHOWCASE_ITEMS.map(({ id, label, tag, Icon }) => (
+              <div
+                key={id}
+                className="rounded-xl bg-[#F6F5F1] border border-black/[0.06] px-3.5 py-3 flex items-center justify-between gap-2.5"
+              >
+                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                  <div className="w-7 h-7 rounded-lg bg-white border border-black/[0.06] flex items-center justify-center shrink-0 text-[#0F9D58]">
+                    <Icon size={14} strokeWidth={1.5} />
+                  </div>
+                  <span className="text-[13px] font-medium text-[#18181B] leading-snug tabular-nums">
+                    {label}
+                  </span>
+                </div>
+
+                <span className="whitespace-nowrap px-2 py-0.5 rounded-md bg-white border border-black/[0.06] text-[11px] font-medium text-[#0F9D58] shrink-0">
+                  {tag}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 3. Chamada direta para ação (sem precisar voltar para a Home) */}
+        <div className="mt-5 text-center">
+          <button
+            type="button"
+            onClick={onTriggerFilePicker || onSendAnotherFile}
+            className="w-full bg-[#0F9D58] hover:bg-[#0B8043] text-white py-3.5 px-4 rounded-xl font-medium text-[14.5px] tracking-[-0.02em] flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_2px_10px_rgba(15,157,88,0.18)]"
+          >
+            <FileUp size={16} strokeWidth={1.5} />
+            <span>Enviar print ou PDF da minha fatura (Grátis)</span>
+          </button>
+
+          {onOpenQuiz && (
+            <button
+              type="button"
+              onClick={onOpenQuiz}
+              className="block mx-auto mt-3 text-xs text-[#8A8985] hover:text-[#18181B] transition-colors cursor-pointer"
+            >
+              Sem o arquivo agora? Simular perda em 10 segundos →
+            </button>
+          )}
+        </div>
+
+        {/* 4. Dica rápida de baixa fricção */}
+        <div className="mt-5 rounded-xl bg-white border border-black/[0.06] p-3.5 flex items-start gap-2.5">
+          <Info
+            size={15}
+            strokeWidth={1.5}
+            className="text-[#0F9D58] shrink-0 mt-0.5"
+          />
+          <p className="text-[12.5px] leading-relaxed text-[#52525B]">
+            Dica: basta tirar um print da fatura aberta no app do seu banco —
+            leva menos de 10 segundos.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section
       aria-label="Resultado da análise"
-      style={{ paddingBottom: "7rem" }}
-      className="pt-1 text-left pb-28"
+      className="pt-1 pb-36 text-left"
     >
       {/* Barra superior de assinante: exibida APENAS se isSubscribed === true */}
       {isSubscribed && (
         <aside
           aria-label="Status do plano de assinatura"
-          className="mb-4 rounded-[14px] bg-[#E8F8EE] dark:bg-[#062414] border border-[#B9E9C8] dark:border-[#0F4A2C] px-4 py-2.5 text-[13px] font-semibold text-[#008A39] dark:text-[#22C55E] flex items-center gap-2"
+          className="mb-4 rounded-[12px] bg-[#08B968]/10 border border-[#08B968]/25 px-4 py-2.5 text-[13px] font-medium text-[#087D4A] flex items-center gap-2"
         >
-          <CheckIcon className="w-4 h-4 shrink-0 text-[#00C853]" />
+          <CheckIcon className="w-4 h-4 shrink-0 text-[#08B968]" />
           <span>Plano Mensal ativado! Análise completa desbloqueada.</span>
         </aside>
       )}
 
-      {/* Condicional: Resultado Limpo (Task 5) vs Resultado com Achado Suspeito (Task 2) */}
+      {/* Condicional: Resultado Limpo vs Resultado com Achado Suspeito */}
       {data.isClean ? (
-        /* ESTADO LIMPO (Task 5) */
-        <header className="rounded-[24px] bg-[#FAFAFA] dark:bg-[#1A1A1A] border border-[#EAEAEA] dark:border-[#2A2A2A] p-6 text-center">
-          <div className="relative mx-auto w-14 h-14 flex items-center justify-center mb-3">
-            <span
-              aria-hidden="true"
-              className="absolute inset-0 rounded-full bg-[#00C853]/20 animate-ping opacity-60 pointer-events-none"
-            />
-            <div
-              aria-hidden="true"
-              className="relative w-14 h-14 rounded-full bg-[#00C853]/15 text-[#00C853] flex items-center justify-center"
-            >
-              <CheckIcon className="w-7 h-7" />
-            </div>
-          </div>
-
-          <h1 className="text-[20px] sm:text-[22px] font-bold text-[#00A844] dark:text-[#22C55E] leading-tight">
-            Suas contas estão limpas e protegidas
-          </h1>
-
-          <div className="mt-3.5 p-3.5 rounded-[14px] bg-[#FEF2F2] dark:bg-[#2A1212] border border-[#FCA5A5] dark:border-[#5C1D1D] text-left">
-            <p className="text-[13px] leading-relaxed text-[#B91C1C] dark:text-[#F87171] font-semibold">
-              Mas isso é só do arquivo de hoje. Sem monitoramento contínuo, novas cobranças passam sem você ver.
-            </p>
-          </div>
-        </header>
-      ) : (
-        /* ESTADO COM TRANSAÇÃO SUSPEITA (Task 2 - Inversão da Ordem) */
-        <header className="rounded-[24px] bg-[#FAFAFA] dark:bg-[#1A1A1A] border border-[#EAEAEA] dark:border-[#2A2A2A] p-5 sm:p-6 text-left">
-          {/* Badge vermelho no topo */}
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-[#FEF2F2] dark:bg-[#2A1212] border border-[#FCA5A5] dark:border-[#5C1D1D] px-3 py-1">
-            <span className="text-[12.5px] font-bold text-[#DC2626] dark:text-[#F87171]">
-              ⚠️ 6 cobranças suspeitas detectadas
-            </span>
-          </div>
-
-          {/* Linha seguinte */}
-          <h1 className="mt-3 text-[17px] sm:text-[19px] font-bold text-[#111111] dark:text-[#FAFAFA] leading-snug">
-            Analisamos 18 transações. Identificamos{" "}
-            <span className="text-[#DC2626] dark:text-[#EF4444] font-extrabold tabular-nums">
-              R$ 181,00/mês (R$ 2.172,00/ano)
-            </span>{" "}
-            em cobranças indevidas e recorrentes.
-          </h1>
-
-          {/* Seção condicional: Grátis (Bloqueado) vs Assinante (Desbloqueado) */}
-          {!isSubscribed ? (
-            /* ESTADO BLOQUEADO (GRÁTIS) */
-            <div className="mt-4 pt-3.5 border-t border-[#EAEAEA] dark:border-[#2A2A2A] text-left">
-              {/* Prévia Teaser: 3 itens simulando os itens com nome borrado e valor visível */}
-              <div className="rounded-[14px] bg-white dark:bg-[#111111] border border-[#E5E5E5] dark:border-[#2D2D2D] p-3.5 text-left">
-                <div className="space-y-1.5">
-                  {teaserItems.map((item) => (
-                    <div
-                      key={item.prefix}
-                      className="flex items-center justify-between py-1.5 border-b border-[#F0F0F0] dark:border-[#242424] last:border-b-0 text-left"
-                    >
-                      <div className="flex items-center gap-1.5 min-w-0 pr-2">
-                        <span className="text-[12.5px] font-semibold text-[#1A1A1A] dark:text-white shrink-0">
-                          {item.prefix}
-                        </span>
-                        <span className="text-[12.5px] font-medium text-[#1A1A1A] dark:text-[#E4E4E7] truncate">
-                          [{item.categoryTag}]{" "}
-                          <span className="filter blur-[4px] select-none pointer-events-none opacity-80">
-                            {item.blurredName}
-                          </span>
-                        </span>
-                      </div>
-                      <span className="text-[12.5px] font-bold text-[#E5484D] tabular-nums shrink-0 whitespace-nowrap">
-                        — R$ {formatBRL(item.amount)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Bloqueio preto com texto exato exigido */}
-                <button
-                  type="button"
-                  onClick={onUnlockEconomyReport || onSaveToVault}
-                  className="w-full mt-3 min-h-[44px] rounded-[10px] bg-[#1A1A1A] hover:bg-[#2A2A2A] text-white text-[12.5px] font-semibold py-2.5 px-3 flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-sm text-center leading-snug"
+        /* ESTADO LIMPO */
+            <header className="rounded-[16px] bg-white border border-[#EAEAE7] shadow-[0_1px_3px_rgba(0,0,0,0.02)] p-6 text-center">
+              <div className="relative mx-auto w-12 h-12 flex items-center justify-center mb-3">
+                <div
+                  aria-hidden="true"
+                  className="relative w-12 h-12 rounded-full bg-[#08B968]/10 text-[#08B968] flex items-center justify-center"
                 >
-                  <LockSmallIcon className="w-4 h-4 text-[#00C853] shrink-0" />
-                  <span>
-                    O relatório completo com a explicação e o passo a passo de recuperação está bloqueado.
-                  </span>
-                </button>
-              </div>
-            </div>
-          ) : (
-            /* ESTADO DESBLOQUEADO (ASSINANTE) */
-            <div className="mt-4 pt-3.5 border-t border-[#EAEAEA] dark:border-[#2A2A2A] text-left">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-[14px] font-bold text-[#1A1A1A] dark:text-[#FAFAFA]">
-                  Relatório de Economia Desbloqueado
-                </h2>
-                <span className="text-[11.5px] font-bold text-[#00A844] dark:text-[#22C55E] bg-[#00C853]/10 px-2 py-0.5 rounded-full">
-                  Economia de R$ {formattedSuspiciousValue}/mês
-                </span>
-              </div>
-
-              <ul className="space-y-2.5">
-                {effectiveEconomyList.map((item) => (
-                  <li
-                    key={item.id}
-                    className="rounded-[14px] bg-white dark:bg-[#111111] border border-[#E5E5E5] dark:border-[#2A2A2A] p-3 text-left shadow-[0_1px_2px_rgba(0,0,0,0.03)]"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="text-[14px] font-semibold text-[#1A1A1A] dark:text-white">
-                          {item.name}
-                        </p>
-                        <p className="text-[12px] text-[#6B7280] dark:text-[#A1A1AA] mt-0.5">
-                          Impacto em 12 meses:{" "}
-                          <strong className="text-[#1A1A1A] dark:text-white font-semibold">
-                            R$ {formatBRL(item.yearlyImpact || item.monthlyAmount * 12)}/ano
-                          </strong>
-                        </p>
-                      </div>
-                      <span className="text-[14.5px] font-bold text-[#E5484D] tabular-nums shrink-0">
-                        -R$ {formatBRL(item.monthlyAmount)}/mês
-                      </span>
-                    </div>
-
-                    <div className="mt-2.5 pt-2 border-t border-[#F0F0F0] dark:border-[#262626] flex items-center justify-between">
-                      <span className="inline-flex items-center gap-1 text-[11.5px] font-medium text-[#008A39] dark:text-[#22C55E] bg-[#E8F8EE] dark:bg-[#092E1B] px-2 py-0.5 rounded-md">
-                        💡 {item.actionTip}
-                      </span>
-                      {item.category && (
-                        <span className="text-[11px] font-medium text-[#8E8E93]">
-                          {item.category}
-                        </span>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </header>
-      )}
-
-      {/* Barra de Progressão em Níveis (Task 4) */}
-      <AuditLevelBar
-        currentLevel={auditLevel}
-        isSubscribed={isSubscribed}
-        onSendAnother={onSendAnotherFile}
-        onUnlockFull={onUnlockEconomyReport}
-        className="mt-5"
-      />
-
-      {/* Bloco 1 — Tarifas encontradas (se houver) */}
-      {hasTariffs && (
-        <div className="mt-5 rounded-[16px] bg-[#FAFAFA] dark:bg-[#1A1A1A] border border-[#EAEAEA] dark:border-[#2A2A2A] p-4 sm:p-5">
-          <h2 className="text-[15px] font-semibold text-[#1A1A1A] dark:text-[#FAFAFA]">
-            Tarifas identificadas
-          </h2>
-
-          <ul className="mt-3 divide-y divide-[#EAEAEA] dark:divide-[#2A2A2A] border-t border-[#EAEAEA] dark:border-[#2A2A2A]">
-            {(!isSubscribed ? data.tariffs.slice(0, 1) : data.tariffs).map((item) => (
-              <li
-                key={item.id}
-                className="py-3 flex items-center justify-between gap-3"
-              >
-                <span className="text-[14.5px] font-medium text-[#1A1A1A] dark:text-[#E4E4E7]">
-                  {item.name}
-                </span>
-                <span className="text-[15px] font-bold text-[#E5484D] tabular-nums shrink-0">
-                  R$ {formatBRL(item.amount)}
-                </span>
-              </li>
-            ))}
-            {!isSubscribed && (
-              <li
-                onClick={onUnlockEconomyReport || onSaveToVault}
-                className="py-3 flex items-center justify-between gap-3 cursor-pointer group"
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-[14px]">🔒</span>
-                  <span className="text-[14px] font-medium text-[#1A1A1A] dark:text-[#E4E4E7] group-hover:text-[#00C853] transition-colors">
-                    + 3 cobranças recorrentes ocultas
-                  </span>
+                  <CheckIcon className="w-6 h-6" />
                 </div>
-                <span className="text-[14.5px] font-bold text-[#E5484D] tabular-nums shrink-0">
-                  (R$ 138,70/mês)
-                </span>
-              </li>
-            )}
-          </ul>
-        </div>
+              </div>
+
+                <h1 className="text-[20px] sm:text-[22px] font-semibold tracking-[-0.025em] text-[#171717] leading-tight">
+                  0 tarifas ilegais hoje, mas identificamos R$ {formatBRL(calculated15Percent)}/mês em gastos otimizáveis.
+                </h1>
+
+                    <div className="mt-3.5 p-3.5 rounded-[12px] bg-[#E54848]/[0.06] border border-[#E54848]/20 text-left">
+                      <p className="text-[13px] leading-relaxed text-[#E54848] font-normal">
+                        Mesmo sem taxas bancárias duplicadas, até 15% dos seus R$ {formatBRL(baseDebitosTotal)} em débitos estão indo para cobranças silenciosas e micro-gastos recorrentes.
+                      </p>
+                    </div>
+                  </header>
+                  ) : (
+                        /* ESTADO COM TRANSAÇÃO SUSPEITA */
+                        <header className="rounded-[16px] bg-white border border-[#EAEAE7] shadow-[0_1px_3px_rgba(0,0,0,0.02),0_4px_12px_rgba(0,0,0,0.02)] p-5 text-left">
+                          {/* Badge de alerta no topo */}
+                          <div className="inline-flex items-center gap-1.5 rounded-full bg-[#E54848]/[0.08] border border-[#E54848]/20 px-2.5 py-1">
+                            <AlertCircleIcon className="w-3.5 h-3.5 text-[#E54848] shrink-0" />
+                            <span className="text-[12px] font-medium text-[#E54848]">
+                              {suspiciousCount} {suspiciousCount === 1 ? "cobrança suspeita detectada" : "cobranças suspeitas detectadas"}
+                            </span>
+                          </div>
+
+                            {/* Título principal e valor identificado com alto destaque */}
+                            <h1 className="mt-3.5 text-[16.5px] sm:text-[18px] font-semibold text-[#171717] leading-[1.35] tracking-[-0.02em]">
+                              Analisamos {totalTxCount} {totalTxCount === 1 ? "transação" : "transações"}. Identificamos{" "}
+                                <span className="text-[#E54848] font-semibold tabular-nums text-[19px] sm:text-[21px] tracking-[-0.03em]">
+                                  R$ {formattedMonthlyIdentified}/mês
+                                </span>{" "}
+                                <span className="text-[#171717] font-semibold tabular-nums">
+                                  (R$ {formattedAnnualIdentified}/ano)
+                                </span>{" "}
+                                <span className="text-[#858585] font-normal">
+                                  em cobranças indevidas e recorrentes.
+                                </span>
+                            </h1>
+
+                            {/* Seção condicional: Grátis (plan_status !== 'active') vs Assinante (plan_status === 'active') */}
+                            {!isSubscribed ? (
+                              /* ESTADO GRÁTIS: 1ª cobrança desbloqueada + demais com blur + CTA R$ 14,99/mês */
+                                <div className="mt-4 pt-3.5 border-t border-black/[0.06] text-left">
+                                  <div className="rounded-xl bg-[#F6F5F1] border border-black/[0.06] p-3.5 text-left">
+                                    <div className="divide-y divide-black/[0.06]">
+                                      {listedItems.map((item, idx) => {
+                                        const isFirstUnlocked = idx === 0;
+                                        const merchantNameClass = isFirstUnlocked
+                                          ? "mt-1 text-[13.5px] font-medium text-[#18181B] truncate"
+                                          : "mt-1 text-[13.5px] font-medium text-[#18181B] truncate filter blur-[5px] select-none pointer-events-none";
+
+                                        return (
+                                          <div
+                                            key={item.id}
+                                            className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0 text-left"
+                                          >
+                                            <div className="min-w-0 flex-1 pr-2">
+                                              <div className="flex items-center gap-1.5 flex-wrap">
+                                                <span className="inline-flex items-center rounded-md bg-white border border-black/[0.06] px-2 py-0.5 text-[11px] font-medium text-[#18181B]">
+                                                  {item.tag}
+                                                </span>
+                                                <span className="text-[11px] text-[#8A8985] tabular-nums">
+                                                  {item.data}
+                                                </span>
+                                                {isFirstUnlocked && (
+                                                  <span className="inline-flex items-center rounded-full bg-[#0F9D58]/10 px-2 py-0.5 text-[10px] font-medium text-[#0F9D58]">
+                                                    1ª liberada
+                                                  </span>
+                                                )}
+                                              </div>
+                                              <p className={merchantNameClass}>
+                                                {item.nomeEstabelecimento}
+                                              </p>
+                                            </div>
+                                            <div className="text-right shrink-0">
+                                              <p className="text-[13.5px] font-semibold text-[#E54848] tabular-nums whitespace-nowrap">
+                                                R$ {formatBRL(item.valorMensal)}/mês
+                                              </p>
+                                              <p className="text-[11px] text-[#8A8985] tabular-nums whitespace-nowrap">
+                                                R$ {formatBRL(item.custoAnual)}/ano
+                                              </p>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+
+                                    {/* Botão de desbloqueio direto: Desbloquear todas as cobranças · R$ 14,99/mês */}
+                                    <button
+                                      type="button"
+                                      onClick={onUnlockEconomyReport || onSaveToVault}
+                                      className="w-full mt-3.5 min-h-[46px] rounded-xl bg-[#0F9D58] hover:bg-[#0B8043] text-white text-[13.5px] font-medium py-3 px-4 flex items-center justify-center gap-2 transition-all cursor-pointer text-center leading-snug shadow-[0_2px_10px_rgba(15,157,88,0.18)]"
+                                    >
+                                      <LockSmallIcon className="w-3.5 h-3.5 text-white shrink-0" />
+                                      <span>
+                                        Desbloquear todas as cobranças · R$ 14,99/mês
+                                      </span>
+                                    </button>
+                                  </div>
+
+                                  {!isLoggedIn && onRequestSignup && (
+                                    <div className="mt-3 rounded-xl bg-[#F6F5F1] border border-black/[0.06] px-3.5 py-2.5 flex items-center justify-between gap-2">
+                                      <span className="text-[12px] text-[#52525B]">
+                                        Salve esta auditoria no seu Histórico de Faturas:
+                                      </span>
+                                      <button
+                                        type="button"
+                                        onClick={onRequestSignup}
+                                        className="text-[12px] font-medium text-[#0F9D58] hover:underline whitespace-nowrap cursor-pointer"
+                                      >
+                                        Criar conta grátis →
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                            ) : (
+                              /* ESTADO DESBLOQUEADO (ASSINANTE: plan_status === 'active') */
+                                <div className="mt-4 pt-3.5 border-t border-black/[0.06] text-left">
+                                  <div className="flex items-center justify-between mb-3">
+                                    <h2 className="text-[13.5px] font-semibold text-[#18181B]">
+                                      Relatório de Economia Desbloqueado
+                                    </h2>
+                                    <span className="text-[11.5px] font-medium text-[#0F9D58] bg-[#0F9D58]/10 px-2.5 py-0.5 rounded-full tabular-nums">
+                                      Economia de R$ {formattedMonthlyIdentified}/mês
+                                    </span>
+                                  </div>
+
+                                  <ul className="space-y-2.5">
+                                    {listedItems.map((item) => {
+                                      const resolved = isChargeResolved(item.id);
+                                      const isCopied =
+                                        copiedScriptItemId === item.id;
+                                      const cardClass = resolved
+                                        ? "rounded-xl bg-[#0F9D58]/[0.05] border border-[#0F9D58]/30 p-3.5 text-left transition-all"
+                                        : "rounded-xl bg-[#F6F5F1] border border-black/[0.06] p-3.5 text-left transition-all";
+                                      const resolveBtnClass = resolved
+                                        ? "flex-1 min-h-[34px] rounded-lg bg-[#0F9D58] text-white text-[12px] font-medium px-2.5 py-1.5 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                                        : "flex-1 min-h-[34px] rounded-lg bg-white hover:bg-black/[0.03] border border-black/[0.08] text-[#18181B] text-[12px] font-medium px-2.5 py-1.5 flex items-center justify-center gap-1.5 transition-colors cursor-pointer";
+
+                                      return (
+                                        <li key={item.id} className={cardClass}>
+                                          <div className="flex items-start justify-between gap-3">
+                                            <div className="min-w-0 flex-1">
+                                              <div className="flex items-center gap-1.5 flex-wrap">
+                                                <span className="inline-flex items-center rounded-md bg-white border border-black/[0.06] px-2 py-0.5 text-[11px] font-medium text-[#18181B]">
+                                                  {item.tag}
+                                                </span>
+                                                <span className="text-[11px] text-[#8A8985] tabular-nums">
+                                                  {item.data}
+                                                </span>
+                                                {resolved && (
+                                                  <span className="inline-flex items-center gap-1 rounded-full bg-[#0F9D58]/15 px-2 py-0.5 text-[10.5px] font-medium text-[#0F9D58]">
+                                                    <CheckIcon className="w-2.5 h-2.5" />
+                                                    Estornado / Resolvido
+                                                  </span>
+                                                )}
+                                              </div>
+                                              <p className="mt-1.5 text-[14px] font-medium text-[#18181B]">
+                                                {item.nomeEstabelecimento}
+                                              </p>
+                                            </div>
+                                            <div className="text-right shrink-0">
+                                              <p className="text-[14px] font-semibold text-[#E54848] tabular-nums whitespace-nowrap">
+                                                R$ {formatBRL(item.valorMensal)}/mês
+                                              </p>
+                                              <p className="text-[11px] text-[#8A8985] tabular-nums whitespace-nowrap">
+                                                R$ {formatBRL(item.custoAnual)}/ano
+                                              </p>
+                                            </div>
+                                          </div>
+
+                                          {/* Botões de ação do assinante: Marcar como Estornado/Resolvido + Copiar texto de pedido de estorno */}
+                                          <div className="mt-3 pt-2.5 border-t border-black/[0.06] flex items-center gap-2">
+                                            <button
+                                              type="button"
+                                              onClick={() =>
+                                                handleToggleResolved(item.id)
+                                              }
+                                              className={resolveBtnClass}
+                                            >
+                                              <CheckIcon className="w-3.5 h-3.5 shrink-0" />
+                                              <span>
+                                                {resolved
+                                                  ? "Estornado/Resolvido"
+                                                  : "Marcar Estornado/Resolvido"}
+                                              </span>
+                                            </button>
+
+                                            <button
+                                              type="button"
+                                              onClick={() =>
+                                                handleCopyRefundScript(item)
+                                              }
+                                              className="flex-1 min-h-[34px] rounded-lg bg-white hover:bg-black/[0.03] border border-black/[0.08] text-[#18181B] text-[12px] font-medium px-2.5 py-1.5 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                                            >
+                                              <CopyIcon className="w-3.5 h-3.5 text-[#0F9D58] shrink-0" />
+                                              <span>
+                                                {isCopied
+                                                  ? "Texto copiado!"
+                                                  : "Copiar pedido de estorno"}
+                                              </span>
+                                            </button>
+                                          </div>
+                                        </li>
+                                      );
+                                    })}
+                                  </ul>
+                                </div>
+                            )}
+                                                            </header>
       )}
 
-      {/* Bloco 2 — Possíveis duplicidades (se houver) */}
-      {hasDuplicates && (
-        <div className="mt-5 rounded-[16px] bg-[#FAFAFA] dark:bg-[#1A1A1A] border border-[#EAEAEA] dark:border-[#2A2A2A] p-4 sm:p-5">
-          <h2 className="text-[15px] font-semibold text-[#1A1A1A] dark:text-[#FAFAFA]">
-            Possíveis cobranças repetidas
-          </h2>
+                                                            {/* Barra de Progressão em Níveis */}
+                                                            <AuditLevelBar
+                                                              currentLevel={auditLevel}
+                                                              isSubscribed={isSubscribed}
+                                                              onSendAnother={onSendAnotherFile}
+                                                              onUnlockFull={onUnlockEconomyReport}
+                                                              className="mt-4"
+                                                            />
 
-          <div className="mt-3 space-y-3">
-            {data.duplicates.map((dup) => (
-              <div
-                key={dup.id}
-                className="rounded-[14px] bg-white dark:bg-[#111111] border border-[#EAEAEA] dark:border-[#2A2A2A] p-4"
-              >
-                <div className="flex items-start justify-between gap-2.5">
-                  <div className="min-w-0">
-                    <p className="text-[15px] font-semibold text-[#1A1A1A] dark:text-white truncate">
-                      {!isSubscribed ? (
-                        <span className="filter blur-[4px] select-none pointer-events-none opacity-80">
-                          [App de Transporte • Oculto]
+                                                            {/* Bloco 1 — Tarifas encontradas (se houver) */}
+                                                            {(hasTariffs || freeSampleTariff) && (
+                                                                  <div className="mt-4 rounded-[16px] bg-white border border-[#EAEAE7] p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+                                                                    <h2 className="text-[14px] font-semibold text-[#171717]">
+                                                                      Tarifas identificadas
+                                                                    </h2>
+
+                                                                      <ul className="mt-3 divide-y divide-[#EAEAE7] border-t border-[#EAEAE7]">
+                                                                        {(!isSubscribed
+                                                                          ? freeSampleTariff
+                                                                            ? [freeSampleTariff]
+                                                                            : data.tariffs.slice(0, 1)
+                                                                          : data.tariffs
+                                                                        ).map((item) => (
+                                                                          <li
+                                                                            key={item.id}
+                                                                            className="py-3 flex items-center justify-between gap-3"
+                                                                          >
+                                                                              <span className="text-[14px] font-normal text-[#171717]">
+                                                                                {item.name}
+                                                                              </span>
+                                                                                <span className="text-[14px] font-semibold text-[#E54848] tabular-nums shrink-0">
+                                                                                  R$ {formatBRL(item.amount)}
+                                                                                </span>
+                                                                              </li>
+            ))}
+                                                                              {!isSubscribed && hiddenTariffsCount > 0 && (
+                                                                                <li
+                                                                                  onClick={onUnlockEconomyReport || onSaveToVault}
+                                                                                  className="py-3 flex items-center justify-between gap-3 cursor-pointer group"
+                                                                                >
+                                                                                  <div className="flex items-center gap-2 min-w-0">
+                                                                                      <LockSmallIcon className="w-3.5 h-3.5 text-[#858585] shrink-0" />
+                                                                                      <span className="text-[13.5px] font-medium text-[#171717] group-hover:text-[#08B968] transition-colors">
+                                                                                        + {hiddenTariffsCount} {hiddenTariffsCount === 1 ? "cobrança recorrente oculta" : "cobranças recorrentes ocultas"}
+                                                                                      </span>
+                                                                                  </div>
+                                                                                    <span className="text-[14px] font-semibold text-[#E54848] tabular-nums shrink-0">
+                                                                                      (R$ {formatBRL(hiddenTariffsSum)}/mês)
+                                                                                    </span>
+                                                                                </li>
+                                                                              )}
+                                                                            </ul>
+                                                                          </div>
+                                                                        )}
+
+                                                                        {/* Bloco 2 — Possíveis duplicidades (se houver) */}
+                                                                        {hasDuplicates && (
+                                                                              <div className="mt-4 rounded-[16px] bg-white border border-[#EAEAE7] p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+                                                                                <h2 className="text-[14px] font-semibold text-[#171717]">
+                                                                                  Possíveis cobranças repetidas
+                                                                                </h2>
+
+                                                                                  <div className="mt-3 space-y-2.5">
+                                                                                    {data.duplicates.map((dup) => (
+                                                                                      <div
+                                                                                        key={dup.id}
+                                                                                        className="rounded-[12px] bg-[#FAFAF8] border border-[#EAEAE7] p-3.5"
+                                                                                      >
+                                                                                        <div className="flex items-start justify-between gap-2.5">
+                                                                                          <div className="min-w-0">
+                                                                                              <p className="text-[14px] font-semibold text-[#171717] truncate">
+                                                                                                {!isSubscribed ? (
+                        <span className="filter blur-[4px] select-none pointer-events-none opacity-75">
+                          {dup.merchant}
                         </span>
                       ) : (
                         dup.merchant
                       )}
                     </p>
-                    <p className="mt-0.5 text-[13px] text-[#6B7280] dark:text-[#A1A1AA]">
+                    <p className="mt-0.5 text-[12px] text-[#858585]">
                       {dup.date}
                     </p>
                   </div>
 
-                  <span className="inline-flex items-center gap-1 rounded-full bg-[#FFF9DB] dark:bg-[#2F2700] border border-[#FFE066] dark:border-[#7A6400] px-2.5 py-0.5 text-[11.5px] font-semibold text-[#8F6B00] dark:text-[#FFD43B] shrink-0">
-                    ⚠️ duplicidade
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[#E54848]/[0.08] border border-[#E54848]/20 px-2.5 py-0.5 text-[11px] font-medium text-[#E54848] shrink-0">
+                    duplicidade
                   </span>
                 </div>
 
-                <div className="mt-3 pt-2.5 border-t border-[#F0F0F0] dark:border-[#242424] flex items-center justify-between">
-                  <span className="text-[13px] text-[#6B7280] dark:text-[#A1A1AA]">
+                <div className="mt-2.5 pt-2.5 border-t border-[#EAEAE7] flex items-center justify-between">
+                  <span className="text-[12.5px] text-[#858585]">
                     Cobrado {dup.occurrences}x no mesmo dia
                   </span>
-                  <span className="text-[15px] font-bold text-[#1A1A1A] dark:text-white tabular-nums">
+                  <span className="text-[14px] font-semibold text-[#171717] tabular-nums">
                     R$ {formatBRL(dup.amount)}
                   </span>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
+                                                                                                ))}
+                                                                                              </div>
+                                                                                          </div>
       )}
 
-      {/* Bloco 3 — Resumo por categoria */}
-      <div className="mt-5 rounded-[16px] bg-[#FAFAFA] dark:bg-[#1A1A1A] border border-[#EAEAEA] dark:border-[#2A2A2A] p-4 sm:p-5">
-        <h2 className="text-[15px] font-semibold text-[#1A1A1A] dark:text-[#FAFAFA]">
-          Resumo por categoria
-        </h2>
+                                                                                          {/* Bloco 3 — Resumo por categoria */}
+                                                                                              <div className="mt-4 rounded-[16px] bg-white border border-[#EAEAE7] p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+                                                                                                <h2 className="text-[14px] font-semibold text-[#171717]">
+                                                                                                  Resumo por categoria
+                                                                                                </h2>
 
-        <div className="mt-3 divide-y divide-[#EAEAEA] dark:divide-[#2A2A2A] border-t border-[#EAEAEA] dark:border-[#2A2A2A]">
-          <div className="py-2.5 flex items-center justify-between text-[14.5px]">
-            <span className="font-medium text-[#1A1A1A] dark:text-[#E4E4E7]">PIX</span>
-            <span className="font-semibold text-[#1A1A1A] dark:text-white tabular-nums">
-              R$ {formatBRL(data.categories.pix > 0 ? data.categories.pix : 1240.0)}
-            </span>
-          </div>
-          <div className="py-2.5 flex items-center justify-between text-[14.5px]">
-            <span className="font-medium text-[#1A1A1A] dark:text-[#E4E4E7]">Boletos</span>
-            <span className="font-semibold text-[#1A1A1A] dark:text-white tabular-nums">
-              R$ {formatBRL(data.categories.boletos > 0 ? data.categories.boletos : 890.5)}
-            </span>
-          </div>
-          <div className="py-2.5 flex items-center justify-between text-[14.5px]">
-            <span className="font-medium text-[#1A1A1A] dark:text-[#E4E4E7]">Débitos</span>
-            <span className="font-semibold text-[#1A1A1A] dark:text-white tabular-nums">
-              R$ {formatBRL(data.categories.debitos > 0 ? data.categories.debitos : 2140.8)}
-            </span>
-          </div>
-        </div>
-      </div>
+                                                                                                      <div className="mt-3 divide-y divide-[#EAEAE7] border-t border-[#EAEAE7]">
+                                                                                                        <div className="py-2.5 flex items-center justify-between text-[14px]">
+                                                                                                          <span className="font-normal text-[#858585]">PIX</span>
+                                                                                                          <span className="font-semibold text-[#171717] tabular-nums">
+                                                                                                            R$ {formatBRL(catPix)}
+                                                                                                          </span>
+                                                                                                        </div>
+                                                                                                            <div className="py-2.5 flex items-center justify-between text-[14px]">
+                                                                                                              <span className="font-normal text-[#858585]">Boletos</span>
+                                                                                                              <span className="font-semibold text-[#171717] tabular-nums">
+                                                                                                                R$ {formatBRL(catBoletos)}
+                                                                                                              </span>
+                                                                                                            </div>
+                                                                                                                <div className="py-2.5 flex items-center justify-between text-[14px]">
+                                                                                                                  <span className="font-normal text-[#858585]">Débitos</span>
+                                                                                                                  <span className="font-semibold text-[#171717] tabular-nums">
+                                                                                                                    R$ {formatBRL(catDebitos)}
+                                                                                                                  </span>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                        </div>
 
-      {/* Faixa Rotativa de Prova Social (Task 2) */}
-      {!isSubscribed && (
-        <div className="mt-5">
-          <SocialProofTicker />
-        </div>
+                                                                                                        {/* Faixa Rotativa de Prova Social */}
+                                                                                                        {!isSubscribed && (
+                                                                                                            <div className="mt-4">
+                                                                                                              <SocialProofTicker />
+                                                                                                            </div>
       )}
 
-      {/* Rodapé de Ações (Tasks 3 e 5) */}
-      <div className="mt-4 space-y-2.5">
-        {/* Botão Verde Principal */}
-        {data.isClean ? (
-          <div>
-            <button
-              type="button"
-              onClick={onUnlockEconomyReport || onSaveToVault}
-              className="w-full min-h-[52px] rounded-[16px] bg-[#00C853] hover:bg-[#00B54B] active:bg-[#00A047] text-white font-semibold text-[15.5px] px-5 flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-md"
-            >
-              <span>Quero monitoramento contínuo</span>
-            </button>
-            <p className="mt-1.5 text-center text-[11.5px] text-[#6B7280] dark:text-[#9CA3AF] font-medium">
-              Acesso imediato · R$ 29,90/mês · Cancele quando quiser
-            </p>
-          </div>
-        ) : isSubscribed ? (
-          <button
-            type="button"
-            onClick={onSaveToVault}
-            disabled={isSavingToVault}
-            className="w-full min-h-[52px] rounded-[16px] bg-[#00C853] hover:bg-[#00B54B] active:bg-[#00A047] text-white font-semibold text-[15px] px-5 flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-60 shadow-md"
-          >
-            <CheckIcon className="w-4 h-4 text-white shrink-0" />
-            <span>
-              {isSavingToVault ? "Salvando..." : "Salvar Diagnóstico no Cofre"}
-            </span>
-          </button>
-        ) : (
-          <div>
-            <button
-              type="button"
-              onClick={onUnlockEconomyReport || onSaveToVault}
-              disabled={isSavingToVault}
-              className="w-full min-h-[52px] rounded-[16px] bg-[#00C853] hover:bg-[#00B54B] active:bg-[#00A047] text-white font-semibold text-[15.5px] px-5 flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-60 shadow-md"
-            >
-              <span>Recuperar meus R$ 181,00/mês agora</span>
-            </button>
-            <p className="mt-1.5 text-center text-[11.5px] text-[#6B7280] dark:text-[#9CA3AF] font-medium">
-              Acesso imediato · Recupere até 6x o valor do plano logo no 1º mês · Cancele quando quiser
-            </p>
-          </div>
-        )}
+                                                                                                            {/* Rodapé de Ações */}
+                                                                                                            <div className="mt-4 space-y-2.5">
+                                                                                                              {/* Botão Verde Principal */}
+                                                                                                              {data.isClean ? (
+                                                                                                                <div>
+                                                                                                                  <button
+                                                                                                                    type="button"
+                                                                                                                    onClick={onUnlockEconomyReport || onSaveToVault}
+                                                                                                                    className="w-full min-h-[50px] rounded-[14px] bg-[#08B968] hover:bg-[#087D4A] text-white font-semibold text-[15px] px-5 flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-[0_2px_8px_rgba(8,185,104,0.22)]"
+                                                                                                                  >
+                                                                                                                    <span>Desbloquear raio-x de gastos (R$ {formatBRL(calculated15Percent)}/mês)</span>
+                                                                                                                  </button>
+                                                                                                                    <p className="mt-2 text-center text-[11.5px] text-[#858585] font-normal">
+                                                                                                                      Acesso imediato por R$ 14,99/mês · Cancele quando quiser
+                                                                                                                    </p>
+                                                                                                                </div>
+                                                                                                              ) : isSubscribed ? (
+                                                                                                                <button
+                                                                                                                  type="button"
+                                                                                                                  onClick={onSaveToVault}
+                                                                                                                  disabled={isSavingToVault}
+                                                                                                                  className="w-full min-h-[50px] rounded-[14px] bg-[#08B968] hover:bg-[#087D4A] text-white font-semibold text-[15px] px-5 flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-60 shadow-[0_2px_8px_rgba(8,185,104,0.22)]"
+                                                                                                                >
+                                                                                                                  <CheckIcon className="w-4 h-4 text-white shrink-0" />
+                                                                                                                  <span>
+                                                                                                                    {isSavingToVault ? "Salvando..." : "Salvar Diagnóstico no Cofre"}
+                                                                                                                  </span>
+                                                                                                                </button>
+                                                                                                              ) : (
+                                                                                                                <div>
+                                                                                                                  <button
+                                                                                                                    type="button"
+                                                                                                                    onClick={onUnlockEconomyReport || onSaveToVault}
+                                                                                                                    disabled={isSavingToVault}
+                                                                                                                    className="w-full min-h-[50px] rounded-[14px] bg-[#08B968] hover:bg-[#087D4A] text-white font-semibold text-[15px] px-5 flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-60 shadow-[0_2px_8px_rgba(8,185,104,0.22)]"
+                                                                                                                  >
+                                                                                                                    <span>Recuperar meus R$ {formattedMonthlyIdentified}/mês agora</span>
+                                                                                                                  </button>
+                                                                                                                    <p className="mt-2 text-center text-[11.5px] text-[#858585] font-normal">
+                                                                                                                      Acesso imediato por R$ 14,99/mês (Recupere até 12x o valor no 1º mês) · Cancele quando quiser
+                                                                                                                    </p>
+                                                                                                                </div>
+                                                                                                              )}
 
-        {/* Analisar Fatura Completa */}
-        <button
-          type="button"
-          onClick={onSendAnotherFile}
-          className="w-full min-h-[46px] rounded-[14px] bg-[#F5F5F5] dark:bg-[#1E1E20] hover:bg-[#ECECEC] active:bg-[#E0E0E0] text-[#111111] dark:text-[#FAFAFA] text-[14px] font-semibold px-4 flex items-center justify-center gap-2 transition-colors cursor-pointer border border-[#E5E5E5] dark:border-[#2D2D2D]"
-        >
-          <span>Analisar Fatura Completa ou Extrato</span>
-        </button>
-      </div>
+                                                                                                              {/* Analisar Fatura Completa */}
+                                                                                                              <button
+                                                                                                                type="button"
+                                                                                                                onClick={onSendAnotherFile}
+                                                                                                                className="w-full min-h-[46px] rounded-[14px] bg-white hover:bg-[#F5F5F2] text-[#171717] text-[13.5px] font-medium px-4 flex items-center justify-center gap-2 transition-colors cursor-pointer border border-[#EAEAE7]"
+                                                                                                              >
+                                                                                                                <span>Analisar Fatura Completa ou Extrato</span>
+                                                                                                              </button>
+                                                                                                            </div>
 
-      {/* Modal Card / Compartilhar */}
-      {isShareModalOpen && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="share-modal-title"
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
-          onClick={() => setIsShareModalOpen(false)}
-        >
-          <div
-            className="w-full max-w-[390px] rounded-[24px] bg-white dark:bg-[#18181A] p-5 shadow-2xl relative text-left border border-[#EAEAEA] dark:border-[#2A2A2A]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header do Modal */}
-            <div className="flex items-center justify-between pb-3 border-b border-[#F0F0F0] dark:border-[#27272A]">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#00C853]" />
-                <h3
-                  id="share-modal-title"
-                  className="text-[15px] font-bold text-[#1A1A1A] dark:text-[#FAFAFA]"
-                >
-                  Card de Diagnóstico Parcial
-                </h3>
-              </div>
-              <button
-                type="button"
-                aria-label="Fechar"
-                onClick={() => setIsShareModalOpen(false)}
-                className="w-7 h-7 rounded-full bg-[#F5F5F5] dark:bg-[#27272A] hover:bg-[#EAEAEA] text-[#6B7280] flex items-center justify-center transition-colors cursor-pointer"
-              >
-                <CloseIcon className="w-3.5 h-3.5" />
-              </button>
-            </div>
+                                                                                                            {/* Modal Card / Compartilhar */}
+                                                                                                            {isShareModalOpen && (
+                                                                                                              <div
+                                                                                                                role="dialog"
+                                                                                                                aria-modal="true"
+                                                                                                                aria-labelledby="share-modal-title"
+                                                                                                                className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] flex items-center justify-center p-4 animate-in fade-in duration-200"
+                                                                                                                onClick={() => setIsShareModalOpen(false)}
+                                                                                                              >
+                                                                                                                <div
+                                                                                                                  className="w-full max-w-[390px] rounded-[20px] bg-white p-5 shadow-2xl relative text-left border border-[#EAEAE7]"
+                                                                                                                  onClick={(e) => e.stopPropagation()}
+                                                                                                                >
+                                                                                                                  {/* Header do Modal */}
+                                                                                                                    <div className="flex items-center justify-between pb-3 border-b border-[#EAEAE7]">
+                                                                                                                      <div className="flex items-center gap-2">
+                                                                                                                        <span className="w-2 h-2 rounded-full bg-[#08B968]" />
+                                                                                                                        <h3
+                                                                                                                          id="share-modal-title"
+                                                                                                                          className="text-[14.5px] font-semibold text-[#171717]"
+                                                                                                                        >
+                                                                                                                          Card de Diagnóstico Parcial
+                                                                                                                        </h3>
+                                                                                                                      </div>
+                                                                                                                      <button
+                                                                                                                        type="button"
+                                                                                                                        aria-label="Fechar"
+                                                                                                                        onClick={() => setIsShareModalOpen(false)}
+                                                                                                                        className="w-7 h-7 rounded-full bg-[#F5F5F2] hover:bg-[#EAEAE7] text-[#858585] flex items-center justify-center transition-colors cursor-pointer"
+                                                                                                                      >
+                                                                                                                        <CloseIcon className="w-3.5 h-3.5" />
+                                                                                                                      </button>
+                                                                                                                    </div>
 
-            {/* Preview do Card Dark Premium */}
-            <div className="mt-4 rounded-[20px] bg-[#121214] p-5 border border-[#27272A] text-left relative overflow-hidden select-none">
-              <div
-                aria-hidden="true"
-                className="absolute top-0 right-0 w-44 h-44 rounded-full bg-[#00C853]/15 blur-2xl pointer-events-none"
-              />
+                                                                                                                    {/* Preview do Card Dark Premium */}
+                                                                                                                      <div className="mt-4 rounded-[16px] bg-[#171717] p-5 border border-[#27272A] text-left relative overflow-hidden select-none">
+                                                                                                                        <div className="flex items-center justify-between relative z-10">
+                                                                                                                          <div className="flex items-center gap-2">
+                                                                                                                              <div className="w-7 h-7 rounded-[8px] bg-[#08B968] text-white font-semibold flex items-center justify-center text-[15px]">
+                                                                                                                                t
+                                                                                                                              </div>
+                                                                                                                                <span className="font-semibold text-[16px] text-white tracking-tight">
+                                                                                                                                  taxly
+                                                                                                                                </span>
+                                                                                                                            </div>
+                                                                                                                              <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-[11px] font-medium text-[#08B968]">
+                                                                                                                                Diagnóstico Parcial
+                                                                                                                              </span>
+                                                                                                                          </div>
 
-              <div className="flex items-center justify-between relative z-10">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-[8px] bg-[#00C853] text-white font-bold flex items-center justify-center text-[15px]">
-                    t
-                  </div>
-                  <span className="font-bold text-[17px] text-white tracking-tight">
-                    taxly
-                  </span>
-                </div>
-                <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-[11px] font-semibold text-[#00C853]">
-                  ✓ Diagnóstico Parcial
-                </span>
-              </div>
+                                                                                                                          <div className="mt-6 relative z-10">
+                                                                                                                              <p className="text-[12px] text-[#858585]">
+                                                                                                                                Cobranças suspeitas detectadas
+                                                                                                                              </p>
+                                                                                                                                <p className="mt-1 text-[34px] font-semibold text-[#E54848] tracking-[-0.03em] leading-none tabular-nums">
+                                                                                                                                  R$ 181,00/mês
+                                                                                                                                </p>
+                                                                                                                                  <p className="mt-1.5 text-[12px] text-[#858585]">
+                                                                                                                                    6 cobranças suspeitas detectadas
+                                                                                                                                  </p>
+                                                                                                                                </div>
 
-              <div className="mt-6 relative z-10">
-                <p className="text-[12.5px] text-[#A1A1AA]">
-                  Cobranças suspeitas detectadas
-                </p>
-                <p className="mt-1 text-[36px] font-extrabold text-[#DC2626] tracking-tight leading-none tabular-nums">
-                  R$ 181,00/mês
-                </p>
-                <p className="mt-1 text-[12px] text-[#71717A]">
-                  6 cobranças suspeitas detectadas
-                </p>
-              </div>
+                                                                                                                                    <div className="mt-5 pt-3.5 border-t border-white/10 relative z-10">
+                                                                                                                                      <p className="text-[13px] font-semibold text-white leading-tight">
+                                                                                                                                        Quanto o seu extrato esconde?
+                                                                                                                                      </p>
+                                                                                                                                        <p className="mt-0.5 text-[11.5px] text-[#858585]">
+                                                                                                                                          Descubra cobranças indevidas no taxly.app
+                                                                                                                                        </p>
+                                                                                                                                    </div>
+                                                                                                                                </div>
 
-              <div className="mt-5 pt-3.5 border-t border-[#27272A] relative z-10">
-                <p className="text-[13px] font-bold text-white leading-tight">
-                  Quanto o seu extrato esconde?
-                </p>
-                <p className="mt-0.5 text-[11.5px] text-[#71717A]">
-                  Descubra cobranças indevidas no taxly.app
-                </p>
-              </div>
-            </div>
+                                                                                                                                <canvas ref={canvasRef} className="hidden" />
 
-            <canvas ref={canvasRef} className="hidden" />
+                                                                                                                                {/* Ações de Compartilhamento */}
+                                                                                                                                <div className="mt-4 space-y-2">
+                                                                                                                                  <button
+                                                                                                                                    type="button"
+                                                                                                                                    onClick={handleNativeShare}
+                                                                                                                                    className="w-full min-h-[44px] rounded-[12px] bg-[#08B968] hover:bg-[#087D4A] text-white font-semibold text-[13.5px] px-4 flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                                                                                                                                  >
+                                                                                                                                    <ShareIcon className="w-4 h-4 text-white shrink-0" />
+                                                                                                                                    <span>Compartilhar Card no WhatsApp / Stories</span>
+                                                                                                                                  </button>
 
-            {/* Ações de Compartilhamento */}
-            <div className="mt-4 space-y-2">
-              <button
-                type="button"
-                onClick={handleNativeShare}
-                className="w-full min-h-[46px] rounded-[14px] bg-[#00C853] hover:bg-[#00B54B] active:bg-[#00A047] text-white font-semibold text-[14px] px-4 flex items-center justify-center gap-2 transition-colors cursor-pointer"
-              >
-                <ShareIcon className="w-4 h-4 text-white shrink-0" />
-                <span>Compartilhar Card no WhatsApp / Stories</span>
-              </button>
+                                                                                                                                  <div className="grid grid-cols-2 gap-2">
+                                                                                                                                    <button
+                                                                                                                                      type="button"
+                                                                                                                                      onClick={handleDownloadCard}
+                                                                                                                                      disabled={isDownloading}
+                                                                                                                                      className="min-h-[38px] rounded-[10px] bg-[#F5F5F2] hover:bg-[#EAEAE7] text-[#171717] font-medium text-[12.5px] px-3 flex items-center justify-center gap-1.5 transition-colors cursor-pointer border border-[#EAEAE7]"
+                                                                                                                                    >
+                                                                                                                                      <ShareDownloadIcon className="w-3.5 h-3.5 text-[#171717] shrink-0" />
+                                                                                                                                      <span>{isDownloading ? "Gerando..." : "Baixar imagem"}</span>
+                                                                                                                                    </button>
 
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={handleDownloadCard}
-                  disabled={isDownloading}
-                  className="min-h-[40px] rounded-[12px] bg-[#F5F5F5] dark:bg-[#27272A] hover:bg-[#EBEBEB] text-[#1A1A1A] dark:text-white font-medium text-[12.5px] px-3 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                >
-                  <ShareDownloadIcon className="w-3.5 h-3.5 text-[#1A1A1A] dark:text-white shrink-0" />
-                  <span>{isDownloading ? "Gerando..." : "Baixar imagem"}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleCopyShareText}
-                  className="min-h-[40px] rounded-[12px] bg-[#F5F5F5] dark:bg-[#27272A] hover:bg-[#EBEBEB] text-[#1A1A1A] dark:text-white font-medium text-[12.5px] px-3 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                >
-                  <CopyIcon className="w-3.5 h-3.5 text-[#1A1A1A] dark:text-white shrink-0" />
-                  <span>{copyFeedback ? "Copiado! ✓" : "Copiar texto"}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+                                                                                                                                    <button
+                                                                                                                                      type="button"
+                                                                                                                                      onClick={handleCopyShareText}
+                                                                                                                                      className="min-h-[38px] rounded-[10px] bg-[#F5F5F2] hover:bg-[#EAEAE7] text-[#171717] font-medium text-[12.5px] px-3 flex items-center justify-center gap-1.5 transition-colors cursor-pointer border border-[#EAEAE7]"
+                                                                                                                                    >
+                                                                                                                                      <CopyIcon className="w-3.5 h-3.5 text-[#171717] shrink-0" />
+                                                                                                                                      <span>{copyFeedback ? "Copiado!" : "Copiar texto"}</span>
+                                                                                                                                    </button>
+                                                                                                                                  </div>
+                                                                                                                                </div>
+                                                                                                                              </div>
+                                                                                                                          </div>
       )}
-    </section>
-  );
+                                                                                                                        </section>
+                                                                                                                        );
 }

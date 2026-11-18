@@ -1,176 +1,145 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowLeftIcon, CheckIcon } from "@/components/icons";
+import { ArrowLeft, Check } from "lucide-react";
+import { formatBRL } from "@/data/charges";
 
 export type BillingPlanId = "annual" | "monthly";
 
 interface PaywallScreenProps {
   onBack: () => void;
   onSubscribe: (plan: BillingPlanId) => void;
+  annualValue?: number;
+  isLoading?: boolean;
 }
 
-interface PlanOption {
-  id: BillingPlanId;
+interface PaywallBenefitItem {
   title: string;
-  priceMain: string;
-  pricePeriod: string;
-  badge?: string;
-  highlightNote?: string;
+  description: string;
 }
 
-const PLAN_OPTIONS: PlanOption[] = [
+const PAYWALL_BENEFITS: PaywallBenefitItem[] = [
   {
-    id: "annual",
-    title: "Anual",
-    priceMain: "R$ 179,90",
-    pricePeriod: "/ano",
-    badge: "MAIS ECONÔMICO",
-    highlightNote: "Equivale a R$ 14,99/mês — 50% OFF",
+    title: "Nomes e datas revelados:",
+    description:
+      "tire o desfoque agora e veja exatamente quem está cobrando cada centavo na sua fatura",
   },
   {
-    id: "monthly",
-    title: "Mensal",
-    priceMain: "R$ 29,90",
-    pricePeriod: "/mês",
+    title: "Impacto em 12 meses:",
+    description:
+      "descubra quanto cada assinatura ou taxa silenciosa vai tirar do seu bolso ao longo do ano",
   },
-];
-
-const PAYWALL_BENEFITS = [
-  "Análises ilimitadas de faturas e comprovantes",
-  "Alertas quando surgir uma cobrança nova",
-  "Passo a passo de como cancelar cada item",
+  {
+    title: "Auditorias ilimitadas todo mês:",
+    description:
+      "escaneie suas próximas faturas antes de pagar para barrar duplicidades e reajustes",
+  },
+  {
+    title: "Cofre blindado de comprovantes:",
+    description:
+      "guarde PIX, boletos e faturas organizados para nunca perder uma prova de pagamento",
+  },
 ];
 
 /**
- * Tela 2 — Paywall exibida ao tocar em "Desbloquear análise completa".
+ * Tela de Paywall / Assinatura — Oferta única de R$ 14,99/mês.
  */
-export function PaywallScreen({ onBack, onSubscribe }: PaywallScreenProps) {
-  const [selectedPlan, setSelectedPlan] = useState<BillingPlanId>("annual");
+export function PaywallScreen({
+  onBack,
+  onSubscribe,
+  annualValue = 2172,
+  isLoading = false,
+}: PaywallScreenProps) {
+  const valorAnual =
+    annualValue && annualValue > 0 ? formatBRL(annualValue) : "2.172,00";
 
   return (
     <section
-      aria-label="Planos e assinatura taxly"
-      style={{ paddingBottom: "7rem" }}
-      className="pt-1 text-left pb-28"
+      aria-label="Assinatura Taxly"
+      className="mx-[-24px] mt-[-12px] px-6 pt-3 pb-8 bg-[#F6F5F1] text-[#18181B] text-left rounded-b-2xl"
     >
-      {/* Header com seta de retorno, frase âncora e subtítulo */}
+      {/* Header com seta de retorno, headline dinâmica e subtítulo */}
       <header>
         <button
           type="button"
           aria-label="Voltar para a tela de resultado"
           onClick={onBack}
-          className="w-9 h-9 rounded-full bg-[#FAFAFA] border border-[#E5E7EB] hover:bg-[#F0F0F0] active:bg-[#E5E5E5] text-[#1A1A1A] flex items-center justify-center transition-colors cursor-pointer"
+          className="w-9 h-9 rounded-full bg-white border border-black/[0.06] hover:bg-black/[0.03] active:scale-[0.98] text-[#18181B] flex items-center justify-center transition-all cursor-pointer shadow-[0_2px_12px_rgba(0,0,0,0.03)]"
         >
-          <ArrowLeftIcon className="w-4 h-4" />
+          <ArrowLeft size={16} strokeWidth={1.5} />
         </button>
 
-        <h1 className="mt-4 text-[28px] sm:text-[30px] leading-[1.15] tracking-[-0.03em] font-extrabold text-[#1A1A1A]">
-          Recupere R$ 37,90 por menos de R$ 0,33 por dia.
+        <h1 className="mt-4 text-[26px] sm:text-[28px] leading-[1.12] tracking-[-0.03em] font-medium text-[#18181B] tabular-nums">
+          Recupere até R$ {valorAnual}/ano por menos de R$ 0,50 por dia.
         </h1>
 
-        <p className="mt-2 text-[14.5px] font-normal text-[#6B7280]">
-          Cancele quando quiser, direto no app.
+        <p className="mt-2 text-[14px] leading-relaxed font-normal text-[#8A8985]">
+          Desbloqueie sua auditoria completa agora e monitore suas próximas faturas.
         </p>
       </header>
 
-      {/* Cards de plano (Anual em destaque + Mensal) */}
-      <div
-        role="radiogroup"
-        aria-label="Escolha seu plano"
-        className="mt-6 space-y-3"
-      >
-        {PLAN_OPTIONS.map((plan) => {
-          const isSelected = selectedPlan === plan.id;
+      {/* Card Único de Assinatura (Hero Card) */}
+      <div className="mt-5 rounded-2xl bg-white border border-[#0F9D58]/30 p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] text-left">
+        <span className="inline-flex items-center rounded-full bg-[#0F9D58]/10 px-2.5 py-0.5 text-[10.5px] font-medium tracking-[0.04em] uppercase text-[#0F9D58]">
+          PLANO ÚNICO · ACESSO IMEDIATO
+        </span>
 
-          return (
-            <button
-              key={plan.id}
-              type="button"
-              role="radio"
-              aria-checked={isSelected}
-              onClick={() => setSelectedPlan(plan.id)}
-              className={`relative w-full rounded-[16px] p-4 sm:p-5 text-left transition-colors cursor-pointer ${
-                isSelected
-                  ? "border-2 border-[#00C853] bg-[#FAFAFA]"
-                  : "border-2 border-[#E5E7EB] bg-white hover:border-[#D4D4D8]"
-              }`}
-            >
-              {plan.badge && (
-                <span className="absolute -top-2.5 right-4 rounded-full bg-[#00C853] px-2.5 py-0.5 text-[10.5px] font-bold tracking-[0.04em] uppercase text-white">
-                  {plan.badge}
-                </span>
-              )}
+        <div className="mt-3 flex items-baseline gap-1">
+          <span className="text-[32px] font-medium tracking-[-0.03em] text-[#18181B] tabular-nums leading-none">
+            R$ 14,99
+          </span>
+          <span className="text-[14px] font-normal text-[#8A8985]">
+            /mês
+          </span>
+        </div>
 
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-[15px] font-semibold text-[#1A1A1A]">
-                    {plan.title}
-                  </p>
-                  <p className="mt-1 flex items-baseline gap-0.5">
-                    <span className="text-[24px] font-extrabold tracking-[-0.025em] text-[#1A1A1A] tabular-nums">
-                      {plan.priceMain}
-                    </span>
-                    <span className="text-[14px] font-medium text-[#6B7280]">
-                      {plan.pricePeriod}
-                    </span>
-                  </p>
-                  {plan.highlightNote && (
-                    <p className="mt-1.5 text-[13px] font-semibold text-[#00C853]">
-                      {plan.highlightNote}
-                    </p>
-                  )}
-                </div>
+        <p className="mt-2 text-[13px] font-normal text-[#8A8985]">
+          Cancele quando quiser, em 1 clique direto no app.
+        </p>
 
-                {/* Indicador de seleção (check verde quando selecionado) */}
-                <span
-                  aria-hidden="true"
-                  className={`mt-0.5 w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-colors ${
-                    isSelected
-                      ? "bg-[#00C853] text-white"
-                      : "border-2 border-[#D4D4D8] bg-white"
-                  }`}
-                >
-                  {isSelected && <CheckIcon className="w-3.5 h-3.5" />}
-                </span>
-              </div>
-            </button>
-          );
-        })}
+        {/* Faixa de retorno estimado */}
+        <div className="mt-3 bg-[#F6F5F1] rounded-lg px-3 py-2 text-xs font-medium text-[#18181B]">
+          Retorno estimado: recupere até 12x o valor do plano já na 1ª auditoria.
+        </div>
+
+        {/* Lista de Benefícios Focada em Retenção (4 itens com check fino #0F9D58) */}
+        <ul
+          aria-label="Benefícios incluídos na assinatura"
+          className="mt-4 pt-4 border-t border-black/[0.06] space-y-3"
+        >
+          {PAYWALL_BENEFITS.map((benefit) => (
+            <li key={benefit.title} className="flex items-start gap-2.5">
+              <Check
+                size={16}
+                strokeWidth={1.5}
+                className="text-[#0F9D58] shrink-0 mt-0.5"
+                aria-hidden="true"
+              />
+              <span className="text-[13.5px] leading-snug text-[#52525B] font-normal">
+                <strong className="font-semibold text-[#18181B]">
+                  {benefit.title}
+                </strong>{" "}
+                {benefit.description}
+              </span>
+            </li>
+          ))}
+        </ul>
       </div>
 
-      {/* Lista de benefícios */}
-      <ul
-        aria-label="Benefícios incluídos na assinatura"
-        className="mt-6 space-y-3"
-      >
-        {PAYWALL_BENEFITS.map((benefit) => (
-          <li key={benefit} className="flex items-center gap-3">
-            <span
-              aria-hidden="true"
-              className="w-[22px] h-[22px] rounded-full bg-[#FAFAFA] border border-[#EAEAEA] text-[#00C853] flex items-center justify-center shrink-0"
-            >
-              <CheckIcon className="w-3 h-3" />
-            </span>
-            <span className="text-[14.5px] text-[#1A1A1A] leading-snug font-normal">
-              {benefit}
-            </span>
-          </li>
-        ))}
-      </ul>
-
-      {/* CTA final */}
-      <div className="mt-7">
+      {/* Botão Principal */}
+      <div className="mt-5">
         <button
           type="button"
-          onClick={() => onSubscribe(selectedPlan)}
-          className="w-full min-h-[52px] rounded-[16px] bg-[#00C853] hover:bg-[#00B54B] active:bg-[#00A047] text-white font-semibold text-[15.5px] px-5 flex items-center justify-center transition-colors cursor-pointer"
+          disabled={isLoading}
+          onClick={() => onSubscribe("monthly")}
+          className="w-full min-h-[52px] rounded-2xl bg-[#0F9D58] hover:bg-[#0B8043] active:scale-[0.99] disabled:opacity-65 text-white font-medium tracking-[-0.02em] tabular-nums text-[15px] px-5 flex items-center justify-center transition-all cursor-pointer shadow-[0_2px_12px_rgba(15,157,88,0.2)]"
         >
-          Assinar e desbloquear
+          {isLoading
+            ? "Redirecionando para o pagamento seguro..."
+            : "Desbloquear meu relatório · R$ 14,99"}
         </button>
 
-        <p className="mt-2.5 text-center text-[12.5px] font-normal text-[#6B7280]">
-          Pagamento seguro · Cancele quando quiser
+        <p className="mt-2.5 text-center text-[12px] font-normal text-[#8A8985]">
+          Pagamento seguro via Cartão · Renovação mensal
         </p>
       </div>
     </section>

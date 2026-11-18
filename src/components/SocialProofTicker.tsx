@@ -39,23 +39,20 @@ export function SocialProofTicker({
     return () => clearInterval(timer);
   }, [intervalMs]);
 
+  const textClass = isFading
+    ? "text-[12.5px] font-normal text-[#858585] truncate transition-opacity duration-200 opacity-0"
+    : "text-[12.5px] font-normal text-[#858585] truncate transition-opacity duration-200 opacity-100";
+
   return (
     <div
       aria-label="Prova social recente"
-      className={`rounded-[12px] bg-[#F5F5F5] dark:bg-[#1C1C1E] border border-[#EAEAEA] dark:border-[#2C2C2E] px-3.5 py-2 flex items-center justify-center gap-2 select-none overflow-hidden ${className}`}
+      className={`rounded-[12px] bg-[#F5F5F2] border border-[#EAEAE7] px-3.5 py-2.5 flex items-center justify-center gap-2 select-none overflow-hidden ${className}`}
     >
       <span
         aria-hidden="true"
-        className="w-1.5 h-1.5 rounded-full bg-[#00C853] shrink-0"
+        className="w-1.5 h-1.5 rounded-full bg-[#08B968] shrink-0"
       />
-      <p
-        className={`text-[12.5px] sm:text-[13px] text-[#4B5563] dark:text-[#A1A1AA] font-medium truncate transition-opacity duration-300 ${
-          isFading ? "opacity-0 -translate-y-1" : "opacity-100 translate-y-0"
-        }`}
-      >
-        {TESTIMONIALS[index]}
-      </p>
+      <p className={textClass}>{TESTIMONIALS[index]}</p>
     </div>
   );
 }
-

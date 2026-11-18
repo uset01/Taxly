@@ -27,6 +27,35 @@ export interface EconomyItem {
   category?: string;
 }
 
+export interface OpenAiOpportunityItem {
+  categoria: string;
+  nomeEstabelecimento: string;
+  valorMensal: number;
+  data: string;
+}
+
+export interface OpenAiFreeTariffSample {
+  nome: string;
+  valor: number;
+}
+
+export interface OpenAiDuplicateFinding {
+  encontrada: boolean;
+  nomeEstabelecimento: string;
+  data: string;
+  valor: number;
+}
+
+export interface OpenAiAnalyzePayload {
+  arquivoValido: boolean;
+  motivoInvalido: string;
+  totalTransacoes: number;
+  resumoCategorias: CategorySummary;
+  itensOportunidade: OpenAiOpportunityItem[];
+  tarifaAmostraGratis: OpenAiFreeTariffSample;
+  possivelDuplicidade: OpenAiDuplicateFinding;
+}
+
 export interface AnalysisSummaryData {
   documentType: "fatura" | "extrato";
   fileName: string;
@@ -34,12 +63,20 @@ export interface AnalysisSummaryData {
   tariffs: DetectedTariff[];
   duplicates: DetectedDuplicate[];
   categories: CategorySummary;
-  totalAttention: number; // soma de tarifas + duplicidades
+  totalAttention: number; // soma de tarifas + duplicidades + itensOportunidade
   isClean: boolean;
   economyItems?: EconomyItem[];
   totalRecurringSavings?: number;
   isSingleTransaction?: boolean;
   singleTransactionAmount?: number;
+  // Campos reais vindos diretamente da OpenAI (gpt-4.1-mini)
+  arquivoValido?: boolean;
+  motivoInvalido?: string;
+  totalTransacoes?: number;
+  resumoCategorias?: CategorySummary;
+  itensOportunidade?: OpenAiOpportunityItem[];
+  tarifaAmostraGratis?: OpenAiFreeTariffSample;
+  possivelDuplicidade?: OpenAiDuplicateFinding;
 }
 
 export interface DocumentTransaction {
@@ -104,80 +141,32 @@ export function findDuplicates(
 }
 
 /**
- * Lista de economia padrão realista somando exatamente R$ 184,70/mês
+ * Estado inicial limpo (sem dados fictícios de demonstração)
  */
-export const DEFAULT_SAMPLE_ECONOMY_ITEMS: EconomyItem[] = [
-  {
-    id: "eco-1",
-    name: "Streaming de Vídeo & Assinaturas",
-    monthlyAmount: 55.9,
-    yearlyImpact: 670.8,
-    actionTip: "Cancelar assinatura no app",
-    category: "Assinaturas",
-  },
-  {
-    id: "eco-2",
-    name: "Tarifa Pacote de Serviços Bancários",
-    monthlyAmount: 42.9,
-    yearlyImpact: 514.8,
-    actionTip: "Pedir estorno de tarifa ao banco",
-    category: "Tarifas",
-  },
-  {
-    id: "eco-3",
-    name: "Clube de Benefícios / Seguro Fatura",
-    monthlyAmount: 39.9,
-    yearlyImpact: 478.8,
-    actionTip: "Cancelar cobrança opcional no app",
-    category: "Seguros",
-  },
-  {
-    id: "eco-4",
-    name: "Apps de Delivery & Transporte Recorrentes",
-    monthlyAmount: 46.0,
-    yearlyImpact: 552.0,
-    actionTip: "Cancelar assinatura no app",
-    category: "Serviços",
-  },
-];
+export const DEFAULT_SAMPLE_ECONOMY_ITEMS: EconomyItem[] = [];
 
-/**
- * Conjunto padrão realista somando exatamente R$ 42,30 (18,90 + 8,50 + 14,90).
- */
 export const DEFAULT_SAMPLE_ANALYSIS: AnalysisSummaryData = {
   documentType: "fatura",
-  fileName: "Fatura_Cartao_Outubro.pdf",
-  tariffs: [
-    {
-      id: "tarifa-1",
-      name: "Tarifa de manutenção",
-      amount: 18.9,
-    },
-    {
-      id: "tarifa-2",
-      name: "Juros rotativo",
-      amount: 8.5,
-    },
-  ],
-  duplicates: [
-    {
-      id: "dup-uber",
-      merchant: "Uber do Brasil",
-      date: "12 Out 2026",
-      amount: 14.9,
-      occurrences: 2,
-    },
-  ],
+  fileName: "",
+  tariffs: [],
+  duplicates: [],
   categories: {
-    pix: 1240.0,
-    boletos: 890.5,
-    debitos: 2140.8,
+    pix: 0,
+    boletos: 0,
+    debitos: 0,
   },
-  totalAttention: 42.3,
-  isClean: false,
-  economyItems: DEFAULT_SAMPLE_ECONOMY_ITEMS,
-  totalRecurringSavings: 184.7,
+  totalAttention: 0,
+  isClean: true,
+  economyItems: [],
+  totalRecurringSavings: 0,
   isSingleTransaction: false,
+  totalTransacoes: 0,
+  resumoCategorias: {
+    pix: 0,
+    boletos: 0,
+    debitos: 0,
+  },
+  itensOportunidade: [],
 };
 
 /**

@@ -1,12 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeftIcon, CheckIcon, LockSmallIcon } from "@/components/icons";
+import {
+  AlertCircleIcon,
+  ArrowLeftIcon,
+  CheckIcon,
+  LockSmallIcon,
+  ShieldCheckIcon,
+} from "@/components/icons";
 import { formatBRL } from "@/data/charges";
 
 interface LossQuizScreenProps {
   onBack: () => void;
-  onActivateSubscription: (planPrice: number) => void;
+  onActivateSubscription: (planPrice: number, annualValue?: number) => void;
   onSendManualFile?: () => void;
 }
 
@@ -147,37 +153,34 @@ export function LossQuizScreen({
   return (
     <section
       aria-label="Quiz interativo de diagnóstico financeiro"
-      style={{ paddingBottom: "7rem" }}
-      className="pt-1 text-left pb-28 relative min-h-screen animate-in fade-in duration-200"
+      className="pt-1 text-left relative animate-in fade-in duration-200"
     >
       {/* Topo com botão de voltar e barra de progresso */}
-      <header className="flex items-center justify-between gap-3 pb-3 border-b border-[#F0F0F0] dark:border-[#27272A]">
+      <header className="flex items-center justify-between gap-3 pb-3.5 border-b border-[#EAEAE7] dark:border-[#27272A]">
         <div className="flex items-center gap-2.5">
           <button
             type="button"
             aria-label="Voltar"
             onClick={handleStepBack}
-            className="w-9 h-9 rounded-full bg-[#FAFAFA] dark:bg-[#1C1C1E] border border-[#E5E7EB] dark:border-[#2C2C2E] hover:bg-[#F0F0F0] active:bg-[#E5E5E5] text-[#1A1A1A] dark:text-white flex items-center justify-center transition-colors cursor-pointer"
+            className="w-9 h-9 rounded-full bg-white dark:bg-[#1C1C1E] border border-[#EAEAE7] dark:border-[#2C2C2E] hover:bg-[#F5F5F2] active:scale-[0.98] text-[#171717] dark:text-white flex items-center justify-center transition-all cursor-pointer"
           >
             <ArrowLeftIcon className="w-4 h-4" />
           </button>
-          <span className="text-[12.5px] font-semibold text-[#8E8E93] uppercase tracking-[0.05em]">
+          <span className="text-[12px] font-medium text-[#858585] uppercase tracking-[0.06em]">
             {step === "final" ? "Diagnóstico" : `Etapa ${step} de 3`}
           </span>
         </div>
 
         {/* Barra de progresso segmentada de 3 etapas */}
         <div className="flex items-center gap-1.5 w-24">
-          {[1, 2, 3].map((s) => (
-            <div
-              key={s}
-              className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
-                (step === "final" || (typeof step === "number" && s <= step))
-                  ? "bg-[#00C853]"
-                  : "bg-[#E5E5E5] dark:bg-[#2A2A2A]"
-              }`}
-            />
-          ))}
+          {[1, 2, 3].map((s) => {
+            const isFilled =
+              step === "final" || (typeof step === "number" && s <= step);
+            const barClass = isFilled
+              ? "h-1.5 flex-1 rounded-full transition-all duration-300 bg-[#08B968]"
+              : "h-1.5 flex-1 rounded-full transition-all duration-300 bg-[#EAEAE7] dark:bg-[#2A2A2A]";
+            return <div key={s} className={barClass} />;
+          })}
         </div>
       </header>
 
@@ -186,15 +189,15 @@ export function LossQuizScreen({
       {/* ========================================================= */}
       {step === 1 && (
         <div className="mt-5 text-left animate-in fade-in duration-200">
-          <span className="inline-flex items-center gap-1 rounded-full bg-[#00C853]/10 px-2.5 py-0.5 text-[11.5px] font-semibold text-[#008A39] dark:text-[#22C55E]">
-            ⚡ Passo 1 · Rápido e anônimo
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#08B968]/10 px-2.5 py-0.5 text-[11.5px] font-medium text-[#087D4A] dark:text-[#08B968]">
+            Passo 1 · Rápido e anônimo
           </span>
 
-          <h1 className="mt-3 text-[22px] sm:text-[24px] font-bold text-[#111111] dark:text-[#FAFAFA] leading-tight">
+          <h1 className="mt-3 text-[22px] sm:text-[24px] font-semibold tracking-[-0.025em] text-[#171717] dark:text-[#FAFAFA] leading-tight">
             Qual seu banco ou cartão principal?
           </h1>
 
-          <p className="mt-1.5 text-[13.5px] text-[#6B7280] dark:text-[#A1A1AA]">
+          <p className="mt-1.5 text-[13.5px] text-[#858585] dark:text-[#A1A1AA]">
             Toque no seu banco para calibrar a taxa média de cobranças ocultas:
           </p>
 
@@ -207,19 +210,19 @@ export function LossQuizScreen({
                   setSelectedBank(bank.name);
                   setStep(2);
                 }}
-                className="min-h-[54px] rounded-[16px] bg-[#FAFAFA] dark:bg-[#1A1A1A] hover:bg-[#F0F0F0] dark:hover:bg-[#252525] active:scale-[0.98] border border-[#EAEAEA] dark:border-[#2A2A2A] hover:border-[#00C853] p-3 text-left flex items-center justify-between gap-2 transition-all cursor-pointer group shadow-sm"
+                className="min-h-[54px] rounded-[14px] bg-white dark:bg-[#1A1A1A] hover:bg-[#F5F5F2] dark:hover:bg-[#252525] active:scale-[0.98] border border-[#EAEAE7] dark:border-[#2A2A2A] hover:border-[#08B968]/40 p-3.5 text-left flex items-center justify-between gap-2 transition-all cursor-pointer group shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
               >
-                <span className="text-[14.5px] font-semibold text-[#111111] dark:text-white group-hover:text-[#00A844] transition-colors">
+                <span className="text-[14px] font-medium text-[#171717] dark:text-white group-hover:text-[#087D4A] transition-colors">
                   {bank.name}
                 </span>
-                <span className="text-[#8E8E93] group-hover:text-[#00C853] transition-colors font-bold text-[14px]">
+                <span className="text-[#858585] group-hover:text-[#08B968] transition-colors font-medium text-[14px]">
                   →
                 </span>
               </button>
             ))}
           </div>
 
-          <p className="mt-6 text-center text-[12px] text-[#8E8E93]">
+          <p className="mt-6 text-center text-[12px] text-[#858585]">
             100% seguro · Não solicitamos senha nem dados de acesso
           </p>
         </div>
@@ -230,53 +233,50 @@ export function LossQuizScreen({
       {/* ========================================================= */}
       {step === 2 && (
         <div className="mt-5 text-left animate-in fade-in duration-200">
-          <span className="inline-flex items-center gap-1 rounded-full bg-[#00C853]/10 px-2.5 py-0.5 text-[11.5px] font-semibold text-[#008A39] dark:text-[#22C55E]">
-            ⚡ Passo 2 · Seleção múltipla
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#08B968]/10 px-2.5 py-0.5 text-[11.5px] font-medium text-[#087D4A] dark:text-[#08B968]">
+            Passo 2 · Seleção múltipla
           </span>
 
-          <h1 className="mt-3 text-[22px] sm:text-[24px] font-bold text-[#111111] dark:text-[#FAFAFA] leading-tight">
+          <h1 className="mt-3 text-[22px] sm:text-[24px] font-semibold tracking-[-0.025em] text-[#171717] dark:text-[#FAFAFA] leading-tight">
             Quais destes você paga ou já testou?
           </h1>
 
-          <p className="mt-1.5 text-[13.5px] text-[#6B7280] dark:text-[#A1A1AA]">
+          <p className="mt-1.5 text-[13.5px] text-[#858585] dark:text-[#A1A1AA]">
             Selecione todos que se aplicam ao seu dia a dia:
           </p>
 
           <div className="mt-4 space-y-2.5">
             {EXPENSE_OPTIONS.map((item) => {
               const isSelected = selectedExpenses.includes(item.id);
+              const rowClass = isSelected
+                ? "rounded-[14px] p-3.5 border transition-all cursor-pointer flex items-center justify-between gap-3 text-left bg-[#08B968]/[0.05] dark:bg-[#08B968]/10 border-[#08B968]"
+                : "rounded-[14px] p-3.5 border transition-all cursor-pointer flex items-center justify-between gap-3 text-left bg-white dark:bg-[#1A1A1A] border-[#EAEAE7] dark:border-[#2A2A2A] hover:border-[#D4D4D0]";
+              const checkClass = isSelected
+                ? "w-5 h-5 rounded-full flex items-center justify-center shrink-0 border transition-colors bg-[#08B968] border-[#08B968] text-white"
+                : "w-5 h-5 rounded-full flex items-center justify-center shrink-0 border transition-colors border-[#D4D4D0] dark:border-[#4B5563] bg-white dark:bg-[#111111]";
+
               return (
                 <div
                   key={item.id}
                   onClick={() => handleToggleExpense(item.id)}
-                  className={`rounded-[16px] p-3.5 border transition-all cursor-pointer flex items-center justify-between gap-3 text-left ${
-                    isSelected
-                      ? "bg-[#E8F8EE]/60 dark:bg-[#062414]/60 border-[#00C853] shadow-sm"
-                      : "bg-[#FAFAFA] dark:bg-[#1A1A1A] border-[#EAEAEA] dark:border-[#2A2A2A] hover:border-[#D1D5DB]"
-                  }`}
+                  className={rowClass}
                 >
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="text-[14.5px] font-semibold text-[#111111] dark:text-white">
+                      <p className="text-[14px] font-medium text-[#171717] dark:text-white">
                         {item.name}
                       </p>
-                      <span className="text-[11.5px] font-bold text-[#008A39] dark:text-[#22C55E] bg-[#00C853]/10 px-2 py-0.5 rounded-full tabular-nums">
+                      <span className="text-[11.5px] font-medium text-[#087D4A] dark:text-[#08B968] bg-[#08B968]/10 px-2 py-0.5 rounded-full tabular-nums">
                         +R$ {formatBRL(item.amount)}
                       </span>
                     </div>
-                    <p className="mt-0.5 text-[12px] text-[#6B7280] dark:text-[#A1A1AA]">
+                    <p className="mt-0.5 text-[12px] text-[#858585] dark:text-[#A1A1AA]">
                       {item.examples}
                     </p>
                   </div>
 
-                  <div
-                    className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 border transition-colors ${
-                      isSelected
-                        ? "bg-[#00C853] border-[#00C853] text-white"
-                        : "border-[#D1D5DB] dark:border-[#4B5563] bg-white dark:bg-[#111111]"
-                    }`}
-                  >
-                    {isSelected && <CheckIcon className="w-3.5 h-3.5 stroke-[3]" />}
+                  <div className={checkClass}>
+                    {isSelected && <CheckIcon className="w-3 h-3 stroke-[2.5]" />}
                   </div>
                 </div>
               );
@@ -288,10 +288,10 @@ export function LossQuizScreen({
             <button
               type="button"
               onClick={() => setStep(3)}
-              className="w-full min-h-[48px] rounded-[16px] bg-[#111111] dark:bg-white text-white dark:text-[#111111] font-semibold text-[14.5px] px-5 flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-sm"
+              className="w-full min-h-[48px] rounded-[14px] bg-[#171717] dark:bg-white text-white dark:text-[#171717] font-medium text-[14px] px-5 flex items-center justify-center gap-2 transition-colors cursor-pointer"
             >
               <span>Avançar para a última etapa</span>
-              <span className="text-[#00C853] font-bold">→</span>
+              <span className="text-[#08B968]">→</span>
             </button>
           </div>
         </div>
@@ -302,15 +302,15 @@ export function LossQuizScreen({
       {/* ========================================================= */}
       {step === 3 && (
         <div className="mt-5 text-left animate-in fade-in duration-200">
-          <span className="inline-flex items-center gap-1 rounded-full bg-[#00C853]/10 px-2.5 py-0.5 text-[11.5px] font-semibold text-[#008A39] dark:text-[#22C55E]">
-            ⚡ Passo 3 · Último passo
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#08B968]/10 px-2.5 py-0.5 text-[11.5px] font-medium text-[#087D4A] dark:text-[#08B968]">
+            Passo 3 · Último passo
           </span>
 
-          <h1 className="mt-3 text-[22px] sm:text-[24px] font-bold text-[#111111] dark:text-[#FAFAFA] leading-tight">
+          <h1 className="mt-3 text-[22px] sm:text-[24px] font-semibold tracking-[-0.025em] text-[#171717] dark:text-[#FAFAFA] leading-tight">
             Há quanto tempo você não revisa sua fatura linha por linha?
           </h1>
 
-          <p className="mt-1.5 text-[13.5px] text-[#6B7280] dark:text-[#A1A1AA]">
+          <p className="mt-1.5 text-[13.5px] text-[#858585] dark:text-[#A1A1AA]">
             Toque na opção que mais se aproxima:
           </p>
 
@@ -323,22 +323,22 @@ export function LossQuizScreen({
                   setSelectedRevision(opt);
                   setStep("final");
                 }}
-                className="w-full min-h-[60px] rounded-[16px] bg-[#FAFAFA] dark:bg-[#1A1A1A] hover:bg-[#F0F0F0] dark:hover:bg-[#252525] active:scale-[0.99] border border-[#EAEAEA] dark:border-[#2A2A2A] hover:border-[#00C853] p-4 text-left flex items-center justify-between gap-3 transition-all cursor-pointer group shadow-sm"
+                className="w-full min-h-[60px] rounded-[14px] bg-white dark:bg-[#1A1A1A] hover:bg-[#F5F5F2] dark:hover:bg-[#252525] active:scale-[0.99] border border-[#EAEAE7] dark:border-[#2A2A2A] hover:border-[#08B968]/40 p-4 text-left flex items-center justify-between gap-3 transition-all cursor-pointer group shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
               >
                 <div>
-                  <p className="text-[15px] font-semibold text-[#111111] dark:text-white group-hover:text-[#00A844] transition-colors">
+                  <p className="text-[14.5px] font-medium text-[#171717] dark:text-white group-hover:text-[#087D4A] transition-colors">
                     {opt.label}
                   </p>
-                  <p className="text-[12px] text-[#6B7280] dark:text-[#A1A1AA] mt-0.5">
+                  <p className="text-[12px] text-[#858585] dark:text-[#A1A1AA] mt-0.5">
                     {opt.description}
                   </p>
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-[11.5px] font-bold text-[#008A39] dark:text-[#22C55E] bg-[#00C853]/10 px-2.5 py-0.5 rounded-full">
+                  <span className="text-[11.5px] font-medium text-[#087D4A] dark:text-[#08B968] bg-[#08B968]/10 px-2.5 py-0.5 rounded-full">
                     {opt.multiplier}x
                   </span>
-                  <span className="text-[#8E8E93] group-hover:text-[#00C853] font-bold text-[14px]">
+                  <span className="text-[#858585] group-hover:text-[#08B968] font-medium text-[14px]">
                     →
                   </span>
                 </div>
@@ -354,94 +354,95 @@ export function LossQuizScreen({
       {step === "final" && (
         <div className="mt-4 text-left animate-in fade-in duration-200">
           {/* Header do Diagnóstico */}
-          <div className="rounded-[24px] bg-[#FAFAFA] dark:bg-[#1A1A1A] border border-[#EAEAEA] dark:border-[#2A2A2A] p-5 sm:p-6 text-left">
+          <div className="rounded-[18px] bg-white dark:bg-[#1A1A1A] border border-[#EAEAE7] dark:border-[#2A2A2A] p-5 sm:p-6 text-left shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
             {/* Badge de Alerta de Perfil */}
             <div className="flex items-center justify-between gap-2">
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-[#FEF2F2] dark:bg-[#2A1212] border border-[#FCA5A5] dark:border-[#5C1D1D] px-3 py-1">
-                <span className="text-[12.5px] font-bold text-[#DC2626] dark:text-[#F87171]">
-                  ⚠️ Alerta de Perfil
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-[#E54848]/[0.08] border border-[#E54848]/20 px-2.5 py-1">
+                <AlertCircleIcon className="w-3.5 h-3.5 text-[#E54848] shrink-0" />
+                <span className="text-[12px] font-medium text-[#E54848]">
+                  Alerta de Perfil
                 </span>
               </div>
-              <span className="text-[11.5px] font-semibold text-[#6B7280] dark:text-[#9CA3AF] bg-[#EFEFEF] dark:bg-[#28282A] px-2.5 py-0.5 rounded-full">
+              <span className="text-[11.5px] font-medium text-[#858585] bg-[#F5F5F2] dark:bg-[#28282A] px-2.5 py-0.5 rounded-full">
                 Cliente {selectedBank}
               </span>
             </div>
 
             {/* Diagnóstico principal exatamente com o texto solicitado */}
-            <h1 className="mt-3.5 text-[17.5px] sm:text-[19.5px] font-bold text-[#111111] dark:text-[#FAFAFA] leading-snug">
+            <h1 className="mt-3.5 text-[18px] sm:text-[20px] font-semibold tracking-[-0.025em] text-[#171717] dark:text-[#FAFAFA] leading-snug">
               Pessoas com o seu perfil financeiro deixam em média{" "}
-              <span className="text-[#DC2626] dark:text-[#EF4444] font-extrabold tabular-nums">
+              <span className="text-[#E54848] font-semibold tabular-nums">
                 R$ {formatBRL(valorEstimadoMensal)}/mês (R$ {formatBRL(valorEstimadoAnual)}/ano)
               </span>{" "}
               em cobranças silenciosas.
             </h1>
 
             {/* Teaser com 3 itens típicos desse perfil com nomes borrados */}
-            <div className="mt-4 pt-3.5 border-t border-[#EAEAEA] dark:border-[#2A2A2A]">
-              <p className="text-[12px] font-semibold text-[#8E8E93] uppercase tracking-[0.04em] mb-2.5">
-                Vazamentos mais frequentes detectados para você:
+            <div className="mt-4 pt-4 border-t border-[#EAEAE7] dark:border-[#2A2A2A]">
+              <p className="text-[11.5px] font-medium text-[#858585] uppercase tracking-[0.06em] mb-2.5">
+                Vazamentos mais frequentes detectados para você
               </p>
 
-              <div className="rounded-[14px] bg-white dark:bg-[#111111] border border-[#E5E5E5] dark:border-[#2D2D2D] p-3.5 text-left">
-                <div className="space-y-2">
+              <div className="rounded-[14px] bg-[#FAFAF8] dark:bg-[#111111] border border-[#EAEAE7] dark:border-[#2D2D2D] p-3.5 text-left">
+                <div className="divide-y divide-[#EAEAE7] dark:divide-[#242424]">
                   {/* Linha 1 */}
-                  <div className="flex items-center justify-between py-1.5 border-b border-[#F0F0F0] dark:border-[#242424]">
+                  <div className="flex items-center justify-between py-2 first:pt-0">
                     <div className="flex items-center gap-1.5 min-w-0 pr-2">
-                      <span className="text-[12.5px] font-semibold text-[#1A1A1A] dark:text-white shrink-0">
+                      <span className="text-[12px] font-medium text-[#858585] shrink-0">
                         1.
                       </span>
-                      <span className="text-[12.5px] font-medium text-[#1A1A1A] dark:text-[#E4E4E7] truncate">
-                        [Cobrança Recorrente]{" "}
+                      <span className="text-[12.5px] font-normal text-[#171717] dark:text-[#E4E4E7] truncate">
+                        Cobrança Recorrente{" "}
                         <span className="filter blur-[5px] select-none pointer-events-none opacity-80">
                           Streaming VIP / Assinatura
                         </span>
                       </span>
                     </div>
-                    <span className="text-[12.5px] font-bold text-[#DC2626] dark:text-[#EF4444] tabular-nums shrink-0">
+                    <span className="text-[12.5px] font-medium text-[#E54848] tabular-nums shrink-0">
                       — R$ 49,90/mês
                     </span>
                   </div>
 
                   {/* Linha 2 */}
-                  <div className="flex items-center justify-between py-1.5 border-b border-[#F0F0F0] dark:border-[#242424]">
+                  <div className="flex items-center justify-between py-2">
                     <div className="flex items-center gap-1.5 min-w-0 pr-2">
-                      <span className="text-[12.5px] font-semibold text-[#1A1A1A] dark:text-white shrink-0">
+                      <span className="text-[12px] font-medium text-[#858585] shrink-0">
                         2.
                       </span>
-                      <span className="text-[12.5px] font-medium text-[#1A1A1A] dark:text-[#E4E4E7] truncate">
-                        [Tarifa Bancária / Seguro]{" "}
+                      <span className="text-[12.5px] font-normal text-[#171717] dark:text-[#E4E4E7] truncate">
+                        Débito Automático{" "}
                         <span className="filter blur-[5px] select-none pointer-events-none opacity-80">
                           Tarifa Pacote Essencial
                         </span>
                       </span>
                     </div>
-                    <span className="text-[12.5px] font-bold text-[#DC2626] dark:text-[#EF4444] tabular-nums shrink-0">
+                    <span className="text-[12.5px] font-medium text-[#E54848] tabular-nums shrink-0">
                       — R$ 38,90/mês
                     </span>
                   </div>
 
                   {/* Linha 3 */}
-                  <div className="flex items-center justify-between py-1.5">
+                  <div className="flex items-center justify-between py-2 last:pb-0">
                     <div className="flex items-center gap-1.5 min-w-0 pr-2">
-                      <span className="text-[12.5px] font-semibold text-[#1A1A1A] dark:text-white shrink-0">
+                      <span className="text-[12px] font-medium text-[#858585] shrink-0">
                         3.
                       </span>
-                      <span className="text-[12.5px] font-medium text-[#1A1A1A] dark:text-[#E4E4E7] truncate">
-                        [Débito em Aplicativo]{" "}
+                      <span className="text-[12.5px] font-normal text-[#171717] dark:text-[#E4E4E7] truncate">
+                        Taxa/Serviço{" "}
                         <span className="filter blur-[5px] select-none pointer-events-none opacity-80">
                           Assinatura Esquecida Nu
                         </span>
                       </span>
                     </div>
-                    <span className="text-[12.5px] font-bold text-[#DC2626] dark:text-[#EF4444] tabular-nums shrink-0">
+                    <span className="text-[12.5px] font-medium text-[#E54848] tabular-nums shrink-0">
                       — R$ 34,90/mês
                     </span>
                   </div>
                 </div>
 
-                {/* Bloqueio preto de curiosidade */}
-                <div className="w-full mt-3 rounded-[10px] bg-[#1A1A1A] text-white text-[12px] font-medium py-2.5 px-3 flex items-center justify-center gap-2 text-center leading-snug">
-                  <LockSmallIcon className="w-4 h-4 text-[#00C853] shrink-0" />
+                {/* Bloqueio discreto */}
+                <div className="w-full mt-3 rounded-[10px] bg-[#F5F5F2] dark:bg-[#1E1E21] border border-[#EAEAE7] dark:border-[#2C2C30] text-[#171717] dark:text-[#FAFAFA] text-[12px] font-normal py-2.5 px-3 flex items-center justify-center gap-2 text-center leading-snug">
+                  <LockSmallIcon className="w-3.5 h-3.5 text-[#858585] shrink-0" />
                   <span>
                     O detalhamento dos nomes e o passo a passo de recuperação são liberados na auditoria.
                   </span>
@@ -454,19 +455,17 @@ export function LossQuizScreen({
           <div className="mt-4">
             <button
               type="button"
-              onClick={() => onActivateSubscription(14.99)}
-              className="w-full min-h-[52px] rounded-[16px] bg-[#00C853] hover:bg-[#00B54B] active:bg-[#00A047] text-white font-semibold text-[15px] sm:text-[15.5px] px-5 flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-md text-center leading-snug"
+              onClick={() => onActivateSubscription(14.99, valorEstimadoAnual)}
+              className="w-full min-h-[52px] rounded-[14px] bg-[#08B968] hover:bg-[#087D4A] active:scale-[0.99] text-white font-semibold text-[15px] px-5 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_2px_8px_rgba(8,185,104,0.2)] text-center leading-snug"
             >
               <span>Ativar Taxly por R$ 14,99/mês e Auditar Minha Fatura</span>
             </button>
 
             {/* Selo de Garantia Exato Solicitado */}
-            <div className="mt-3.5 p-3.5 rounded-[14px] bg-[#FAFAFA] dark:bg-[#1A1A1A] border border-[#E5E5E5] dark:border-[#2C2C2E] text-left flex items-start gap-2.5">
-              <span className="text-[17px] shrink-0 leading-none select-none">
-                🛡️
-              </span>
-              <p className="text-[12px] leading-relaxed text-[#4B5563] dark:text-[#A1A1AA]">
-                <strong className="font-semibold text-[#111111] dark:text-white">
+            <div className="mt-3 p-3.5 rounded-[14px] bg-white dark:bg-[#1A1A1A] border border-[#EAEAE7] dark:border-[#2C2C2E] text-left flex items-start gap-2.5">
+              <ShieldCheckIcon className="w-4 h-4 text-[#08B968] shrink-0 mt-0.5" />
+              <p className="text-[12px] leading-relaxed text-[#858585] dark:text-[#A1A1AA]">
+                <strong className="font-medium text-[#171717] dark:text-white">
                   Garantia de Economia:
                 </strong>{" "}
                 se você enviar sua fatura em até 7 dias e não achar pelo menos R$ 15,00 para economizar, devolvemos 100% do valor.
@@ -478,7 +477,7 @@ export function LossQuizScreen({
               <button
                 type="button"
                 onClick={onSendManualFile}
-                className="mt-3 w-full py-2 text-center text-[13px] font-medium text-[#6B7280] dark:text-[#A1A1AA] hover:text-[#111111] dark:hover:text-white underline underline-offset-4 cursor-pointer"
+                className="mt-3 w-full py-2 text-center text-[13px] font-normal text-[#858585] hover:text-[#171717] dark:hover:text-white underline underline-offset-4 cursor-pointer transition-colors"
               >
                 Já tenho a fatura salva? Enviar arquivo agora
               </button>

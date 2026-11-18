@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckIcon, LockIcon } from "@/components/icons";
+import { AlertCircleIcon, CheckIcon, LockIcon } from "@/components/icons";
 import { SocialProofTicker } from "@/components/SocialProofTicker";
 import { AuditLevelBar } from "@/components/AuditLevelBar";
 
@@ -34,103 +34,106 @@ export function PartialResultScreen({
         style={{ paddingBottom: "7rem" }}
         className="pt-1 text-left pb-28"
       >
-        {/* Header: Badge vermelho + Frase com volume e valor */}
+        {/* Header: Badge + Frase com volume e valor */}
         <header>
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-[#FEF2F2] dark:bg-[#2A1212] border border-[#FCA5A5] dark:border-[#5C1D1D] px-3 py-1">
-            <span className="text-[12.5px] font-bold text-[#DC2626] dark:text-[#F87171]">
-              ⚠️ 6 cobranças suspeitas detectadas
-            </span>
-          </div>
-
-          <p className="mt-3 text-[18px] sm:text-[20px] leading-tight font-bold text-[#1A1A1A] dark:text-white">
-            Analisamos 18 transações. Identificamos{" "}
-            <span className="text-[#DC2626] dark:text-[#EF4444] font-extrabold tabular-nums">
-              R$ 181,00/mês (R$ 2.172,00/ano)
-            </span>{" "}
-            em cobranças indevidas e recorrentes.
-          </p>
-        </header>
-
-        {/* Bloco de itens (1 visível + 2 em efeito com bloqueio preto) */}
-        <div className="mt-5 rounded-[16px] bg-[#FAFAFA] dark:bg-[#1A1A1A] border border-[#EAEAEA] dark:border-[#2A2A2A] p-4 sm:p-5">
-          <h2 className="text-[14px] font-semibold text-[#1A1A1A] dark:text-white">
-            O que encontramos:
-          </h2>
-
-          <ul className="mt-3 space-y-2.5" aria-label="Itens encontrados na fatura">
-            {/* Item visível */}
-            <li className="rounded-[14px] bg-white dark:bg-[#111111] border border-[#E5E7EB] dark:border-[#2A2A2A] px-4 py-3 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <span
-                  aria-hidden="true"
-                  className="w-5 h-5 rounded-full bg-[#00C853]/15 text-[#00C853] flex items-center justify-center shrink-0"
-                >
-                  <CheckIcon className="w-3 h-3" />
-                </span>
-                <span className="text-[14px] font-semibold text-[#1A1A1A] dark:text-white leading-snug">
-                  Cobrança duplicada — R$ 14,90
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-[#E54848]/[0.08] border border-[#E54848]/20 px-2.5 py-1">
+                <AlertCircleIcon className="w-3.5 h-3.5 text-[#E54848] shrink-0" />
+                <span className="text-[12px] font-medium text-[#E54848]">
+                  6 cobranças suspeitas detectadas
                 </span>
               </div>
-            </li>
 
-            {/* Itens bloqueados */}
-            {LOCKED_ITEMS.map((item) => (
-              <li key={item.id}>
-                <div className="w-full rounded-[14px] bg-white/75 dark:bg-[#111111]/75 backdrop-blur-md border border-[#EAEAEA] dark:border-[#2A2A2A] px-4 py-3 flex items-center justify-between gap-3 text-left">
-                  <span className="text-[13.5px] text-[#8E8E93] select-none filter blur-[3px]">
-                    {item.blurredPreview}
-                  </span>
-                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#1A1A1A] dark:text-white bg-[#F5F5F5] dark:bg-[#2A2A2A] px-2 py-0.5 rounded-full shrink-0">
-                    <LockIcon className="w-3 h-3 text-[#00C853]" />
-                    <span>Bloqueado</span>
-                  </span>
-                </div>
-              </li>
+                <p className="mt-3 text-[17px] sm:text-[18.5px] leading-[1.35] font-semibold tracking-[-0.02em] text-[#171717]">
+                  Analisamos 18 transações. Identificamos{" "}
+                    <span className="text-[#E54848] font-semibold tabular-nums">
+                      R$ 181,00/mês (R$ 2.172,00/ano)
+                    </span>{" "}
+                    <span className="text-[#858585] font-normal">
+                      em cobranças indevidas e recorrentes.
+                    </span>
+                </p>
+              </header>
+
+                  {/* Bloco de itens */}
+                  <div className="mt-4 rounded-[16px] bg-white border border-[#EAEAE7] shadow-[0_1px_3px_rgba(0,0,0,0.02)] p-4 sm:p-5">
+                    <h2 className="text-[14px] font-semibold text-[#171717]">
+                      O que encontramos:
+                    </h2>
+
+                      <ul className="mt-3 space-y-2" aria-label="Itens encontrados na fatura">
+                        {/* Item visível */}
+                          <li className="rounded-[12px] bg-[#FAFAF8] border border-[#EAEAE7] px-3.5 py-3 flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <span
+                                aria-hidden="true"
+                                className="w-5 h-5 rounded-full bg-[#08B968]/10 text-[#08B968] flex items-center justify-center shrink-0"
+                              >
+                                <CheckIcon className="w-3 h-3" />
+                              </span>
+                                <span className="text-[13.5px] font-semibold text-[#171717] leading-snug">
+                                  Cobrança duplicada — R$ 14,90
+                                </span>
+                            </div>
+                          </li>
+
+                          {/* Itens bloqueados */}
+                          {LOCKED_ITEMS.map((item) => (
+                            <li key={item.id}>
+                                  <div className="w-full rounded-[12px] bg-[#FAFAF8] border border-[#EAEAE7] px-3.5 py-3 flex items-center justify-between gap-3 text-left">
+                                    <span className="text-[13.5px] text-[#858585] select-none filter blur-[3px]">
+                                      {item.blurredPreview}
+                                    </span>
+                                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[#171717] bg-[#F5F5F2] border border-[#EAEAE7] px-2 py-0.5 rounded-full shrink-0">
+                                        <LockIcon className="w-3 h-3 text-[#08B968]" />
+                                        <span>Bloqueado</span>
+                                      </span>
+                                  </div>
+                                </li>
             ))}
-          </ul>
+                              </ul>
 
-          {/* Bloqueio preto com texto exato da tarefa */}
-          <div className="mt-4 rounded-[12px] bg-[#1A1A1A] p-3 text-center text-white text-[12.5px] font-semibold leading-snug shadow-sm">
-            O relatório completo com a explicação e o passo a passo de recuperação está bloqueado.
-          </div>
-        </div>
+                                {/* Bloqueio com texto exato da tarefa */}
+                                <div className="mt-3.5 rounded-[10px] bg-[#F5F5F2] border border-[#EAEAE7] p-3 text-center text-[#171717] text-[12px] font-medium leading-snug">
+                                  O relatório completo com a explicação e o passo a passo de recuperação está bloqueado.
+                                </div>
+                              </div>
 
-        {/* Barra de Progressão de Níveis (Task 4) */}
-        <AuditLevelBar
-          currentLevel={1}
-          isSubscribed={false}
-          className="mt-5"
-        />
+                              {/* Barra de Progressão de Níveis */}
+                              <AuditLevelBar
+                                currentLevel={1}
+                                isSubscribed={false}
+                                className="mt-4"
+                              />
 
-        {/* Faixa Rotativa de Prova Social (Task 2) */}
-        <div className="mt-4">
-          <SocialProofTicker />
-        </div>
-      </section>
+                              {/* Faixa Rotativa de Prova Social */}
+                              <div className="mt-4">
+                                <SocialProofTicker />
+                              </div>
+                            </section>
 
-      {/* Barra fixa de conversão no rodapé com CTA (Task 3) */}
-      <div className="fixed bottom-[88px] left-1/2 -translate-x-1/2 z-30 w-full max-w-[430px] px-6 pt-3 pb-2 bg-white/95 dark:bg-[#121214]/95 backdrop-blur-sm border-t border-[#F0F0F0] dark:border-[#262626]">
+      {/* Barra fixa de conversão no rodapé com CTA */}
+      <div className="fixed bottom-[88px] left-1/2 -translate-x-1/2 z-30 w-full max-w-[430px] px-6 pt-3 pb-2 bg-[#FAFAF8]/95 backdrop-blur-md border-t border-[#EAEAE7]">
         <button
           type="button"
           onClick={onUnlock}
-          className="w-full min-h-[52px] rounded-[16px] bg-[#00C853] hover:bg-[#00B54B] active:bg-[#00A047] text-white font-semibold text-[15.5px] px-5 flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-md"
+          className="w-full min-h-[50px] rounded-[14px] bg-[#08B968] hover:bg-[#087D4A] text-white font-semibold text-[15px] px-5 flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-[0_2px_8px_rgba(8,185,104,0.22)]"
         >
           <span>Recuperar meus R$ 181,00/mês agora</span>
         </button>
-        <p className="mt-1.5 text-center text-[11.5px] text-[#6B7280] dark:text-[#9CA3AF] font-medium">
-          Acesso imediato · Recupere até 6x o valor do plano logo no 1º mês · Cancele quando quiser
+        <p className="mt-1.5 text-center text-[11.5px] text-[#858585] font-normal">
+          Acesso imediato por R$ 14,99/mês (Recupere até 12x o valor no 1º mês) · Cancele quando quiser
         </p>
 
-        <div className="mt-2.5 flex items-center justify-center gap-4">
+        <div className="mt-2 flex items-center justify-center gap-4">
           <button
             type="button"
             onClick={onContinueFree}
-            className="text-[13px] font-medium text-[#6B7280] dark:text-[#A1A1AA] hover:text-[#1A1A1A] dark:hover:text-white underline underline-offset-4 cursor-pointer"
+            className="text-[13px] font-medium text-[#858585] hover:text-[#171717] underline underline-offset-4 cursor-pointer"
           >
             Analisar Fatura Completa ou Extrato
           </button>
         </div>
       </div>
     </>
-  );
+                          );
 }
